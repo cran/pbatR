@@ -1,0 +1,13 @@
+export(
+       as.phe, as.ped, as.pedlist,
+       is.phe, is.ped, is.pedlist,
+       read.ped, read.phe, write.ped, write.phe,
+       
+       pbat.create.commandfile,
+       pbat.files, pbat.obj, pbat.m,
+       summary.pbat, plot.pbat, print.pbat, 
+       
+       pbat.get, pbat.set,
+
+       pbat, pbat.last, pbat.last.rawResults
+       )

@@ -1,0 +1,244 @@
+##################################################################
+## Thomas Hoffmann                                              ##
+## CREATED:   2005                                              ##
+## DESCRIPTION: 'ped' class files (pedigree files)              ##
+##################################################################
+
+
+##################################################################
+## S3 Methods for 'ped' class                                   ##
+##################################################################
+
+## There are two different ways to store it.. as ped and a pedlist...
+
+ped <- function( x, ... )
+  UseMethod( "ped" );
+
+pedlist <- function( x, ... )
+  UseMethod( "pedlist" );
+
+is.ped <- function( obj ) {
+  if( sum( class(obj)=="ped" ) == 1 )
+    return(TRUE);
+  return(FALSE);
+}
+
+is.pedlist <- function( obj ) {
+  if( sum( class(obj)=="pedlist" ) == 1 )
+    return(TRUE);
+  return(FALSE);
+}
+
+
+
+####################################################################
+# read.ped(...)   <EXTERNAL>                                       #
+# DESCRIPTION: Reads in the .ped pedigree file, as described in    #
+#  the pbat literature.                                            #
+# PARAM: filename  filename to open; does not need .ped extension. #
+#        format=="ped":      RETURN dataframe with markers         #
+#                                   subscripted as .a, .b          #
+#                                   (class 'ped')                  #
+#        format=="pedfile":   RETURN list with markers being lists #
+#                                    with members $a, $b           #
+#                                    (class 'pedfile')             #
+####################################################################
+read.ped <- function( filename, format="ped", lowercase=TRUE, ... ) {
+  #--------------------------------------------------------------------
+  # http://www.biostat.harvard.edu/~clange/default.htm                -
+  #  * Following the FBAT convention, PBAT pedigree files have the    -
+  #    extension *.ped.                                               -
+  #  * The first line of the PBAT pedigree file contains the names    -
+  #    of the markers.                                                -
+  #  * From the second line on, the pedigree file contains the        -
+  #    pedigree data. Each line stands for one individual/subject.    -
+  #    Each line of the pedigree file starts with the pedigree id,    -
+  #    followed by the individual/subject id, the id of the father,   -
+  #    the id of the mother, the individual's sex and affection       -
+  #    status. After this information, for each marker, both marker   -
+  #    alleles are listed. The order of the markers has to correspond -
+  #    to the order of the marker names in the first line of the file.-
+  #                                                                   -
+  # * In the pedigree file, missing alleles, unknown affection status -
+  #   and unknown sex are coded as 0?                                 - 
+  # * If an individual's mother or father is referred to in the       -
+  #   pedigree file, but does not have its own entity in the pedigree -
+  #   file, PBAT assumes that her/his marker alleles are missing.     -
+  # (*) Missing values in the phenotype file have to be coded either as
+  #    '.' or '-'.  Coding missing phenotypes as 0 will lead          -
+  #     to incorrect results.                                         -
+  #--------------------------------------------------------------------
+
+  #warning( "DO WE NEED TO DO ANYTHING WITH MISSINGNESS???" );
+
+  filename <- str.file.extension( filename, ".ped" );
+  ped <- read.badheader( filename, na.strings="", lowercase=lowercase, ... ); # 0 is NA only for censor & sex
+  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+
+  if( format=="ped" ) {
+    # Then we tack on extensions to each of the markers, so, for example,
+    #  suppose we had marker m7, then the dataframe would have m7.a, m7.b;
+    #  note, however, that these are unphased.
+    
+    tack.extension <- function( strvec, extension ) {
+      for( i in 1:length(strvec) ){
+        strvec[i] <- paste( strvec[i], extension, sep="" );
+      }
+      return( strvec );
+    }
+    alt.vecs <- function( v1, v2 ) {
+      if( length(v1)!=length(v2) ) stop("alt.vecs: length must be the same!");
+      v <- rep(0,2*length(v1));
+      v[seq(1,2*length(v1),by=2)] <- v1;
+      v[seq(2,2*length(v1),by=2)] <- v2;
+      return(v);
+    }
+
+    markerNames <- alt.vecs( tack.extension(ped$header,".a"),
+                             tack.extension(ped$header,".b")    );
+    names( ped$table ) <- make.names(  c( firstNames, markerNames )  );
+    class(ped$table) <- c("ped","data.frame");
+    return( ped$table );
+  }
+  #else{
+  
+  # keep each of the markers the same, but each marker will be a
+  #  list of 'a' and 'b' for the two.
+  pedlist <- list();
+  for( i in 1:length(firstNames) )
+    pedlist[[i]] <- ped$table[[i]];
+  names( pedlist ) <- firstNames;
+  
+  ENTRYPOINT <- length(firstNames)+1;
+  for( i in 1:length(ped$header) ) {
+    idx1=ENTRYPOINT+(i-1)*2;
+    idx2=idx1+1;
+    newMarker <- list( a=ped$table[[idx1]], b=ped$table[[idx2]] );
+    pedlist[[length(pedlist)+1]] <- newMarker;
+    names(pedlist)[length(pedlist)] <- ped$header[i];
+  }
+  class(pedlist) <- c("pedlist","list"); #OUCH!
+  return(pedlist);
+} ## VERIFIED ## (with 'total' dataset)
+
+as.ped <- function( x,
+                    idped="idped", idsub="idsub", idfath="idfath",
+                    idmoth="idmoth", sex="sex", affection="affection" ) {
+  if( is.ped(x) )
+    return(x);
+  
+  if( is.pedlist(x) ) {
+    # convert it
+    tmpdf = x;
+    remList <- c();
+    for( i in 1:length(x) ) {
+      if( is.list(x[[i]]) ){
+        remList <- c(remList, i); # to be removed later...
+        tmpdf[[length(tmpdf)+1]] <- x[[i]][[1]];
+        tmpdf[[length(tmpdf)+1]] <- x[[i]][[2]];
+        name1 <- paste( names(x)[i], ".a", sep="" );
+        name2 <- paste( names(x)[i], ".b", sep="" );
+        jj <- length(tmpdf);
+        names(tmpdf)[(jj-1):jj] <- c(name1,name2);
+      }
+    }
+    df <- data.frame( tmpdf[-remList] );
+    class(df) <- c("ped", "data.frame");
+    return( df )
+  }
+  
+  if( is.data.frame(x) ) {
+    # The we just need to ensure the proper ordering...
+    
+    # ensure proper ordering
+    idpedCol <- x[idped];
+    idsubCol <- x[idsub];
+    idfathCol <- x[idfath];
+    idmothCol <- x[idmoth];
+    idsexCol <- x[sex];
+    idAffectionCol <- x[affection];
+    df <- dfr.r( x, c(idped,idsub,idfath,idmoth,sex,affection) );
+    df <- cbind( idpedCol, idsubCol, idfathCol, idmothCol,
+                 idsexCol, idAffectionCol, df );
+    names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","affection");
+    class(df) <- c("ped", "data.frame" );
+    return( df );
+  }
+  stop( "parameter 'x' must be of class 'ped', 'pedlist', or 'data.frame'." );
+}
+
+rem.dot.a <- function( strVec ){
+  for( i in 1:length(strVec) ){
+    dotloc <- strlen(strVec[i])-1;
+    if( substring( strVec[i], dotloc, dotloc )!="." ) #@$%!!!
+      stop( "write.ped: malformed header" );
+    strVec[i] <- substring( strVec[i], 1, strlen(strVec[i])-2 ); #@$%!!!
+    
+    #if( substring( strVec[i], dotloc, dotloc )=="." ) #@$%!!!
+    #  strVec[i] <- substring( strVec[i], 1, strlen(strVec[i])-2 ); #@$%!!!
+  }
+  return( strVec );
+}
+
+####################################################################
+# write.ped(...)  <EXTERNAL>                                       #
+# Writes a pedigree file out from the proper data format.          #
+# PARAM file  string or connection for file output                 #
+####################################################################
+write.ped <- function( file, ped ) {
+  # assuming its in a dataframe format...
+  # also assuming that "marker.a" and "marker.b" are next to each
+  #  other in the data frame...
+  
+  if( is.character(file) ){
+    file <- str.file.extension(file,".ped");
+  }
+
+  if( is.pedlist(ped) )
+    ped <- as.ped(ped); # convert to 'ped' instead of 'pedlist'
+  
+  if( !is.ped(ped) )
+    stop( "Can only write objects of class 'ped'.  See as.ped(...)" );
+  
+  #markerNames <- unique( rem.dot.a( names()[7:length(
+  header <- unique( rem.dot.a( names(ped)[7:length(ped)] ) );
+  
+  # and dump it to file!
+  write.badheader( file, ped, header );
+}
+
+as.pedlist <- function( x,
+                        idped="idped", idsub="idsub", idfath="idfath",
+                        idmoth="idmoth", sex="sex", affection="affection" ) {
+  if( is.pedlist(x) )
+    return(x);
+
+  if( is.data.frame(x) )
+    x <- as.ped( x, idped, idsub, idfath, idmoth, sex, affection );
+
+  if( !is.ped(x) )
+    stop( "'x' must be of class 'ped' or 'data.frame'." );
+
+  header <- unique( rem.dot.a( names(x)[-c(1:6)] ) );
+  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+
+  # keep each of the markers the same, but each marker will be a
+  #  list of 'a' and 'b' for the two.
+  pedlist <- list();
+  for( i in 1:length(firstNames) )
+    pedlist[[i]] <- x[[i]];
+  names( pedlist ) <- firstNames;
+  
+  ENTRYPOINT <- length(firstNames)+1;
+  for( i in 1:length(header) ) {
+    idx1=ENTRYPOINT+(i-1)*2;
+    idx2=idx1+1;
+    newMarker <- list( a=x[[idx1]], b=x[[idx2]] );
+    pedlist[[length(pedlist)+1]] <- newMarker;
+    names(pedlist)[length(pedlist)] <- header[i];
+  }
+  class(pedlist) <- c("pedlist","list");
+  return(pedlist);
+  
+}
+                       
