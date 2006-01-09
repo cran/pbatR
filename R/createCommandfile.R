@@ -11,6 +11,14 @@ PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
 ## Gets the 'pbatdata.txt' file, from the internet.                 #
 #####################################################################
 getPbatdata <- function() {
+  ## Give the user a chance to say yes or no:
+  msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
+                  PBATDATAURL,
+                  "'? This file is needed.", sep="");
+  if( "yes" != tclvalue(tkmessageBox(title="pbatdata.txt",message=msgStr,icon="question",type="yesno")) )
+    return();
+
+  ## Carry on with downloading
   pbatpath <- str.getpath(pbat.get());
   zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );
   if( pbatpath=="" ) zipfile <- "./pbatdata.zip";
@@ -324,8 +332,7 @@ pbat.create.commandfile <- function(
                     " working directory '", getwd(),
                     "', or in the pbat directory '", pbatdatafile, "'",
                     ", or anywhere in your current path,",
-                    " and it could not be downloaded online (this often gets corrupted for reasons",
-                    " the author does not understand). ",
+                    " and it could not be downloaded online. ",
                     " Please see",
                     " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
                     " for more details.", sep="" ) );
@@ -383,6 +390,29 @@ pbat.create.commandfile <- function(
   errorIfAnyMatch( censor, time, "censor", "time" );
   errorIfAnyMatch( censor, phenos, "censor", "phenos" );
   errorIfAnyMatch( time, phenos, "time", "phenos" );
+
+  ## Enforce haplotype mode for multiprocessing
+  if( pbat.getNumProcesses() > 1 && is.null(haplos) ) {
+    haplos <- list();
+    if( is.null(snps) || snps[1]=="" ) {
+      # simple hack - we need to insert the names into the haplotypes...
+      # - it's really not pretty but it solves our problem so simply
+      #   now that ew have the addition of multiple processing built
+      #   in to pbat.
+      # - on a second note, it's really the only way to be able to fix
+      #   this on such a low level to guarantee that the command-line
+      #   stuff will also work without a massive changes?
+      junk <- read.ped( pedfile, lowercase=FALSE ); ## that lowercase...
+      allSnps <- names( as.pedlist( junk ) );
+      haplos[1] <- allSnps[7:length(allSnps)];
+    }else{
+      haplos[1] <- snps;
+    }
+    snps <- "";
+    sub.haplos <- TRUE;
+    length.haplos <- 1;
+    adj.snps <- TRUE;
+  }  
 
   # Verification of the haplos structure
   if( !is.null(haplos) && !is.list(haplos) )

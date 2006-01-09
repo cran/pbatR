@@ -2,7 +2,7 @@
 # Thomas Hoffmann                                                  #
 # CREATED:     06/07/2005                                          #
 # RE-CREATED:  06/20/2005                                          #
-# MODIFIED:    06/29/2005                                          #
+# MODIFIED:    01/08/2006                                          #
 #                                                                  #
 # DESCRIPTION: Methods for setting and getting the pbat binary     #
 #    executable filename, and methods for reading/writing          #
@@ -92,6 +92,46 @@ pbat.set <- function( executableStr="", CLEAR=FALSE ) {
   cat( "\n", file=file );
 }  
 
+####################################################################
+# pbat.getNumProcesses()                                           #
+# DESCRIPTION: Multiple processing addition - gets the number of   #
+#  processes to spawn.  NOTE: retained within sessions.            #
+####################################################################
+pbat.getNumProcesses <- function() {
+  filename <- paste( pbat.get.fname(), "2", sep="" );
+  if( file.exists(filename)==FALSE )
+    return( 1 ); ## default
+
+  file <- file( filename, "r" );
+  on.exit( close(file) );
+
+  tmp <- readLines(file, 1, TRUE);
+  if( tmp=="" ) tmp=1;
+  return( as.integer(tmp) );  
+}
+
+####################################################################
+# pbat.setNumProcesses(...)                                        #
+# DESCRIPTION: Multiple processing addition - sets the number of   #
+#  processes to spawn.  NOTE: retained within sessions.            #
+# RETURNS: 0 if sucessful, 1 otherwise                             #
+####################################################################
+pbat.setNumProcesses <- function( n ) {
+  n <- as.integer(n);
+  if( n < 1 ) {
+    warning("Number of processes must be a positive integer.");
+    return(1);
+  }
+  
+  filename <- paste( pbat.get.fname(), "2", sep="" );
+  file <- file( filename, "w" );
+  on.exit( close(file) );
+
+  cat( n, file=file );
+  cat( "\n", file=file );
+
+  return(0);
+}
 
 ####################################################################
 #                                                                  #

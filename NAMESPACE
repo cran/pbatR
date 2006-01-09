@@ -9,5 +9,9 @@ export(
        
        pbat.get, pbat.set,
 
-       pbat, pbat.last, pbat.last.rawResults
+       pbat, pbat.last, pbat.last.rawResults,
+
+       pbat.getNumProcesses, pbat.setNumProcesses
        )
+
+useDynLib(pbatR)

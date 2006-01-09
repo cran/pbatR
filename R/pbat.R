@@ -139,7 +139,20 @@ pbat.files <- function( pedfile, fbat="gee",
   ##system( paste( pbat.get(), commandfile, "> ", TMPOUT ), intern=TRUE );
   # 10/07/2005 -- output redirection failing!!!
   ##  Instead it should fail when trying to load some of the input in...
-  system( paste( pbat.get(), commandfile ), intern=TRUE );
+
+  ## 01/09/2006 rewrite for multiple processes
+  numProcesses <- pbat.getNumProcesses();
+  if( numProcesses == 1 ) {
+    system( paste( pbat.get(), commandfile ), intern=TRUE );
+  }else{
+    clearCommands();
+    for( i in 1:numProcesses ) {
+      addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
+    }
+    runCommands();
+  }
+
+
   ##if( !file.exists( TMPOUT ) )
   ##  stop( "Either pbat execution was terminated, or pbat executable couldn't be found.  In the latter case, you need the 'pbat' software - see set.pbat() for more details and a web-link to download." ); # this might not work... seems to so far though :)
   ##printFile( TMPOUT ); # So we can see the pbat output... anyway to tell if erred?
@@ -154,7 +167,8 @@ pbat.files <- function( pedfile, fbat="gee",
   # Get the getPbatlog()
   ##print( "loading logfile" );
   ##print( logfile );
-  res <- loadPbatlog( logfile );
+  ##res <- loadPbatlog( logfile );
+  res <- loadPbatlogExtended( logfile ); ## 01/09/2006
 
   pbatObj <- list();
   pbatObj$call <- NULL; # set by upper function

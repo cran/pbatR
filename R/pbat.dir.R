@@ -144,3 +144,20 @@ loadCurrentPbatLog <- function( beforeLogs ) {
   # Load and return that log.
   return( loadPbatlog( strLog ) );
 }
+
+## Added 01/09/2006 - works with multiple processes
+loadPbatlogExtended <- function( log ) {
+  numProcesses <- pbat.getNumProcesses();
+  if( numProcesses == 1 )
+    return( loadPbatlog(log) );
+  
+  res <- loadPbatlog(paste(log,"_1_",numProcesses,sep=""));
+  for( i in 2:numProcesses ){
+    res2 <- loadPbatlog(paste(log,"_",i,"_",numProcesses,sep=""));
+    res$call <- list(res$call,res2$call);
+    res$data <- rbind( res$data, res2$data );
+  }
+  rownames(res$data) <- 1:nrow(res$data);
+
+  return(res);
+}

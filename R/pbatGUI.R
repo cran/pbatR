@@ -1380,27 +1380,27 @@ pbatGUI.mainForm <- function() {
   }
 
   {
-    # Frame 3 - all other options
+    ## Frame 3 - all other options
     frame.misc <- tkframe( globs$form, relief="groove", borderwidth=2 );
     tkgrid( frame.misc );
     tkgrid.configure( frame.misc, sticky="news" );
     
-    ;# - phenotypes
+    ## - phenotypes
     but.phenotypes <- tkbutton( frame.misc, text="Phenotypes / Censor ... ", command=pbatGUI.phenotypes );
     tkgrid( but.phenotypes );
     tkgrid.configure( frame.misc, sticky="we" );
     
-    ;# - predictors
+    ## - predictors
     but.predictors <- tkbutton( frame.misc, text="Predictors ...", command=pbatGUI.predictors );
     tkgrid( but.predictors );
     tkgrid.configure( but.predictors, sticky="we" );
     
-    ;# - snps / blocks
+    ## - snps / blocks
     but.snps <- tkbutton( frame.misc, text="SNPS / Blocks ...", command=pbatGUI.snps );
     tkgrid( but.snps );
     tkgrid.configure( but.snps, sticky="we" );
     
-    ;# - group
+    ## - group
     but.group <- tkbutton( frame.misc, text="Group ...", command=pbatGUI.group );
     globs$tclVar.group <- tclVar();
     globs$te.group <- tkentry( frame.misc, width=ENTRYWIDTH, textvariable=globs$tclVar.group );
@@ -1415,7 +1415,21 @@ pbatGUI.mainForm <- function() {
   }
 
   {
-    # Frame 4 - processing
+    ## Frame 3.5 - number of processes
+    frame.np <- tkframe( globs$form, relief="groove", borderwidth=2 );
+    tkgrid( frame.np );
+    tkgrid.configure( frame.np, sticky="news" );
+    
+    globs$tclVar.pbatNP <- tclVar( pbat.getNumProcesses() );
+    globs$te.pbatNP <- tkentry( frame.np, width=ENTRYWIDTH, textvariable=globs$tclVar.pbatNP );
+    ##tkconfigure( globs$te.pbatNP, state="readonly" );
+    lbl.pbatNP <- tklabel( frame.np, text="Number of Processes:" )
+    tkgrid( lbl.pbatNP, globs$te.pbatNP );
+    tkgrid.configure( lbl.pbatNP, sticky="ew" );
+  }
+  
+  {
+    ## Frame 4 - processing
     frame.process <- tkframe( globs$form, relief="groove", borderwidth=3 );
     tkgrid( frame.process );
     tkgrid.configure( frame.process, sticky="news" );
@@ -1425,6 +1439,17 @@ pbatGUI.mainForm <- function() {
     ;#                                                                  #
     ;####################################################################
     onProcess <- function() {
+      ## Set the number of processes (01/08/2006):
+      globs <- getPbatGUI( "globs" );
+      if( 0 != pbat.setNumProcesses( tclvalue(globs$tclVar.pbatNP) ) ) {
+        tkmessageBox( title="ERROR",
+                      message="Number of processes must be a positive integer.",
+                      icon="error", type="ok" );
+        return(FALSE);
+      }
+        
+      ##
+      
       # ensure the data was actually loaded in!
       if( !pbatGUI.ensureDataLoaded() ) return( FALSE );
       
