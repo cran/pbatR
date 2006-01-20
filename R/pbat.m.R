@@ -1,7 +1,7 @@
 ####################################################################
 # Thomas Hoffmann                                                  #
 # CREATED:     06/??/2005                                          #
-# MODIFIED:    06/??/2005                                          #
+# MODIFIED:    01/18/2006                                          #
 # DESCRIPTION: The new and improved interface to pbat!             #
 ####################################################################
 
@@ -194,7 +194,8 @@ pbat.m <- function(
 
   # now check the order of each of each by spliting each pred on '^'
   preds.order <- "";
-  if( length(preds) > 1 ) {
+  ##if( length(preds) > 1 ) {
+  if( length(preds)>=1 && preds[1]!="" ) { ## 01/18/2006 bugfix
     preds.order <- rep(1,length(preds)); # PASSING - order 1 unless changed
     for( i in 1:length(preds) ) {
       tmp <- strsplitFix( preds[i], "^" );

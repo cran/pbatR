@@ -6,7 +6,7 @@
   Gives the ability to get/set the number of processes of pbat to
   spawn. This is useful for those who have systems with multiple
   processors.
-  This value is retained within the realms of a particular user.
+  This value is retained between sessions for each user.
 }
 \usage{
 pbat.setNumProcesses(n)

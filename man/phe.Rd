@@ -19,7 +19,7 @@ write.phe( file, phe )
 \arguments{
   \item{df}{Dataframe with the data}
   \item{pid}{String for the column header for 'pid' - pedigree ID.}
-  \item{id}{String for the column header for 'id' - ID.}
+  \item{id}{String for the column header for 'id' - subject ID.}
 
   \item{obj}{any object}
 
@@ -37,6 +37,37 @@ write.phe( file, phe )
 
   \item{file}{string representing filename, or a connection for file output}
   \item{phe}{An object of class 'phe' (see \code{\link{as.phe}}).}
+}
+\note{
+  \bold{'read.phe' mild warning}: This function \emph{might change
+    the names of headers}, so they may not correspond to what pbat is
+  looking for if you call any of 
+  the pbat*files() commands (\emph{even} if lowercase=FALSE, as some
+  symbols might be modified by R naming
+  conventions).
+
+  \bold{'read.phe' mild warning solution}: For example, instead of using
+  pbat.logrank.files(...), just use the suggested pbat.m(...) or
+  pbat.obj(..) after loading in the '.phe' and '.ped' files.
+}
+\details{
+  When reading in a file on disk using \code{read.ped}, a `.phe' file
+  should have the following format (taken from the PBAT web-page). 
+  The first line contains 
+  the names of the covariates and phenotypes and the subsequent lines
+  contain the pedigree id, the id of the subject, followed by the values
+  of the covariates and phenotypes for that subject.  Here missing
+  values must be indicate with a `.' or `-', unlike the pedigree file.
+  Examples of this type of file can be found on the PBAT webpage.
+  
+  Once the dataset is read in, missing values are converted into the
+  usual R format of NA (see NA in the help files).
+
+  When using \code{as.phe}, missing values should be in the native R
+  format.
+  The \code{write.ped} function will convert back into the missing
+  format necessary for PBAT.
+
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}

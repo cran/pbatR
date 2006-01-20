@@ -110,16 +110,22 @@ myPed  # Note it's the same as before!
 myPed <- as.ped( myPedlist )       # Easy conversion back
 myPedlist <- as.pedlist( myPed )   #  and forth between formats.
 }
-\details{ \bold{'read.phe' mild warning}: This function \emph{might change
-    the names of headers}, so they may not correspond to what pbat is
-  looking for if you call any of 
-  the pbat*files() commands (\emph{even} if lowercase=FALSE, as some
-  symbols might be modified by R naming
-  conventions).
+\details{
+  When reading in a file on disk using \code{read.ped}, a `.ped' file should
+  have the following format (taken from the PBAT web-page).
+  The first line of the PBAT pedigree file contains the names of the
+  markers.
+  Each subsequent line stands for one individual/subject, starting with
+  the pedigree id, followed by the individual/subject id, the id of the
+  father, the id of the mother, the individual's sex and affection
+  status. After this information, for each marker, both marker alleles
+  are listed. The order of the markers has to correspond to the order of
+  the marker names in the first line of the file. Missing values here
+  must be encoded with a `0', unlike the phenotype file.
+  Examples of this type of file can be found on the PBAT webpage.
 
-  \bold{'read.phe' mild warning solution}: For example, instead of using
-  pbat.logrank.files(...), just use the suggested pbat.m(...) or
-  pbat.obj(..) after loading in the '.phe' and '.ped' files.
+  The usage of \code{as.ped} and \code{as.pedlist} should also follow
+  the same missingness convention.
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}

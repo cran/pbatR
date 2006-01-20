@@ -23,7 +23,7 @@
 
   \code{pbat.last.rawResults} prints out the raw text file of the
   output (particularly useful if the output of pbat cannot be parsed
-  properly).
+  properly, although all of this should have been fixed now).
 
   
   \code{pbat.m} runs pbat according to an expression, from \code{phe} class
@@ -397,14 +397,15 @@ pbat.create.commandfile( pedfile, phefile="",
   details.
 }
 \details{
-  These commands require 'pbatdata.txt' to be in the working directory;
+  These commands require `pbatdata.txt' to be in the working directory;
   if not found, the program will attempt to (1) copy the file from the
-  directory where pbat is or (2) download it from the internet.
+  directory where pbat is, (2) copy it from anywhere in the path, or (3)
+  download it from the internet.
 
   These commands will also generate a lot of output files in the current
   working directory when interfacing with pbat.  These files will be
   time-stamped so concurrent analysis in the same directory can be run.
-  Race condition: if two logrank analysis finish at \emph{exactly the
+  \emph{Race condition}: if two logrank analysis finish at \emph{exactly the
     same time}, then the plots for one might be lost and/or get linked
   to the wrong analysis.  This should be a rather rare occurence, and is
   a result of pbat always sending this output to only one filename.
@@ -422,7 +423,7 @@ pbat.create.commandfile( pedfile, phefile="",
 # load in the data
 # Here we assume that:
 #  data.phe contains 'preds1', 'preds2', 'preds3', 'time',
-#                     'censor', 'phenos1'
+#                     'censor', 'phenos1', ... 'phenos4'
 #  data.ped contains 'snp1', 'snp2', 'snp3',
 #                     'block1snp1','block1snp2',
 #                     'block2snp1','block2snp2'
@@ -437,8 +438,11 @@ res <- pbat.m( ALL ~ NONE, phe, ped, fbat="pc", ... )
 summary( res )
 res  # equivalent to print(res)
 
-# basic model, does all snps (if none specified)
+# basic model with one phenotype, does all snps (if none specified)
 pbat.m( phenos1 ~ preds1, phe, ped, fbat="gee" )
+
+# same model, but with more phenotypes
+pbat.m( phenos1 + phenos2 + phenos3 ~ preds1, phe, ped, fbat="gee" )
 
 # does all snps, the mi() tells it should be a marker interaction
 pbat.m( phenos1 ~ mi(preds1), phe, ped, fbat="gee" )
@@ -452,7 +456,7 @@ plot( res )
 #  '|'), and stratified by group (presence of censor auto-indicates
 #  log-rank analysis).  Note that the group is at the end of the
 #  expression, and _must_ be at the end of the expression
-res <- pbat.m( time & censor ~ 1 * preds1^3 + preds2 | snp1 | snp2 |
+res <- pbat.m( time & censor ~ preds1^3 + preds2 | snp1 | snp2 |
          snp3 / group, temp )
 plot( res )
 

@@ -178,8 +178,10 @@ pbatGUI.errorMessage <- function( message ) {
 #                                                                  #
 ####################################################################
 pbatGUI.populateList <- function( lst, items ) {
-  for( i in 1:length(items) )
-    tkinsert( lst, "end", items[i] );
+  if( length(items) > 0 ) { ## semi-bug fix 01/20/2006
+    for( i in 1:length(items) )
+      tkinsert( lst, "end", items[i] );
+  }
 }
 pbatGUI.tkClearText <- function( obj ) {
   tkdelete( obj, 0, 9999999 );
@@ -206,7 +208,7 @@ pbatGUI.phenotypesForm <- function(){
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   tkfocus(form);
-  tkwm.title( form, "Time / Censor" );
+  tkwm.title( form, "P2BAT - Phenotypes" );
 
   # get the possible/impossible arrays of phenos
   allPhenos <- names( globs$phe[-c(1,2)] );
@@ -289,7 +291,7 @@ pbatGUI.logrankForm <- function(){
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   tkfocus(form);
-  tkwm.title( form, "Time / Censor" );
+  tkwm.title( form, "P2BAT - Time / Censor" );
 
   # get the possible/impossible arrays of phenos
   allPhenos <- names( globs$phe[-c(1,2)] );
@@ -418,7 +420,7 @@ pbatGUI.predictorsForm <- function(){
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   #tkfocus(form);
-  tkwm.title( form, "Predictors" );
+  tkwm.title( form, "P2BAT - Predictors" );
 
   # get the possible/impossible arrays of phenos
   allPhenos <- names( globs$phe[-c(1,2)] );
@@ -537,7 +539,14 @@ pbatGUI.predictorsForm <- function(){
       return;
     idx <- which( selPheno==allPhenos );
 
-    globs$mi[idx] <- !globs$mi[idx];
+    ## 01/20/2006 forbidden pbat command fix
+    if( tclvalue(globs$rbVal.pbat)=="logrank" ) {
+      ## Error message - not possible
+      globs$mi[idx] <- FALSE;
+      tkmessageBox( title="Error", message="Marker interaction not available for time-to-onset data.", type="ok" );
+    }else{
+      globs$mi[idx] <- !globs$mi[idx];
+    }
     setPbatGUI( "globs", globs );
 
     ## repopulate list...
@@ -641,12 +650,11 @@ pbatGUI.snpsForm <- function() {
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   tkfocus(form);
-  tkwm.title( form, "Phenotypes" );
+  tkwm.title( form, "P2BAT - SNPs / Blocks" );
 
   # get the names of possible snps
   allSnps <- names( as.pedlist( globs$ped ) ); # horribly inefficient
   allSnps <- allSnps[7:length(allSnps)];
-  ##print( allSnps );
 
   # Grid the headers
   tkgrid( tklabel( form, text="Choose SNPs:" ),
@@ -685,7 +693,7 @@ pbatGUI.snpsForm <- function() {
     if( sum(newEntry==globs$blocks) > 0 ) {
       ##print( "Item is already in the list!" );
     }else {
-      globs$blocks = c( globs$blocks, newEntry );
+      globs$blocks <- c( globs$blocks, newEntry );
       tkinsert( lst.block, "end", newEntry );
       
       # set the global variables
@@ -705,7 +713,7 @@ pbatGUI.snpsForm <- function() {
       if( sum(newEntry==globs$blocks) > 0 ) {
         ##print( "Item is already in the list!" );
       }else {
-        globs$blocks = c( globs$blocks, newEntry );
+        globs$blocks <- c( globs$blocks, newEntry );
         tkinsert( lst.block, "end", newEntry );
         
         ;# set the global variables
@@ -721,7 +729,7 @@ pbatGUI.snpsForm <- function() {
     if( length(snpIndex)<1 ) return;
     
     tkdelete( lst.block, snpIndex );
-    globs$blocks = globs$blocks[-(snpIndex+1)];
+    globs$blocks <- globs$blocks[-(snpIndex+1)];
     
     ;# set the global variables
     setPbatGUI( "globs", globs );
@@ -768,7 +776,7 @@ pbatGUI.groupForm <- function() {
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   tkfocus(form);
-  tkwm.title( form, "Group" );
+  tkwm.title( form, "P2BAT - Group" );
 
   # get the possible/impossible arrays of phenos
   allPhenos <- names( globs$phe[-c(1,2)] );
@@ -873,7 +881,7 @@ pbatGUI.optionsForm <- function() {
   tkwm.deiconify(form);
   tkgrab.set(form); # make it modal
   tkfocus(form);
-  tkwm.title( form, "Time / Censor" );
+  tkwm.title( form, "P2BAT - Options" );
 
   # helper gui functions
   msg <- function( message, title="Information" ) {
@@ -1309,8 +1317,10 @@ pbatGUI.write <- function() {
 
   if( !is.null(globs$res) ) {
     # get a filename to write out
-    outfile <- tclvalue(tkgetSaveFile(filetypes="{{Text File} {.txt}}"));
+    outfile <- tclvalue(tkgetSaveFile(filetypes="{{Comma Separated Values} {.csv}} {{Text File} {.txt}}"));
     if( !is.null(outfile) && outfile!="" ) {
+      if( strfindf(outfile,'.')==-1 )
+        outfile <- paste( outfile, ".csv", sep="" );
       write.pbat( globs$res, outfile );
       return(TRUE);
     }
@@ -1327,7 +1337,7 @@ pbatGUI.mainForm <- function() {
   globs$form <- tktoplevel();
   tkwm.deiconify( globs$form );
   tkfocus( globs$form );
-  tkwm.title( globs$form, "PBAT GUI" );
+  tkwm.title( globs$form, "P2BAT" );
 
   # Create all of the buttons and objects on the form
 

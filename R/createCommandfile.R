@@ -1,8 +1,9 @@
 #####################################################################
 ## Thomas Hoffmann                                                  #
 ## EXPORTED:    07/08/2005                                          #
+## MODIFIED:    01/18/2006                                          #
 ## DESCRIPTION: Creating the command file to pass to pbat.          #
-####################################################################
+#####################################################################
 
 PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
 
@@ -377,7 +378,8 @@ pbat.create.commandfile <- function(
   
   errorVecNotContained( "phenos", phenos, posPhenos );
   errorVecNotContained( "time", time, posPhenos, AT.MOST.SINGLETON=TRUE );
-  errorVecNotContained( "inters", inters, phenos );
+  ##errorVecNotContained( "inters", inters, phenos );
+  errorVecNotContained( "inters", inters, preds );  ## 01/18/2006
   errorVecNotContained( "groups", groups, posPhenos );
   
   errorIfAnyMatch( groups.var, phenos, "groups", "phenos" );
@@ -392,7 +394,9 @@ pbat.create.commandfile <- function(
   errorIfAnyMatch( time, phenos, "time", "phenos" );
 
   ## Enforce haplotype mode for multiprocessing
-  if( pbat.getNumProcesses() > 1 && is.null(haplos) ) {
+  ## 01/18/2006 rewrite - this should _always_ be done!
+  ##if( pbat.getNumProcesses() > 1 && is.null(haplos) ) {
+  if( is.null(haplos) ) {
     haplos <- list();
     if( is.null(snps) || snps[1]=="" ) {
       # simple hack - we need to insert the names into the haplotypes...
@@ -404,9 +408,9 @@ pbat.create.commandfile <- function(
       #   stuff will also work without a massive changes?
       junk <- read.ped( pedfile, lowercase=FALSE ); ## that lowercase...
       allSnps <- names( as.pedlist( junk ) );
-      haplos[1] <- allSnps[7:length(allSnps)];
+      haplos[[1]] <- allSnps[7:length(allSnps)];  ## 01/18/06 fix - list
     }else{
-      haplos[1] <- snps;
+      haplos[[1]] <- snps;
     }
     snps <- "";
     sub.haplos <- TRUE;
@@ -471,17 +475,32 @@ pbat.create.commandfile <- function(
   writeCommand( "phenos", phenos, end=TRUE );
 
   if( preds!="" ) {                   # (6)
-    if( length(preds)!=length(preds.order) ) {
-      warning("'preds' and 'preds.order' must be of the same length. This information will be ignored.");
-    }else{
-      writeCommand( "preds", pasteVector(c(preds,preds.order,"end")) );
+    ##if( length(preds)!=length(preds.order) ) {
+    ##  warning("'preds' and 'preds.order' must be of the same length. This information will be ignored.");
+    ##}else{
+    ##  writeCommand( "preds", pasteVector(c(preds,preds.order,"end")) );
+    ##}
+
+    ## 01/18/2006 bugfix - alteration in the pbat syntax?
+    if( (length(preds)!=length(preds.order)) || preds.order[1]=="" ) {
+      warning("'preds' and 'preds.order' are not of the same length; all order's will be forced to 1.'");
+      preds.order = rep(1,length(preds));
     }
+    writeCommand( "preds", pasteVector( c( preds, "end", preds.order, "end" ) ) );
   }
+
+  ## 01/18/2006 bugfix - didn't have end
+  writeCommand( "inters", inters, end=TRUE );      # (7)
   
-  writeCommand( "inters", inters );      # (7)
-  
-  if( groups.var!="" )                    # (8)
-    writeCommand( groups, c(groups.var, "end", groups, "end") );
+  if( groups.var!="" ){                    # (8)
+    if( is.null(groups) || groups[1]=="" ) {
+      ## Then we have to extract the groups values from the file!
+      junk.phe <- read.phe( phefile );
+      groups <- unique( junk.phe[[groups.var]] );
+    }
+    
+    writeCommand( "groups", c(groups.var, "end", groups, "end") );
+  }
 
   writeCommandStrMatch1( "fbat", fbat, c("gee","pc","logrank") );
 

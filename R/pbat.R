@@ -45,28 +45,81 @@ print.pbat <- function( x, ... ) {
 }
 
 write.pbat <- function(x, filename) {
+  if( str.file.extension(filename,extension='csv')==filename ) {
+    write.pbat.csv(x, filename);
+    return(invisible());
+  }
+
+  
+  ## updates 01/20/2006
   f <- file( filename, "w" );
   #cat( paste("PBAT ",as.character(x$fbat),"\n",sep=""), file=f );
   if( !is.null(x$call) ) {
-    #cat( "FORMULA\n", file=f );
+    cat( "** FORMULA **\n", file=f );
     write( x$call, file=f );
-    #cat( "\n\n", file=f );
+    cat( "\n\n", file=f );
   }
   if( !is.null(x$pbat.call) ) {
-    cat( "PBAT BATCH FILE:\n", file=f );
+    cat( "** PBAT BATCH FILE: **\n", file=f );
     write( x$pbat.call, file=f );
     cat( "\n\n", file=f );
   }
-  if( !is.null(x$pbat.results) ) {
-    cat( "PBAT RESULTS:\n", file=f );
-    write( x$pbat.results, file=f );
+  if( !is.null(x$results) ) {
+    cat( "** PBAT RESULTS **:\n", file=f );
+    write.table( x$results, file=f, sep=" & ", row.names=FALSE, quote=FALSE );  ## sep consistent with Christoph
     cat( "\n\n", file=f );
   }
-  if( !is.null(x$rcode) ) {
-    cat( "R SOURCE CODE:\n", file=f );
-    write( x$rcode );
+
+  if( !is.null(x$rcode) && x$rcode!="") {
+    cat( "** R SOURCE CODE (all that follows): **\n", file=f );
+    close(f);
+    ##write( x$rcode, file=f );
+    ##cat( "\n\n", file=f );
+    file.append( filename, x$rcode );
+  }else{
+    close(f);
+  }
+  return(invisible());
+}
+
+write.pbat.csv <- function(x, filename) {
+  filename <- str.file.extension(filename,extension='csv');
+  
+  quotify <- function( strList ) {
+    for( i in 1:length(strList) )
+      strList[i] <- paste("\"",strList[i],"\"");
+    return( strList );
+  }
+  
+  ## updates 01/20/2006
+  f <- file( filename, "w" );
+  #cat( paste("PBAT ",as.character(x$fbat),"\n",sep=""), file=f );
+  if( !is.null(x$call) ) {
+    cat( "** FORMULA **\n", file=f );
+    write( x$call, file=f ); 
+    cat( "\n\n", file=f ); ## all fine
+  }
+  if( !is.null(x$pbat.call) ) {
+    cat( "** PBAT BATCH FILE: **\n", file=f );
+    write( quotify(x$pbat.call), file=f );
     cat( "\n\n", file=f );
   }
+  if( !is.null(x$results) ) {
+    cat( "** PBAT RESULTS **:\n", file=f );
+    write.table( x$results, file=f, sep=",", row.names=FALSE, quote=FALSE );
+    cat( "\n\n", file=f );
+  }
+
+  if( !is.null(x$rcode) && x$rcode!="") {## major changes here
+    cat( "** R SOURCE CODE (all that follows; in quotes for csv format): **\n", file=f );
+    close(f);
+    ##printFile2FileQuotesAppend( filename, x$rcode );
+    printFile2FileQuotesAppend( x$rcode, filename );  ## syntax backwards!
+  }else{
+    close(f);
+  }
+  
+  return(invisible());
 }
 
 
@@ -141,13 +194,24 @@ pbat.files <- function( pedfile, fbat="gee",
   ##  Instead it should fail when trying to load some of the input in...
 
   ## 01/09/2006 rewrite for multiple processes
+  ## 01/18/2006 fix to allow spaces in windows
   numProcesses <- pbat.getNumProcesses();
   if( numProcesses == 1 ) {
-    system( paste( pbat.get(), commandfile ), intern=TRUE );
+    if( isWindows() ){
+      system( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ),
+              intern=TRUE );
+    }else{
+      system( paste( pbat.get(), commandfile ), intern=TRUE );
+    }
   }else{
     clearCommands();
     for( i in 1:numProcesses ) {
-      addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
+      if( isWindows() ) {
+        addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
+                           " ", i, " ", numProcesses, sep="" ) );
+      }else{
+        addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
+      }
     }
     runCommands();
   }
@@ -238,13 +302,35 @@ pbat.logrank.replot <- function( save="", load="" ) {
 ####################################################################
 printFile <- function( filename ) {
   file = file(filename, "rt", blocking=FALSE );
-  on.exit(close(file));
+  ##on.exit(close(file));
   ##print( readLines(file) ); ## Alteration 11/15/2005
   lines <- readLines(file);
   if( length(lines)>=1 ) {
     for( i in 1:length(lines) )
       cat( lines[i], "\n" );
   }
+  close(file);
+}
+
+####################################################################
+# printFile(...)                                                   #
+# DESCRIPTION: Like running cat <filename> from unix prompt,       #
+#   but from within R.                                             #
+# PARAM filename  Name of the file to print out.                   #
+####################################################################
+printFile2FileQuotesAppend <- function( filename, filenameAppend ) {
+  file = file(filename, "rt", blocking=FALSE );
+  fileA = file(filenameAppend, "at", blocking=FALSE );
+  ##on.exit(close(file));
+  ##on.exit(close(fileA));
+  ##print( readLines(file) ); ## Alteration 11/15/2005
+  lines <- readLines(file);
+  if( length(lines)>=1 ) {
+    for( i in 1:length(lines) )
+      cat( "\"", lines[i], "\"", "\n", sep="", file=fileA );
+  }
+  close(file); ## should fix
+  close(fileA);
 }
 
 ####################################################################

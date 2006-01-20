@@ -11,7 +11,9 @@ export(
 
        pbat, pbat.last, pbat.last.rawResults,
 
-       pbat.getNumProcesses, pbat.setNumProcesses
+       pbat.getNumProcesses, pbat.setNumProcesses,
+
+       write.pbat, write.pbat.csv
        )
 
 useDynLib(pbatR)

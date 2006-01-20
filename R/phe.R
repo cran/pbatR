@@ -85,5 +85,6 @@ write.phe <- function( file, phe ) {
     file <- str.file.extension(file,".phe");
   }
 
-  write.badheader( file, phe, names(phe)[-c(1,2)] );
+  ##write.badheader( file, phe, names(phe)[-c(1,2)] );
+  write.badheader( file, phe, names(phe)[-c(1,2)], na="." ); ## 01/19/2006 bugfix
 }

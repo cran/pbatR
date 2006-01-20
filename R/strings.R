@@ -1,7 +1,7 @@
 ####################################################################
 # Thomas Hoffmann                                                  #
 # CREATED:  some time ago                                          #
-# MODIFIED: 06/29/2005                                             #
+# MODIFIED: 01/20/2006      (strReplace)                           #
 ####################################################################
 
 ##################################################
@@ -64,6 +64,32 @@ str.file.extension <- function( s, extension='txt' ){
   }
   return( paste(s,extension,sep="") );
 }
+
+######################################################
+## strReplace(...)                                   #
+## Replaces occurences of one string with another.   #
+## HOWEVER - if it's at the beginning ur the end it  #
+##  will get lost.                                   #
+## PARAM  str   string to replace                    #
+##        find  string to look for                   #
+##        repl  string to replace with               #
+######################################################
+strReplace <- function( str, find, repl )  {
+  strList <- strsplit( str, find )[[1]];
+
+  if( length(strList) <= 1 )
+    return(str);
+  
+  strRet <- strList[1];
+  print( strRet );
+  for( i in 2:length(strList) ){
+    strRet <- paste( strRet, strList[i], sep=repl );
+    print( strRet );
+  }
+
+  return(strRet);
+}
+
 
 #substring( string, start, stop=... )
 #substr( string, start, stop )

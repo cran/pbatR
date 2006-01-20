@@ -64,6 +64,7 @@ pbat.set <- function( executableStr="", CLEAR=FALSE ) {
   if( executableStr=="" && CLEAR==FALSE ) {
     ;# now do the work!
     form <- tktoplevel();
+    tkwm.title( form, "P2BAT - pbat.set()" );
     if( isWindows() ) {
       executableStr <- tclvalue(tkgetOpenFile(filetypes="{{Pbat Executable} {.exe}}"));
     } else{
