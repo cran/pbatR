@@ -1,7 +1,7 @@
 ####################################################################
 # Thomas Hoffmann                                                  #
 # CREATED:  some time ago                                          #
-# MODIFIED: 01/20/2006      (strReplace)                           #
+# MODIFIED: 01/25/2006                                             #
 ####################################################################
 
 ##################################################
@@ -12,8 +12,10 @@
 strlen <- function( s ) { return(nchar(s)) };
 
 strfindf <- function( s, p, start=1 ) {
+  if( strlen(s)<strlen(p) ) return(-1); ## 01/25/2006
   ls <- strlen(s);  lp <- strlen(p);
   if( ls < lp ) return(-1);
+  if( ls-lp+1<start ) return(-1); ## 01/26/2006
   for( i in start:(ls-lp+1) ){
     if( p==substring(s,i,i+lp-1) ) #@$%!!!
       return(i);
@@ -24,6 +26,7 @@ strfindf <- function( s, p, start=1 ) {
 # 10/06/2005
 # find - from behind!
 strfindb <- function( s, p, start=strlen(s)-strlen(p) ) {
+  if( strlen(s)<strlen(p) ) return(-1); ## 01/25/2006
   lp <- strlen(p);
   for( i in seq(start,1,by=-1) ) {
     if( p==substring(s,i,i+lp-1) ) #@$%!!!
@@ -81,10 +84,10 @@ strReplace <- function( str, find, repl )  {
     return(str);
   
   strRet <- strList[1];
-  print( strRet );
+  ##print( strRet );
   for( i in 2:length(strList) ){
     strRet <- paste( strRet, strList[i], sep=repl );
-    print( strRet );
+    ##print( strRet );
   }
 
   return(strRet);

@@ -2,10 +2,10 @@
 \alias{plot.pbat}
 \alias{print.pbat}
 \alias{summary.pbat}
-\title{'pbat' Object Generic Routines}
+\title{`pbat' Object Generic Routines}
 \description{
-  Summary routines for the results of 'pbat', 'pbat.last', pbat.m',
-  'pbat.obj', and 'pbat.files'.
+  Summary routines for the results of `pbat', `pbat.last', `pbat.m',
+  `pbat.obj', and `pbat.files'.
 
   Only a logrank analysis can be plotted.
 }
@@ -17,8 +17,8 @@ summary.pbat(object,...)
 plot.pbat(x,...)
 }
 \arguments{
-  \item{x}{'pbat' object}
-  \item{object}{'pbat' object}
+  \item{x}{`pbat' object (result of pbat.m(...) or pbat().}
+  \item{object}{`pbat' object (result of pbat.m(...) or pbat().}
   \item{...}{Ignored.  Needed for S3 generic method consistency.}
 }
 \references{

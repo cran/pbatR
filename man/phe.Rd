@@ -39,16 +39,16 @@ write.phe( file, phe )
   \item{phe}{An object of class 'phe' (see \code{\link{as.phe}}).}
 }
 \note{
-  \bold{'read.phe' mild warning}: This function \emph{might change
+  \bold{`read.phe' mild warning}: This function \emph{might change
     the names of headers}, so they may not correspond to what pbat is
   looking for if you call any of 
   the pbat*files() commands (\emph{even} if lowercase=FALSE, as some
   symbols might be modified by R naming
   conventions).
 
-  \bold{'read.phe' mild warning solution}: For example, instead of using
+  \bold{`read.phe' mild warning solution}: For example, instead of using
   pbat.logrank.files(...), just use the suggested pbat.m(...) or
-  pbat.obj(..) after loading in the '.phe' and '.ped' files.
+  pbat.obj(..) after loading in the `.phe' and `.ped' files.
 }
 \details{
   When reading in a file on disk using \code{read.ped}, a `.phe' file

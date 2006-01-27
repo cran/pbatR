@@ -37,7 +37,7 @@ pathFindFile <- function( fname ) {
 
   ## Check the rest of the path
   posFnames <- paste( pathGet(), fname, sep="" );
-  print( posFnames );
+  ##print( posFnames );
   for( i in 1:length(posFnames) ) {
     if( file.exists( posFnames[i] ) )
       return( posFnames[i] );

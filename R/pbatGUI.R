@@ -1,4 +1,4 @@
-require( tcltk )
+##require( tcltk ) ## not when I just want to batch it.
 
 ##################################################################
 ## An attempt to allow more than one interface to run at once,  ##
@@ -1449,6 +1449,9 @@ pbatGUI.mainForm <- function() {
     ;#                                                                  #
     ;####################################################################
     onProcess <- function() {
+      ## Clear the results (01/25/2006)
+      pbat.last.clear();
+      
       ## Set the number of processes (01/08/2006):
       globs <- getPbatGUI( "globs" );
       if( 0 != pbat.setNumProcesses( tclvalue(globs$tclVar.pbatNP) ) ) {
@@ -1579,7 +1582,7 @@ pbatGUI.mainForm <- function() {
       if( !is.null(res) )
         plot( res );
     }
-
+    
     onResults <- function() {
       if( !is.null(pbat.last()$results) ) {
         print( pbat.last()$results );
@@ -1622,6 +1625,16 @@ pbat.last <- function() {
   globs <- getPbatGUI( "globs" );
   # and return the structure
   return( globs$res );
+}
+
+####################################################################
+## pbat.last.clear()                                               #
+## Clears out the pbat.last() result.                              #
+####################################################################
+pbat.last.clear <- function() {
+  globs <- getPbatGUI( "globs" );
+  globs$res <- NULL;
+  setPbatGUI( "globs", globs );
 }
 
 ####################################################################

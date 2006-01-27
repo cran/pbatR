@@ -45,8 +45,8 @@ write.ped( file, ped )
     When \code{x} is of class \code{data.frame}, the columns have entries
     that match the string parameters \code{idped,...,censor};
     genetic markers consist of \emph{subsequent} columns
-    formated as follows: e.g. marker 'p5' would need
-    two columns known as 'p5.a' 'p5.b' (or really
+    formated as follows: e.g. marker `p5' would need
+    two columns known as `p5.a' `p5.b' (or really
     just where the characters a and b are different).
     
     When \code{x} is of class \code{list}, the

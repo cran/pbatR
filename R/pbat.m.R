@@ -73,10 +73,13 @@ pbat.m <- function(
 
     # We actually need to reconstruct the formula :(
     # I don't want to deal with infix when the coding is so simple here!
-    # OH HELL YES!!!  I FINALLY STUMBLED UPON AN UNDOCUMENTED SOLUTION!!!
-    #  WHY THE FUCKING HELL THEY COULDN'T HAVE SAID THIS SOMEWHERE...
+    ## Simple solution! W
     formula <- as.character( as.expression( formula ) );
   }
+
+  ##print( "*** FORMULA ***" ); ## debug only
+  ##print( formula );
+  ##print( "*** FORMULA ***" );
 
   ########################################
   # Eliminate all spaces in the formula. #

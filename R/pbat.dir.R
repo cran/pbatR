@@ -52,7 +52,143 @@ getPbatlog <- function( beforeLogs, afterLogs ) {
   return(log);
 } # DEBUGGED
 
-loadPbatlog <- function( log ) {
+strsplitFix2 <- function( x, split ) {
+  if( length(x) > 1 ) stop( "strSplitFix(...) only works on a single string." );
+  if( length(x)==0 || x=="" ) return("");
+  res=unlist( strsplit( x, split, fixed=TRUE ) ); # split, return as vector of strings
+
+  ## slow
+  for( i in 1:length(res) ){
+    ##print( res[i] );
+    if( substring(res[i],1,1)==" " )
+      res[i] <- substring(res[i],2);
+    if( substring(res[i],strlen(res[i]))==" " )
+      res[i] <- substring(res[i],1,strlen(res[i])-1);
+  }
+  return( res[res!=""] ); # eliminate any empty strings!
+}
+
+## This is somewhat slow, but there is no logical reason why a piece of
+##  loadPbatlog.bad won't work (slightly more efficient, but not all that much better).
+## If this comes to be a real problem, then I will rewrite it in C code.
+loadPbatlog <- function( log ){
+  pbatCall <- NULL; pbatData <- NULL;
+
+  ## important to make sure the logfile actually exists - otherwise
+  ##  something went drastically wrong...
+  if( !file.exists(log) )
+    stop( paste("Cannot load the pbat logfile '",log,"'; file does not exist",sep="") );
+  
+  ## The .header & .dat file format has been _dropped_ - I really haven't seen it anymore! so we'll just assume that it has been dropped.
+
+  lines <- readLines( log );
+
+  NUMLINES <- length(lines);
+
+  ## 01/26/2006
+  if( NUMLINES < 1 ) {
+    warning( "Empty pbat output file; safe to ignore if running a smaller analysis with multiple processes." );
+    return( NULL );
+  }
+  
+  ##find the first '&' symbol
+  ## The following code is more robust than it need be, but from previous
+  ##  experience, this output format changes lots b/n versions
+  ##  and is the source of most breaks in the program!
+  and.symbol <- -1;
+  for( i in 1:NUMLINES ){
+    if( !is.null(lines[i]) && lines[i]!="" ) {
+      if( strfindf(lines[i], "&") != -1 ){
+        if( and.symbol == -1 ) and.symbol <- i;
+        break;
+      }
+    }
+  }
+
+  ## if we couldn't find the '&' symbol, we're really screwed
+  ##  That means that there is no data there!
+  if( and.symbol == -1 ) {
+    if( pbat.getNumProcesses() < 2 ) {
+      print( "ERROR: No data could be found in the file. The pbat output is as follows:" );
+      print( lines );
+    }
+    warning( "No output in the logfile - just batch commands. (1) Pbat may have crashed. (2) You may be doing a relatively small analysis, so that some processes had nothing to do (so safe to ignore here)." );
+    return(NULL);  # I'm wondering if we can cut it into so many pieces some don't do anything
+  }
+
+  ## assuming that we found it
+
+  ## extract the call
+  if( and.symbol > 1 )
+    pbatCall <- lines[1:(and.symbol-1)];
+
+  ## check if the first line is a header
+  dataNames <- NULL;
+  ##unlist(strsplit(lines[and.symbol],"&")) );
+  firstLine <- strsplitFix2( lines[and.symbol], "&" );
+  if( firstLine[1] == "Group" ){
+    dataNames <- firstLine;
+    and.symbol <- and.symbol + 1;
+    ##print( dataNames ); ## DEBUG only
+  }
+
+  if( and.symbol>NUMLINES && length(dataNames)>0 ) {
+    ## sometimes we get an empty header! Ouch!!! Why?? Why??? Abolutely horrible design!
+    ##  why the he|| can't all of the output have a bloody label?!?!
+    pbatData <- data.frame( matrix( NA, 1, length(dataNames) ) ); ## It's all we can do.
+    names(pbatData) <- dataNames;
+    ##print( pbatData );
+    return( list( call=pbatCall, data=pbatData ) );
+  }
+
+  ## Now, we know that the output starts at the '&' symbol;
+
+  ## The following mysteriously doesn't work, so we've got to try harder...
+  ## I mean it should, and in fact, it does most of the time...
+  ## Seems to screw up when the line is too long
+  ## What the heck, I don't get it - so do something else that's probably
+  ##  a little slower but will get it done.
+  ##logfile <- file( log, open="r", blocking=FALSE );
+  ##if( and.symbol>1 ) readLines(logfile, and.symbol);
+  ##pbatData <- read.table( logfile, sep="&", header=FALSE, strip.white=TRUE );
+  ##close(logfile);
+
+  for( i in and.symbol:NUMLINES ){
+    nextLine <- strsplitFix2( lines[i], "&" );
+    ##print( nextLine );
+    ##print( length( nextLine ) );
+
+    pbatData <- rbind( pbatData, nextLine );
+  }
+
+  row.names(pbatData) <- 1:nrow(pbatData);
+
+  pbatData <- data.frame( pbatData );
+  if( !is.null(dataNames) ){
+    if( length(dataNames) == ncol(pbatData) ) {
+      names(pbatData) <- dataNames;
+    }else{
+      print( dataNames );
+      warning( "Data Names don't match the data!" );
+    }
+  }
+
+  ##print( pbatData[1,] );
+  ## Lastly, perhaps try to reformat the data into numbers?
+  if( !is.null(pbatData) ){
+    for( i in 1:ncol(pbatData) ){
+      suppressWarnings(
+                       curcol <- as.numeric(as.character(pbatData[,i]))
+                       );
+      if( !is.na(sum(curcol)) )
+        pbatData[,i] <- curcol;
+    }
+  }
+
+  return( list( call=pbatCall, data=pbatData ) );
+}
+
+loadPbatlog.bad <- function( log ) {
   pbatCall <- NULL; pbatData <- NULL;
 
   if( !file.exists(log) )
@@ -86,9 +222,12 @@ loadPbatlog <- function( log ) {
     NUMLINES <- length(tmp);
     close(logfile);
 
+    
+    header <- TRUE; ## 01/25/2006
+    addiLine <- NULL;
     if( NUMLINES>0 ) {
     
-      ;# Now, start reading in the input
+      ## Now, start reading in the input
       
       logfile <- file(log, open="r", blocking=FALSE);
       on.exit(close(logfile));
@@ -102,6 +241,15 @@ loadPbatlog <- function( log ) {
       for( i in 1:NUMLINES ){
         if( substring(line,1,strlen(MARKERSTR))==MARKERSTR ) {
           namesVector <- make.names( unlist(strsplit(line,"&")) );
+          ##print( namesVector );
+          break;
+        }else if( strfindf(line,"&")!=-1 ){
+          ## all added 01/25/2006 for erroneous multiple processes output (i.e. the second one doesn't work at all!)
+          ##print(line); stop(i); ## DEBUG ONLY
+          
+          addiLine <- unlist(strsplit(line,"&"));
+          namesVector <- "BAD"; ## less alteration of code
+          header <- FALSE;
           break;
         }else{
           pbatCall <- c(pbatCall, line);
@@ -110,14 +258,38 @@ loadPbatlog <- function( log ) {
         }
         lastLine=i;
       }
+
+      ##print( "LINE" );
+      ##print( line );
+      ##    line <- readLines( logfile, n=1 );
+      ###    print( line );
+      ##    line <- readLines( logfile, n=1 );
+      ##    print( line );
+      ##    line <- readLines( logfile, n=1 );
+      ##    print( line );
+      ##stop( "what the hell" );
+      
       if( !is.null(namesVector) && lastLine<NUMLINES ) {
+        ##print( "hi" );
         pbatData <- read.table( logfile, header=FALSE, sep="&" );
-        if( length(namesVector) != length(pbatData) ) {
+        ##print( "bye" );
+        ##if( length(namesVector)!=length(pbatData) ) {
+        if( length(namesVector)!=length(pbatData) && header==TRUE ) {
           warning( "Names vector is of improper length! I don't know what to do!" );
-          print( "Names:" );
-          print( namesVector );
+          ##print( "Names:" );
+          ##print( namesVector );
         }else{
-          names(pbatData) <- namesVector;
+          ## 01/25/2006
+          ##names(pbatData) <- namesVector;
+          if( header ) {
+            names(pbatData) <- namesVector;
+          }else{
+            warning( paste("Couldn't load in header for '",log,"' (bug workaround for multiple processes; safe to ignore).") );
+            pbatData <- rbind( addiLine, pbatData );
+            ## strange peculiarity
+            if( pbatData[2,1]==999 )
+              pbatData[2,1] <- -999; ## why does this get lost?
+          }
         }
         ##print( namesVector ); # DEBUG ONLY
         ;#names( pbatData ) <- namesVector;
@@ -152,11 +324,26 @@ loadPbatlogExtended <- function( log ) {
     return( loadPbatlog(log) );
   
   res <- loadPbatlog(paste(log,"_1_",numProcesses,sep=""));
+  ##print( res$call );
+  ##stop("food now" );
   for( i in 2:numProcesses ){
     res2 <- loadPbatlog(paste(log,"_",i,"_",numProcesses,sep=""));
-    res$call <- list(res$call,res2$call);
-    res$data <- rbind( res$data, res2$data );
+    if( !is.null(res2) ) { ## warnings provided elsewhere
+      ## 01/26/2005 update - more than one of the calls isn't informative
+      ##res$call <- list(res$call,res2$call); ## tack them all together
+      if( is.null( res$data ) ) {
+        res$data <- res2$data;
+      }else if( !is.null(res2$data) ) {
+        names( res2$data ) <- names( res$data ); ## fixes problems w/ coersion
+        res$data <- rbind( res$data, res2$data );  ## since error in mult proc
+      }
+    }
   }
+
+  ## Newest 01/26/2006 - get rid of NA's - NA's introduced because of empty column headers
+  ##  in multiple processing mode.
+  res$data <- res$data[!is.na(res$data[,1]),];
+
   rownames(res$data) <- 1:nrow(res$data);
 
   return(res);

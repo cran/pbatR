@@ -31,7 +31,7 @@
   various options.
   
   \code{pbat.obj} runs pbat with a \code{ped} class object (pedigree
-  information), a 'phe' class object (phenotype information), and
+  information), a `phe' class object (phenotype information), and
   various other options.
   
   \code{pbat.files} runs pbat according to a set of filenames and
@@ -43,7 +43,7 @@
   
   Some options are only available for the respective pbat-gee (G),
   pbat-pc (P), pbat-logrank (L).
-  If a parameter is 'R'equired for a specific version, it will be denoted,
+  If a parameter is `R'equired for a specific version, it will be denoted,
   for example, by (G-R).
 }
 \usage{
@@ -107,14 +107,14 @@ pbat.create.commandfile( pedfile, phefile="",
 }
 \arguments{
   \item{formula}{Symbolic expression describing what should be
-    processed.  See 'examples' for more information.}
-  \item{phe}{'phe' object as described in \code{\link{write.phe}}.}
-  \item{ped}{'ped' object as described in \code{\link{write.ped}}.}
+    processed.  See `examples' for more information.}
+  \item{phe}{`phe' object as described in \code{\link{write.phe}}.}
+  \item{ped}{`ped' object as described in \code{\link{write.ped}}.}
 
   \item{file.prefix}{Prefix of the output datafile (phe & ped must match)}
 
   \item{pedfile}{Name of the pedigree file (.ped) in PBAT-format
-    (extension '.ped' is optional).}
+    (extension `.ped' is optional).}
   \item{phefile}{Name of the phenotype file (.phe) in PBAT-format.
     The default assumes the same prefix as that in 'pedfile'.}
 
@@ -359,7 +359,7 @@ pbat.create.commandfile( pedfile, phefile="",
     analysis.  If none are specified, then all are analyzed.  (Note:
     this \emph{must be left empty for logrank analysis}, instead specify
     the time to onset with the time variable. }
-  \item{time}{(L-R) Time to onset variable.  'phenos' cannot be specified
+  \item{time}{(L-R) Time to onset variable.  `phenos' cannot be specified
     when this is used, but it \emph{must be set for logrank}.}
   
   \item{preds}{Vector of strings for the covariates for the test
@@ -390,7 +390,7 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{}{}
 }
 \value{
-  'pbat', 'pbat.last', 'pbat.m', 'pbat.obj', and 'pbat.files'
+  `pbat', `pbat.last', `pbat.m', `pbat.obj', and `pbat.files'
   return an object of class \code{pbat}.  Methods supported by  this include
   \code{plot(...)}, \code{summary(...)}, and \code{print(...)}.  Follow
   the first three links in the 'see also' section of this file for more
@@ -461,7 +461,7 @@ res <- pbat.m( time & censor ~ preds1^3 + preds2 | snp1 | snp2 |
 plot( res )
 
 # haplotype analysis, stratified by group
-pbat.m( time & censor ~ mi(preds1^2) + mi(preds2^3) | block1snp1
+pbat.m( time & censor ~ preds1^2 + preds2^3 | block1snp1
         + block1snp2 | block2snp1 + block2snp2 / group, temp )
 
 # set any of the various options

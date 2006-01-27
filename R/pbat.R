@@ -14,6 +14,8 @@ pbat <- function( x, ... )
   UseMethod( "pbat" );
 
 summary.pbat <- function( object, ... ) {
+  x <- object; ## need for R CMD check
+  
   # print out the pretty call
   if( !is.null(x$call) ) {
     print( "Call:" );
@@ -38,7 +40,7 @@ print.pbat <- function( x, ... ) {
   print( " $call             The formula used." );
   print( " $pbat.call        The batch-file commands sent to pbat." );
   print( " $results          ** The results of pbat execution in a data.frame object. **" );
-  print( " $results.logfile  Filename of the raw results of pbat (may also have extension .hdr & .dat); esp. useful if pbat outputs an unknown format that fails to be read in. Note this is _in the current working directory_." );
+  print( " $results.logfile  Filename of the raw results of pbat (may also have extension .hdr & .dat); esp. useful if pbat outputs an unknown format that fails to be read in (in case this happens in later releases of PBAT). Note this is _in the current working directory_." );
   print( " $rcode            Name of the file containing plots for logrank." );
   print( " $fbat             'pc','gee', or 'logrank'" );
   print( "Type '?pbat' for more details." );
@@ -195,14 +197,23 @@ pbat.files <- function( pedfile, fbat="gee",
 
   ## 01/09/2006 rewrite for multiple processes
   ## 01/18/2006 fix to allow spaces in windows
+  ## 01/24/2006 Windows version of system spin-locks!! removing comletely
   numProcesses <- pbat.getNumProcesses();
   if( numProcesses == 1 ) {
+    ##if( isWindows() ){
+    ##  system( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ),
+    ##          intern=TRUE );
+    ##}else{
+    ##  system( paste( pbat.get(), commandfile ), intern=TRUE );
+    ##}
+
+    clearCommands();
     if( isWindows() ){
-      system( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ),
-              intern=TRUE );
+      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) );
     }else{
-      system( paste( pbat.get(), commandfile ), intern=TRUE );
+      addCommand( paste( pbat.get(), commandfile ) );
     }
+    runCommands();
   }else{
     clearCommands();
     for( i in 1:numProcesses ) {
@@ -233,6 +244,7 @@ pbat.files <- function( pedfile, fbat="gee",
   ##print( logfile );
   ##res <- loadPbatlog( logfile );
   res <- loadPbatlogExtended( logfile ); ## 01/09/2006
+  ###print( res );
 
   pbatObj <- list();
   pbatObj$call <- NULL; # set by upper function
@@ -245,6 +257,7 @@ pbat.files <- function( pedfile, fbat="gee",
   ##print( names(pbatObj) );
   class(pbatObj) <- c("pbat", "list");
   ##print( names(pbatObj) );
+
   return( pbatObj );
 }
 

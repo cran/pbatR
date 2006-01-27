@@ -1,7 +1,7 @@
 #####################################################################
 ## Thomas Hoffmann                                                  #
 ## EXPORTED:    07/08/2005                                          #
-## MODIFIED:    01/18/2006                                          #
+## MODIFIED:    01/25/2006                                          #
 ## DESCRIPTION: Creating the command file to pass to pbat.          #
 #####################################################################
 
@@ -23,7 +23,8 @@ getPbatdata <- function() {
   pbatpath <- str.getpath(pbat.get());
   zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );
   if( pbatpath=="" ) zipfile <- "./pbatdata.zip";
-  download.file( PBATDATAURL, zipfile );
+  ###download.file( PBATDATAURL, zipfile );
+  download.file( PBATDATAURL, "./pbatdata.zip" );
   Sys.sleep(1); ## Just in case this is why it was getting corrupted
   pbatdatafile <- zip.file.extract( file="pbatdata.txt", zipname="pbatdata.zip" );
   destfile <- paste( pbatpath, "/pbatdata.txt", sep="" );
@@ -317,35 +318,58 @@ pbat.create.commandfile <- function(
   #-----------------
 
   # first make sure certain files exist
-  
+
+  ## First try to copy from the pbat directory.
   pbatdatafile <- paste( str.getpath(pbat.get()), "/pbatdata.txt", sep="" );
   if( file.exists( pbatdatafile ) )
     file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
-  
+
+  ## If we can't find it, then try other things
   if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
-    # Now, see if we can find it in the pbat directory location, and go from there...
-    getPbatdata();
-    if( file.exists( pbatdatafile ) )
-      file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
-    if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
-      if( pathFindFile( "pbatdata.txt" ) == "" ){
-        stop( paste("'pbatdata.txt was not found in the current",
-                    " working directory '", getwd(),
-                    "', or in the pbat directory '", pbatdatafile, "'",
-                    ", or anywhere in your current path,",
-                    " and it could not be downloaded online. ",
-                    " Please see",
-                    " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
-                    " for more details.", sep="" ) );
+
+    ## See if it's anywhere in the path
+    newLoc <- pathFindFile("pbatdata.txt");
+    if( newLoc != "" ){
+      ## found it! copy it over!
+      file.copy( from=newLoc, to=paste(getwd(),"/pbatdata.txt",sep="") ); ## seems to have to be in cwd - more than just the path somewhere
+    }else{
+      ## Last thing to try is to download from the internet
+      getPbatdata(); ## but puts it in pbat dir first
+      if( file.exists( pbatdatafile ) ) {
+        file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
       }
     }
+
+    ## So make sure that it finally got copied in
+    if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
+      stop( paste("'pbatdata.txt was not found in the current",
+                  " working directory '", getwd(),
+                  "', or in the pbat directory '", pbatdatafile, "'",
+                  ", or anywhere in your current path,",
+                  " and it could not be downloaded online. ",
+                  " Please see",
+                  " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
+                  " for more details.", sep="" ) );
+    }
+
+    ## Old coding below (changed order to look)
     
-    #warning( paste("'pbatdata.txt was not found in the current",
-    #               " working directory '", getwd(), "', a",
-    #               " file will be created but this may take",
-    #               " a long time to compute. Please see",
-    #               " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
-    #               " for more details.", sep="" ) );
+    ## Now, see if we can find it in the pbat directory location, and go from there...
+    ##getPbatdata();
+    ##if( file.exists( pbatdatafile ) )
+    ##  file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
+    ##if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
+    ##  if( pathFindFile( "pbatdata.txt" ) == "" ){
+    ##    stop( paste("'pbatdata.txt was not found in the current",
+    ##                " working directory '", getwd(),
+    ##                "', or in the pbat directory '", pbatdatafile, "'",
+    ##                ", or anywhere in your current path,",
+    ##                " and it could not be downloaded online. ",
+    ##                " Please see",
+    ##                " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
+    ##                " for more details.", sep="" ) );
+    ##  }
+    ##}
   }
   
   
@@ -359,7 +383,7 @@ pbat.create.commandfile <- function(
                 getwd(), "'.", sep="") );
 
   # other debugging
-  if( phenos!="" & time!="" )
+  if( phenos[1]!="" & time[1]!="" )
     stop( "Both 'phenos' and 'time' cannot have values set to them.  See the help file for more details." );
 
   # much more advanced debugging!
@@ -474,7 +498,7 @@ pbat.create.commandfile <- function(
   }
   writeCommand( "phenos", phenos, end=TRUE );
 
-  if( preds!="" ) {                   # (6)
+  if( !is.null(preds) && preds[1]!="" ) { # (6)   ## 01/27/2006
     ##if( length(preds)!=length(preds.order) ) {
     ##  warning("'preds' and 'preds.order' must be of the same length. This information will be ignored.");
     ##}else{
@@ -508,11 +532,13 @@ pbat.create.commandfile <- function(
   
   # (10-11)
   if( fbat!="logrank" ) {
-    writeCommand( "maxpheno", max.pheno );
-    writeCommand( "minpheno", min.pheno );
+    ## 01/25/2005 - amazing - this bug only shows up in multiprocessing mode
+    writeCommand( "max", max.pheno );
+    writeCommand( "min", min.pheno );
   }
   
-  writeCommandStrMatch( "null", null, c("no linkage, no association", "linkage, no association") );
+  writeCommandStrMatch( "null", null, c("no linkage, no association", "linkage, no association"),
+                        vals=c(1,2) );  ## 01/25/2006
   writeCommand( "alpha", alpha );        # (13)
 
   writeCommandStrMatch( "transpheno", trans.pheno, c("none","ranks","normal score") );

@@ -1,9 +1,9 @@
 \name{write.pbat}
 \alias{write.pbat}
 \alias{write.pbat.csv}
-\title{Saving 'pbat' Object}
+\title{Saving `pbat' Object}
 \description{
-  Writes a 'pbat' object (the result of calling \code{pbat.m}) to disk.
+  Writes a `pbat' object (the result of calling \code{pbat.m}) to disk.
 }
 \usage{
 write.pbat( x, filename )
