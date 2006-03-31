@@ -10,28 +10,30 @@
   Creates, tests, reads, or writes objects of type \code{ped} or
   \code{pedlist} to be used with the pbat commands.
 
-  The \code{ped} class inherits the \code{list} structure, and is almost
-  identical to the \code{list} object described to create it, only with
-  some special reserved names.
-
-  The \code{pedlist} class inherits the \code{data.frame} structure, and
+  The \code{ped} class inherits the \code{data.frame} structure, and
   is almost identical to the \code{data.frame} object described to
   create it, only with some special reserved names.
+
+  The \code{pedlist} class inherits the \code{list} structure, and is almost
+  identical to the \code{list} object described to create it, only with
+  some special reserved names.
 }
 \usage{
 as.ped( x,
         idped="idped", idsub="idsub", idfath="idfath",
-        idmoth="idmoth", sex="sex", affection="affection" )
+        idmoth="idmoth", sex="sex", affection="affection",
+        clearSym=FALSE )
 
 as.pedlist( x,
             idped="idped", idsub="idsub", idfath="idfath",
-            idmoth="idmoth", sex="sex", affection="affection" )
+            idmoth="idmoth", sex="sex", affection="affection",
+            clearSym=FALSE )
 
 is.ped( obj );
 
 is.pedlist( obj );
 
-read.ped( filename, format="ped", lowercase=TRUE, ... )
+read.ped( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... )
 
 write.ped( file, ped )
 }
@@ -64,10 +66,11 @@ write.ped( file, ped )
   
   \item{filename}{Filename to open; does not need .phe extension.}
   \item{format}{Toggles the return structure, set to "ped" or "pedlist".}
-  \item{lowercase}{When TRUE, enforces all headers to lowercase for
-    convenience.}
-  \item{...}{Options for \code{\link{read.table}}.  Do \emph{not} put in
-    \code{header=TRUE}, as this will
+  \item{lowercase}{When TRUE (and sym is FALSE), enforces all headers to
+    lowercase for convenience.}
+
+  \item{...}{Options for \code{\link{read.table}}, used only when sym is
+    FALSE.  Do \emph{not} put in \code{header=TRUE}, as this will
     cause an error, as the header is automatically loaded.
     
     With the proper file formatting, this should not be used.
@@ -78,6 +81,17 @@ write.ped( file, ped )
     \code{as.ped} or \code{as.pedlist})}
 
   \item{obj}{an object}
+
+  \item{sym}{When TRUE, only the header of the file is read in; only
+    PBAT will load in the file.  When FALSE, the entire file will be
+    read in, and can be modified before using with PBAT.}
+
+  \item{max}{When sym is TRUE, the amount of headers to read in before
+    going pure symbolic (so that the SNP usage consistency will not be
+    assessed by pbatR, only by PBAT).}
+  
+  \item{clearSym}{When TRUE, if a symbolic file is found, it will be
+    read in; otherwise, it will stay symbolic.}
 }
 \examples{
 # A highly artificial example with not enough subjects to be run;

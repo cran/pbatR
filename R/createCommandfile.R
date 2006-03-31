@@ -2,7 +2,12 @@
 ## Thomas Hoffmann                                                  #
 ## EXPORTED:    07/08/2005                                          #
 ## MODIFIED:    01/25/2006                                          #
-## DESCRIPTION: Creating the command file to pass to pbat.          #
+##                                                                  #
+## DESCRIPTION:                                                     #
+##  Creating the command file that is passed to pbat.               #
+##  Also contains the routine that gets pbatdata.zip from the       #
+##   internet, gets a time stamp / tests if a string has been       #
+##   stamped, and some of the vector testing/pasting routines.      #
 #####################################################################
 
 PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
@@ -16,8 +21,13 @@ getPbatdata <- function() {
   msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
                   PBATDATAURL,
                   "'? This file is needed.", sep="");
-  if( "yes" != tclvalue(tkmessageBox(title="pbatdata.txt",message=msgStr,icon="question",type="yesno")) )
-    return();
+  if( isPackageLoaded( 'tcltk' ) ) {
+    if( "yes" != tclvalue(tkmessageBox(title="pbatdata.txt",message=msgStr,icon="question",type="yesno")) )
+      return();
+  }else{
+    if( 'yes' != textMessageBox( msgStr, c('yes','no') ) )
+      return();
+  }
 
   ## Carry on with downloading
   pbatpath <- str.getpath(pbat.get());
@@ -35,6 +45,70 @@ getPbatdata <- function() {
 }
 
 #####################################################################
+## checkAndGetPbatdata()                                            #
+## Gets the 'pbatdata.txt' into the cwd, trying _everywhere_!       #
+## Exported out of it's original function 7/25/2006 for use with    #
+##  the power routines.                                             #
+## Note: this will error if it cannot be found (it's not going to   #
+##  compute the prob table).                                        #
+#####################################################################
+checkAndGetPbatdata <- function() {
+  ## First try to copy from the pbat directory.
+  pbatdatafile <- paste( str.getpath(pbat.get()), "/pbatdata.txt", sep="" );
+  if( file.exists( pbatdatafile ) )
+    file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
+
+  ## If we can't find it, then try other things
+  if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
+
+    ## See if it's anywhere in the path
+    newLoc <- pathFindFile("pbatdata.txt");
+    if( newLoc != "" ){
+      ## found it! copy it over!
+      file.copy( from=newLoc, to=paste(getwd(),"/pbatdata.txt",sep="") ); ## seems to have to be in cwd - more than just the path somewhere
+    }else{
+      ## Last thing to try is to download from the internet
+      getPbatdata(); ## but puts it in pbat dir first
+      if( file.exists( pbatdatafile ) ) {
+        file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
+      }
+    }
+
+    ## So make sure that it finally got copied in
+    if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
+      stop( paste("'pbatdata.txt was not found in the current",
+                  " working directory '", getwd(),
+                  "', or in the pbat directory '", pbatdatafile, "'",
+                  ", or anywhere in your current path,",
+                  " and it could not be downloaded online. ",
+                  " Please see",
+                  " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
+                  " for more details.", sep="" ) );
+    }
+
+    ## Old coding below (changed order to look)
+    
+    ## Now, see if we can find it in the pbat directory location, and go from there...
+    ##getPbatdata();
+    ##if( file.exists( pbatdatafile ) )
+    ##  file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
+    ##if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
+    ##  if( pathFindFile( "pbatdata.txt" ) == "" ){
+    ##    stop( paste("'pbatdata.txt was not found in the current",
+    ##                " working directory '", getwd(),
+    ##                "', or in the pbat directory '", pbatdatafile, "'",
+    ##                ", or anywhere in your current path,",
+    ##                " and it could not be downloaded online. ",
+    ##                " Please see",
+    ##                " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
+    ##                " for more details.", sep="" ) );
+    ##  }
+    ##}
+  }
+
+}
+
+#####################################################################
 ## getTimeStamp(...)                                                #
 ## Gets a unique time-stamp string for the output!                  #
 #####################################################################
@@ -46,7 +120,20 @@ getTimeStamp <- function() {
   }
   
   d <- as.POSIXlt( Sys.time() );
-  return( paste( 1900+d$year, zpad(d$mon), zpad(d$mday), zpad(d$hour), zpad(d$min), zpad(d$sec), sep="" ) );
+  return( paste( 1900+d$year, zpad(d$mon), zpad(d$mday), zpad(d$hour), zpad(d$min), zpad(floor(d$sec)), sep="" ) );  ## R2.3 change... seconds decide to have bloody decimal points... why can't we just be consistent between releases???? WHY??????
+}
+
+## Returns if all characters in a string are numbers (decimals not allowed since we're checking for time-stamps ultimately)
+isStringAllNumeric <- function( str ){
+  if( nchar(str)==0 ) return(TRUE); ## I guess so
+  
+  for( i in 1:nchar(str) ) {
+    ch <- substring(str,i,i);
+    #if( !(  ( '0'<=ch & ch<='9') | ch=='.'  ) )
+    if( !( '0'<=ch & ch<='9' ) )
+      return(FALSE);
+  }
+  return(TRUE);
 }
 
 isTimeStamped <- function( str, extLen=3 ) {
@@ -56,9 +143,11 @@ isTimeStamped <- function( str, extLen=3 ) {
   if( strLen < 5+timeLen ) return( FALSE ); # too short
   possTimeStr <- substring( str, strPbatLen, strPbatLen+timeLen-1 );
   #print( possTimeStr );
-  if( !is.na( as.numeric( possTimeStr ) ) )
-    return(TRUE);
-  return(FALSE);
+  ###if( !is.na( as.numeric( possTimeStr ) ) )
+  ###  return(TRUE);
+  ###return(FALSE);
+
+  return( isStringAllNumeric(possTimeStr) );  ## No more warnings!
 }
 
 # Assumes isTimeStamped( str ) _already_ returned TRUE
@@ -123,6 +212,114 @@ pasteVector2 <- function( vector, sep=" " ){
   return(strRet);
 }
 
+## Moved outside pbat.create.commandfile(...) 5/31/06
+#####################################
+## write the command (unless empty) #
+#####################################
+writeCommand <- function( commandStr, vals, end=FALSE, outfile=NULL ) {
+  if(  !( length(vals)==1 && (is.na(vals)||vals=="") )  ) {
+    if( end==FALSE ) {
+      writeLines( paste( commandStr, pasteVector(vals) ), con=outfile );
+    }else{
+      writeLines( paste( commandStr, pasteVector(vals), "end" ), con=outfile );
+    }
+  }
+} # Status: debugged
+
+####################################################################
+## Prints helpful error msg if 'subcol' is not contained in 'col'. #
+## if AT.MOST.SINGLETON=TRUE, then 'subcol' can be of at           #
+##  most length 1                                                  #
+###################################################################
+errorVecNotContained <- function( command, subcol, col,
+                                 AT.MOST.SINGLETON=FALSE ){
+  if( length(subcol)==1 && subcol=="" ) return(); # empty set is contained!
+  
+  if( !isVecContained(subcol,col) ) {
+    stop( paste( "For the option '", command,
+                "', the values that you specified {",
+                csPasteVector(subcol),
+                "} did not match the possible values {",
+                csPasteVector(col),
+                "}.",
+                sep=""
+                ) );
+  }
+  if( length(subcol)>1 && AT.MOST.SINGLETON==TRUE ) {
+    stop( paste("For the option '", command,
+                "', the values that you specified {",
+                csPasteVector(subcol),
+                "} was of too long a length.  Keep in mind it must take at most a single string value from the following collection {",
+                csPasteVector(col), "}.",
+                sep=""
+                ) );
+  }
+}
+
+##########################################################################
+## Prints out a useful error message if their is a nonempty intersection #
+##  between 'col1' and 'col2'                                            #
+##########################################################################
+errorIfAnyMatch <- function( col1, col2, nameCol1, nameCol2 ) {
+  if( length(col1)==1 && col1=="" ) return(); # collection is empty
+  if( length(col2)==1 && col2=="" ) return();
+  
+  for( i in 1:length(col1) )
+    if( sum(col1[i]==col2)>0 )
+      stop( paste("There should not be any overlap in the following two option's collections: ",
+                  nameCol1, "{", csPasteVector(col1), "}, ",
+                  nameCol2, "{", csPasteVector(col2), "}.",
+                  sep="" ) );
+}
+
+################################################
+## write the command from human-readable input #
+## The beauty of this function is it includes  #
+##   the error handling routines within.       #
+## stop() is like throwing an exception, which #
+##   if not caught goes all the way to the user#
+##   and halts the program.                    #
+###############################################
+writeCommandStrMatch <- function( commandStr, str, strVec, vals=c(0:(length(strVec)-1)), outfile=NULL ){
+  if( sum(str==strVec)!=1 ) {
+    ## Error! New: print out a message here for ease!
+    stop( paste( "'", commandStr, "' can only take on the following values: ",
+                csPasteVector( strVec ),
+                ".  You passed the invalid value '", str, "'.",
+                sep="" ) );
+  }
+  
+  writeCommand( commandStr, vals[which(str==strVec)], outfile=outfile );
+  return( TRUE ); # success!
+}
+###### Again just another wrapper to make life a little easier. #######
+writeCommandStrMatch1 <- function( commandStr, str, strVec, outfile ) {
+  return(  writeCommandStrMatch( commandStr, str, strVec, vals=c(1:length(strVec)), outfile=outfile )  );
+} # NOT DEBUGGED
+
+################################################################
+## Prints error messages if outside a range (Closed interval). #
+##  If the value is NULL or "", then there is no max/min       #
+################################################################
+errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE ) {
+  hasMin <- !is.null(min) && min!="";
+  hasMax <- !is.null(max) && max!="";
+  if( (hasMin && value<min) || (hasMax && value>max) ) {
+    minStr <- as.character(min); if(!hasMin) minStr <- "INF";
+    maxStr <- as.character(max); if(!hasMax) maxStr <- "INF";
+    stop( paste("For the option '", commandStr, "', the value must be in the range [",
+                minStr, ",", maxStr, "]. The value you supplied was ", value, ".",
+                sep="") );
+  }
+  
+  ##if( IS.INTEGER && value!=floor(value) )
+  if( IS.INTEGER && as.numeric(value)!=floor(as.numeric(value)) )
+    stop( paste("For the option '", commandStr,
+                "', the value must be _an integer_ in the range [",
+                minStr, ",", maxStr, "]. The value you supplied was ", value, ".",
+                sep="") );
+}
+
 
 #####################################################################
 ## pbat.create.commandfile(...)                                     #
@@ -156,7 +353,9 @@ pbat.create.commandfile <- function(
        output="normal",
        max.mating.types=10000,
        commandfile="",
-       future.expansion=NULL )
+       future.expansion=NULL,
+       LOGFILE.OVERRIDE=TRUE ## But FALSE for the GUI!?
+                                    )
 {
   ##-----------------------------
   ## fix up extensions / naming -
@@ -176,6 +375,17 @@ pbat.create.commandfile <- function(
                        getTimeStamp(), "", sep="" );
     }
   }
+  ## New overriding
+  if( LOGFILE.OVERRIDE ) {
+    potlogfile <- str.extract.afterb(logfile, '/' );
+    if( potlogfile=="" )
+      potlogfile <- str.extract.afterb(logfile, '\\' );
+
+    if( potlogfile != "" )
+      logfile <- potlogfile;
+  }
+
+  
   if( commandfile=="" )
     commandfile <- paste( substring(logfile,1,strlen(logfile)-3), "txt", sep="" );
   #print( "COMMANDFILE" );
@@ -206,112 +416,6 @@ pbat.create.commandfile <- function(
   #        function.  Slightly confusing, but I think it makes
   #        the most sense this way.
   
-  ####################################
-  # write the command (unless empty) #
-  ####################################
-  writeCommand <- function( commandStr, vals, end=FALSE ) {
-    if(  !( length(vals)==1 && (is.na(vals)||vals=="") )  ) {
-      if( end==FALSE ) {
-        writeLines( paste( commandStr, pasteVector(vals) ), con=outfile );
-      }else{
-        writeLines( paste( commandStr, pasteVector(vals), "end" ), con=outfile );
-      }
-    }
-  } # Status: debugged
-
-  ###################################################################
-  # Prints helpful error msg if 'subcol' is not contained in 'col'. #
-  # if AT.MOST.SINGLETON=TRUE, then 'subcol' can be of at           #
-  #  most length 1                                                  #
-  ###################################################################
-  errorVecNotContained <- function( command, subcol, col,
-                                 AT.MOST.SINGLETON=FALSE ){
-    if( length(subcol)==1 && subcol=="" ) return(); # empty set is contained!
-       
-    if( !isVecContained(subcol,col) ) {
-      stop( paste( "For the option '", command,
-                   "', the values that you specified {",
-                   csPasteVector(subcol),
-                   "} did not match the possible values {",
-                   csPasteVector(col),
-                   "}.",
-                   sep=""
-                   ) );
-    }
-    if( length(subcol)>1 && AT.MOST.SINGLETON==TRUE ) {
-      stop( paste("For the option '", command,
-                  "', the values that you specified {",
-                  csPasteVector(subcol),
-                  "} was of too long a length.  Keep in mind it must take at most a single string value from the following collection {",
-                  csPasteVector(col), "}.",
-                  sep=""
-                  ) );
-    }
-  }
-
-  #########################################################################
-  # Prints out a useful error message if their is a nonempty intersection #
-  #  between 'col1' and 'col2'                                            #
-  #########################################################################
-  errorIfAnyMatch <- function( col1, col2, nameCol1, nameCol2 ) {
-    if( length(col1)==1 && col1=="" ) return(); # collection is empty
-    if( length(col2)==1 && col2=="" ) return();
-    
-    for( i in 1:length(col1) )
-      if( sum(col1[i]==col2)>0 )
-        stop( paste("There should not be any overlap in the following two option's collections: ",
-                    nameCol1, "{", csPasteVector(col1), "}, ",
-                    nameCol2, "{", csPasteVector(col2), "}.",
-                    sep="" ) );
-  }
-
-  ###############################################
-  # write the command from human-readable input #
-  # The beauty of this function is it includes  #
-  #   the error handling routines within.       #
-  # stop() is like throwing an exception, which #
-  #   if not caught goes all the way to the user#
-  #   and halts the program.                    #
-  ###############################################
-  writeCommandStrMatch <- function( commandStr, str, strVec, vals=c(0:(length(strVec)-1)) ){
-    if( sum(str==strVec)!=1 ) {
-      # Error! New: print out a message here for ease!
-      stop( paste( "'", commandStr, "' can only take on the following values: ",
-                   csPasteVector( strVec ),
-                   ".  You passed the invalid value '", str, "'.",
-                   sep="" ) );
-    }
-
-    writeCommand( commandStr, vals[which(str==strVec)] );
-    return( TRUE ); # success!
-  }
-  ###### Again just another wrapper to make life a little easier. #######
-  writeCommandStrMatch1 <- function( commandStr, str, strVec ) {
-    return(  writeCommandStrMatch( commandStr, str, strVec, vals=c(1:length(strVec)) )  );
-  } # NOT DEBUGGED
-
-  ###############################################################
-  # Prints error messages if outside a range (Closed interval). #
-  #  If the value is NULL or "", then there is no max/min       #
-  ###############################################################
-  errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE ) {
-    hasMin <- !is.null(min) && min!="";
-    hasMax <- !is.null(max) && max!="";
-    if( (hasMin && value<min) || (hasMax && value>max) ) {
-      minStr <- as.character(min); if(!hasMin) minStr <- "INF";
-      maxStr <- as.character(max); if(!hasMax) maxStr <- "INF";
-      stop( paste("For the option '", commandStr, "', the value must be in the range [",
-                  minStr, ",", maxStr, "]. The value you supplied was ", value, ".",
-                  sep="") );
-    }
-
-    #if( IS.INTEGER && value!=floor(value) )
-    if( IS.INTEGER && as.numeric(value)!=floor(as.numeric(value)) )
-      stop( paste("For the option '", commandStr,
-                  "', the value must be _an integer_ in the range [",
-                  minStr, ",", maxStr, "]. The value you supplied was ", value, ".",
-                  sep="") );
-  }
 
   #-----------------
   # Some debugging -
@@ -319,59 +423,8 @@ pbat.create.commandfile <- function(
 
   # first make sure certain files exist
 
-  ## First try to copy from the pbat directory.
-  pbatdatafile <- paste( str.getpath(pbat.get()), "/pbatdata.txt", sep="" );
-  if( file.exists( pbatdatafile ) )
-    file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
-
-  ## If we can't find it, then try other things
-  if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
-
-    ## See if it's anywhere in the path
-    newLoc <- pathFindFile("pbatdata.txt");
-    if( newLoc != "" ){
-      ## found it! copy it over!
-      file.copy( from=newLoc, to=paste(getwd(),"/pbatdata.txt",sep="") ); ## seems to have to be in cwd - more than just the path somewhere
-    }else{
-      ## Last thing to try is to download from the internet
-      getPbatdata(); ## but puts it in pbat dir first
-      if( file.exists( pbatdatafile ) ) {
-        file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
-      }
-    }
-
-    ## So make sure that it finally got copied in
-    if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
-      stop( paste("'pbatdata.txt was not found in the current",
-                  " working directory '", getwd(),
-                  "', or in the pbat directory '", pbatdatafile, "'",
-                  ", or anywhere in your current path,",
-                  " and it could not be downloaded online. ",
-                  " Please see",
-                  " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
-                  " for more details.", sep="" ) );
-    }
-
-    ## Old coding below (changed order to look)
-    
-    ## Now, see if we can find it in the pbat directory location, and go from there...
-    ##getPbatdata();
-    ##if( file.exists( pbatdatafile ) )
-    ##  file.copy( from=pbatdatafile, to=paste(getwd(),"/pbatdata.txt",sep="") );
-    ##if( !file.exists( paste(getwd(),"/pbatdata.txt",sep="") ) ) {
-    ##  if( pathFindFile( "pbatdata.txt" ) == "" ){
-    ##    stop( paste("'pbatdata.txt was not found in the current",
-    ##                " working directory '", getwd(),
-    ##                "', or in the pbat directory '", pbatdatafile, "'",
-    ##                ", or anywhere in your current path,",
-    ##                " and it could not be downloaded online. ",
-    ##                " Please see",
-    ##                " http://www.biostat.harvard.edu/~clange/Downloading%20PBAT.htm",
-    ##                " for more details.", sep="" ) );
-    ##  }
-    ##}
-  }
-  
+  ## The infamous pbatdata.txt file...
+  checkAndGetPbatdata();
   
   if( !file.exists(pedfile) )
     stop( paste("The pedigree file '",
@@ -391,20 +444,28 @@ pbat.create.commandfile <- function(
   # pedigree file information
   #ped.b <- read.badheader( pedfile );
   #posSnps <- ped.b$header[3:length(ped.b$header)];
-  posSnps <- read.badheader( pedfile )$header;
+  ##posSnps <- read.badheader( pedfile )$header;
+  posSnps <- read.badheader( pedfile, onlyHeader=TRUE )$header;
 
   # phenotype file information
-  phe <- read.phe( phefile );
+  phe <- read.phe( phefile, sym=TRUE );
   posPhenos <- names(phe);
 
   # check containment of various options...
-  errorVecNotContained( "snps", snps, posSnps );
+  if( !is.null(posSnps) )
+    errorVecNotContained( "snps", snps, posSnps );
   
   errorVecNotContained( "phenos", phenos, posPhenos );
   errorVecNotContained( "time", time, posPhenos, AT.MOST.SINGLETON=TRUE );
   ##errorVecNotContained( "inters", inters, phenos );
   errorVecNotContained( "inters", inters, preds );  ## 01/18/2006
-  errorVecNotContained( "groups", groups, posPhenos );
+  #############errorVecNotContained( "groups", groups, posPhenos );
+  ##print( "groups" );
+  ##print( groups ); print( groups.var );
+
+  errorVecNotContained( "preds", preds, posPhenos ) ########################################################################################################
+  errorVecNotContained( "censor", censor, posPhenos )
+  errorVecNotContained( "groups", groups.var, posPhenos );
   
   errorIfAnyMatch( groups.var, phenos, "groups", "phenos" );
   errorIfAnyMatch( groups.var, time, "groups", "time");
@@ -430,9 +491,11 @@ pbat.create.commandfile <- function(
       # - on a second note, it's really the only way to be able to fix
       #   this on such a low level to guarantee that the command-line
       #   stuff will also work without a massive changes?
-      junk <- read.ped( pedfile, lowercase=FALSE ); ## that lowercase...
+      junk <- read.ped( pedfile ); ##, lowercase=FALSE ); ## that lowercase...
       allSnps <- names( as.pedlist( junk ) );
-      haplos[[1]] <- allSnps[7:length(allSnps)];  ## 01/18/06 fix - list
+      haplos[[1]] <- NULL;
+      if( !is.null(allSnps) )
+        haplos[[1]] <- allSnps[7:length(allSnps)];  ## 01/18/06 fix - list
     }else{
       haplos[[1]] <- snps;
     }
@@ -445,7 +508,7 @@ pbat.create.commandfile <- function(
   # Verification of the haplos structure
   if( !is.null(haplos) && !is.list(haplos) )
     stop( "Haplos must be a list of string vectors (or objects that can coerced into strings." );
-  if( !is.null(haplos) && is.list(haplos) ) {
+  if( !is.null(haplos) && is.list(haplos) && length(haplos)>0 ) {
     # check to make sure the snps are in, and no overlap.
     for( i in 1:length(haplos) ){
       # make sure the snps are in the list
@@ -482,21 +545,21 @@ pbat.create.commandfile <- function(
   on.exit( close(outfile) );
 
   if( logfile!="" )
-    writeCommand( "logfile",logfile );
+    writeCommand( "logfile", logfile, outfile=outfile );
   
-  writeCommand( "pedfile", pedfile);     # (1)
-  writeCommand( "phenofile", phefile );  # (3)
+  writeCommand( "pedfile", pedfile, outfile=outfile);     # (1)
+  writeCommand( "phenofile", phefile, outfile=outfile );  # (3)
 
   #if( snps!="" )
-  writeCommand( "snps", c(snps), end=TRUE ); # (2)
+  writeCommand( "snps", c(snps), outfile=outfile, end=TRUE ); # (2)
   
-  writeCommand( "censor", c(censor), end=TRUE ); # (4)
+  writeCommand( "censor", c(censor), outfile=outfile, end=TRUE ); # (4)
   if( time=="" && fbat=="logrank" ) { # (5)
     stop( "time-to-onset variable is required for pbat-logrank." );
   }else{
-    writeCommand( "phenos", c(time), end=TRUE );
+    writeCommand( "phenos", c(time), outfile=outfile, end=TRUE );
   }
-  writeCommand( "phenos", phenos, end=TRUE );
+  writeCommand( "phenos", phenos, outfile=outfile, end=TRUE );
 
   if( !is.null(preds) && preds[1]!="" ) { # (6)   ## 01/27/2006
     ##if( length(preds)!=length(preds.order) ) {
@@ -510,100 +573,106 @@ pbat.create.commandfile <- function(
       warning("'preds' and 'preds.order' are not of the same length; all order's will be forced to 1.'");
       preds.order = rep(1,length(preds));
     }
-    writeCommand( "preds", pasteVector( c( preds, "end", preds.order, "end" ) ) );
+    writeCommand( "preds", pasteVector( c( preds, "end", preds.order, "end" ) ), outfile=outfile );
   }
 
   ## 01/18/2006 bugfix - didn't have end
-  writeCommand( "inters", inters, end=TRUE );      # (7)
+  writeCommand( "inters", inters, outfile=outfile, end=TRUE );      # (7)
   
   if( groups.var!="" ){                    # (8)
     if( is.null(groups) || groups[1]=="" ) {
       ## Then we have to extract the groups values from the file!
-      junk.phe <- read.phe( phefile );
+      junk.phe <- read.phe( phefile, sym=FALSE ); ## WOW - difficult bug to find after adding the sym option
       groups <- unique( junk.phe[[groups.var]] );
     }
     
-    writeCommand( "groups", c(groups.var, "end", groups, "end") );
+    writeCommand( "groups", c(groups.var, "end", groups, "end"), outfile=outfile );
   }
 
-  writeCommandStrMatch1( "fbat", fbat, c("gee","pc","logrank") );
+  writeCommandStrMatch1( "fbat", fbat, c("gee","pc","logrank"), outfile=outfile );
 
   if( censor=="" && fbat=="logrank" ) stop( "Need a censoring variable." );
   
   # (10-11)
   if( fbat!="logrank" ) {
     ## 01/25/2005 - amazing - this bug only shows up in multiprocessing mode
-    writeCommand( "max", max.pheno );
-    writeCommand( "min", min.pheno );
+    writeCommand( "max", max.pheno, outfile=outfile );
+    writeCommand( "min", min.pheno, outfile=outfile );
   }
   
   writeCommandStrMatch( "null", null, c("no linkage, no association", "linkage, no association"),
-                        vals=c(1,2) );  ## 01/25/2006
-  writeCommand( "alpha", alpha );        # (13)
+                        outfile=outfile, vals=c(1,2) );  ## 01/25/2006
+  writeCommand( "alpha", alpha, outfile=outfile );        # (13)
 
-  writeCommandStrMatch( "transpheno", trans.pheno, c("none","ranks","normal score") );
-  writeCommandStrMatch( "transpred",  trans.pred , c("none","ranks","normal score") );
-  writeCommandStrMatch( "transinter", trans.inter, c("none","ranks","normal score") );
+  writeCommandStrMatch( "transpheno", trans.pheno, c("none","ranks","normal score"), outfile=outfile );
+  writeCommandStrMatch( "transpred",  trans.pred , c("none","ranks","normal score"), outfile=outfile );
+  writeCommandStrMatch( "transinter", trans.inter, c("none","ranks","normal score"), outfile=outfile );
 
   if( fbat!="logrank" ) {
-    writeCommandStrMatch( "scanpred", scan.pred, c("all","subsets") );
-    writeCommandStrMatch( "scaninter", scan.inter, c("all","subsets") );
+    writeCommandStrMatch( "scanpred", scan.pred, c("all","subsets"), outfile=outfile );
+    writeCommandStrMatch( "scaninter", scan.inter, c("all","subsets"), outfile=outfile );
   }
   
   writeCommandStrMatch( "scangenetic", scan.genetic,
                         c("additive","dominant","recessive",
-                          "heterozygous advantage","all") );
+                          "heterozygous advantage","all"), outfile=outfile );
 
   if( offset!="default" & offset!="" )
-    writeCommandStrMatch("offset", offset, c("none","max power","gee + marker score","gee") );
+    writeCommandStrMatch("offset", offset, c("none","max power","gee + marker score","gee"), outfile=outfile );
 
-  writeCommandStrMatch1( "screening", screening, c("conditional power","wald") );
+  writeCommandStrMatch1( "screening", screening, c("conditional power","wald"), outfile=outfile );
   #warning( "replace with is.factor??" );
-  writeCommandStrMatch( "distribution", distribution, c("continuous","categorical") );
+  writeCommandStrMatch( "distribution", distribution, c("continuous","categorical"), outfile=outfile );
 
   #warning( "I commented out logfile." );
   #writeCommand( "logfile", logfile );  # (23)
   
   # (24) NA
   if( fbat=="gee" )
-    writeCommand( "maxgee", max.gee );
+    writeCommand( "maxgee", max.gee, outfile=outfile );
   
-  writeCommand( "maxped", max.ped );  # (25)
-  writeCommand( "mininfo", min.info );  # (26)
+  writeCommand( "maxped", max.ped, outfile=outfile );  # (25)
+  writeCommand( "mininfo", min.info, outfile=outfile );  # (26)
 
   if( is.list(haplos) ) {
-    vec <- c(  as.character(length(haplos))  );
-    for( colnum in 1:length(haplos) ) {
-      for( rownum in 1:length(haplos[[colnum]]) ) {
-        vec <- c(vec, as.character(haplos[[colnum]][rownum]));
+    if( length(haplos)==0 ){
+      ## Pure symbolic
+      writeCommand( 'haplos 1 end', "", outfile=outfile );
+    }else{
+      ## Not pure symbolic
+      vec <- c(  as.character(length(haplos))  );
+      for( colnum in 1:length(haplos) ) {
+        for( rownum in 1:length(haplos[[colnum]]) ) {
+          vec <- c(vec, as.character(haplos[[colnum]][rownum]));
+        }
+        vec <- c(vec,"end");
       }
-      vec <- c(vec,"end");
+      writeCommand( "haplos", vec, outfile=outfile );
     }
-    writeCommand( "haplos", vec );
   }
 
-  writeCommandStrMatch( "ambhaplos", incl.ambhaplos, c(TRUE,FALSE) ); #backwards
-  writeCommandStrMatch( "infermissnp", infer.mis.snp, c(FALSE,TRUE) );
+  writeCommandStrMatch( "ambhaplos", incl.ambhaplos, c(TRUE,FALSE), outfile=outfile ); #backwards
+  writeCommandStrMatch( "infermissnp", infer.mis.snp, c(FALSE,TRUE), outfile=outfile );
 
   if( sub.haplos==TRUE ) {
-    writeCommandStrMatch( "subhaplos", sub.haplos, c(FALSE,TRUE) );
-    writeCommand( "lengthhaplos", length.haplos );  # (31)
-    writeCommandStrMatch( "adjsnps", adj.snps, c(FALSE,TRUE) );
+    writeCommandStrMatch( "subhaplos", sub.haplos, c(FALSE,TRUE), outfile=outfile );
+    writeCommand( "lengthhaplos", length.haplos, outfile=outfile );  # (31)
+    writeCommandStrMatch( "adjsnps", adj.snps, c(FALSE,TRUE), outfile=outfile );
   }
   
-  writeCommandStrMatch( "overallhaplo", overall.haplo, c(FALSE,TRUE) );
-  writeCommandStrMatch( "cutoffhaplo", cutoff.haplo, c(FALSE,TRUE) );
+  writeCommandStrMatch( "overallhaplo", overall.haplo, c(FALSE,TRUE), outfile=outfile );
+  writeCommandStrMatch( "cutoffhaplo", cutoff.haplo, c(FALSE,TRUE), outfile=outfile );
   
   # (35-36)
   if( output=="short" )
-    writeCommand( "shortoutput", "1" );
+    writeCommand( "shortoutput", "1", outfile=outfile );
   if( output=="detailed" )
-    writeCommand( "detailedoutput", "1" );
+    writeCommand( "detailedoutput", "1", outfile=outfile );
   
-  writeCommand( "maxmatingtypes", max.mating.types );  # (37)
+  writeCommand( "maxmatingtypes", max.mating.types, outfile=outfile );  # (37)
 
   if( fbat=="logrank" )
-    writeCommand( "splus", "1" ); # (38)
+    writeCommand( "splus", "1", outfile=outfile ); # (38)
 
   if( !is.null(future.expansion) ) {
     for( i in 1:length(future.expansion) )

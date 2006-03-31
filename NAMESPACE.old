@@ -5,6 +5,7 @@ export(
        
        pbat.create.commandfile,
        pbat.files, pbat.obj, pbat.m,
+       summary.pbat, plot.pbat, print.pbat, 
        
        pbat.get, pbat.set,
 
@@ -14,21 +15,7 @@ export(
 
        pbat.clean,
 
-       is.finished, pbat.load, pbat.concatenate,
-
-       pbat.generateData,
-
-       pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
-
        write.pbat, write.pbat.csv
        )
-
-S3method( print, pbat )
-S3method( summary, pbat )
-S3method( plot, pbat )
-
-S3method( print, phe )
-S3method( print, ped )
-S3method( print, pedlist )
 
 useDynLib(pbatR)

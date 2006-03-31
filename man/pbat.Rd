@@ -17,13 +17,16 @@
   \code{pbat} runs a GUI (Graphical User Interface) for pbat.
 
   \code{pbat.last} returns an object of class \code{pbat} of the last
-  command file run from \code{pbat()} (this is also returned from
-  \code{pbat}; this command is retained because rerunning a command in
+  command file run from running \code{pbat()}. Note this is also
+  returned from \code{pbat}.
+  However, this command is provided because rerunning a command in
   pbat can be a very time-consuming process).
 
   \code{pbat.last.rawResults} prints out the raw text file of the
   output (particularly useful if the output of pbat cannot be parsed
-  properly, although all of this should have been fixed now).
+  properly, in the unexpected event the output could not be parsed
+  correctly). This should work even with the new option of not loading
+  the output in.
 
   
   \code{pbat.m} runs pbat according to an expression, from \code{phe} class
@@ -70,13 +73,15 @@ pbat.m( formula, phe, ped, fbat="",
         output="normal",
         max.mating.types=10000,
         commandfile="",
-        future.expansion=NULL )
+        future.expansion=NULL,
+        LOAD.OUTPUT=TRUE )
 
-pbat.obj( phe, ped, file.prefix, ... )
+pbat.obj( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... )
 
-pbat.files( pedfile, fbat="gee",
+pbat.files( pedfile, phefile, fbat="gee",
             commandfile="",
             logrank.outfile="",
+            LOAD.OUTPUT=TRUE,
             ... )
 
 pbat.create.commandfile( pedfile, phefile="",
@@ -103,7 +108,8 @@ pbat.create.commandfile( pedfile, phefile="",
        output="normal",
        max.mating.types=10000,
        commandfile="",
-       future.expansion=NULL )
+       future.expansion=NULL,
+       LOGFILE.OVERRIDE=TRUE )
 }
 \arguments{
   \item{formula}{Symbolic expression describing what should be
@@ -193,7 +199,7 @@ pbat.create.commandfile( pedfile, phefile="",
     adjustment for all selected covariates/predictors.
 
     \code{"subsets"} = The selected FBAT statistic is computed for all
-    posible subsets of the selected covariates/predictor variables.  The
+    possible subsets of the selected covariates/predictor variables.  The
     command is particularly useful to examine the dependence of
     significant results on the selection of a covariate model.
   }
@@ -385,9 +391,13 @@ pbat.create.commandfile( pedfile, phefile="",
     and the second by SNPs m3 and m4.
   }
 
-  
-
-  \item{}{}
+  \item{LOGFILE.OVERRIDE}{When using the 'sym' option in read.ped and
+    read.phe, when this is set to TRUE (default), the PBAT logfile is
+    put in the current working directory; if FALSE, then it is put in
+    the same directory as the datafile.}
+  \item{LOAD.OUTPUT}{When TRUE, loads the output into R (generally
+    recommended). When FALSE, it leaves it in the output left from PBAT
+    (in case output is too large to load into memory).}
 }
 \value{
   `pbat', `pbat.last', `pbat.m', `pbat.obj', and `pbat.files'
@@ -402,13 +412,18 @@ pbat.create.commandfile( pedfile, phefile="",
   directory where pbat is, (2) copy it from anywhere in the path, or (3)
   download it from the internet.
 
+  It is recommended to set 'LOAD.OUTPUT' to 'FALSE' when dealing with
+  large numbers of SNPs.
+
   These commands will also generate a lot of output files in the current
   working directory when interfacing with pbat.  These files will be
   time-stamped so concurrent analysis in the same directory can be run.
   \emph{Race condition}: if two logrank analysis finish at \emph{exactly the
     same time}, then the plots for one might be lost and/or get linked
   to the wrong analysis.  This should be a rather rare occurence, and is
-  a result of pbat always sending this output to only one filename.
+  an unpreventable result of pbat always sending this output to only one
+  filename.  Workaround to race condition: create another directory and
+  use that as your current working directory instead.
 }
 \examples{
 

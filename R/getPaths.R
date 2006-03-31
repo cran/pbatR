@@ -1,10 +1,12 @@
-#################################################################
-## Thomas Hoffmann                                             ##
-## CREATED:  11/??/2005                                        ##
-## MODIFIED: 11/15/2005                                        ##
-## DESCRIPTION: Allows checking in user path directories for   ##
-##  a certain file (i.e. 'pbatdata.txt').                      ##
-#################################################################
+####################################################################
+## Thomas Hoffmann                                                 #
+## CREATED:  11/??/2005                                            #
+## MODIFIED: 11/15/2005                                            #
+##                                                                 #
+## DESCRIPTION:                                                    #
+##  Allows checking in user path directories for a certain file    #
+##   (i.e. the unforgiving 'pbatdata.txt').                        #
+####################################################################
 
 #################################################################
 ## pathGet()                                                   ##
@@ -12,12 +14,12 @@
 #################################################################
 pathGet <- function() {
   paths <- c();
-  if( Sys.info()["sysname"]=="Windows" ) {
-    paths <- strsplit( as.character(Sys.getenv("PATH")), ";" )[[1]];
+  if( isWindows() ) {
+    paths <- strsplit( as.character(Sys.getenv("PATH")), ";", fixed=TRUE )[[1]];
     paths <- paste( paths, "\\", sep="" );
   }else{
     # Good old linux/unix/mac?
-    paths <- strsplit( as.character(Sys.getenv("PATH")), ":" )[[1]];
+    paths <- strsplit( as.character(Sys.getenv("PATH")), ":", fixed=TRUE )[[1]];
     paths <- paste( paths, "/", sep="" );
   }
 

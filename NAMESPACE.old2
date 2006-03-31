@@ -14,12 +14,6 @@ export(
 
        pbat.clean,
 
-       is.finished, pbat.load, pbat.concatenate,
-
-       pbat.generateData,
-
-       pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
-
        write.pbat, write.pbat.csv
        )
 

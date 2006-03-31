@@ -1,9 +1,16 @@
 ##################################################################
-## Thomas Hoffmann                                              ##
-## CREATED:   2005                                              ##
-## DESCRIPTION: 'ped' class files (pedigree files)              ##
+## Thomas Hoffmann                                               #
+## CREATED:   2005                                               #
+## MODIFIED: 05/23/06                                            #
+##                                                               #
+## DESCRIPTION:                                                  #
+##  'ped' class files (pedigree files)                           #
 ##################################################################
 
+## WARNING: HARD CODED CONSTANT in this file for the maximum
+##  before going pure symbolic.
+
+## See phe.R for explanation of symbollic modification
 
 ##################################################################
 ## S3 Methods for 'ped' class                                   ##
@@ -29,7 +36,36 @@ is.pedlist <- function( obj ) {
   return(FALSE);
 }
 
-
+## S3 methods
+print.ped <- function( x, ... ) {
+  if( is.sym( x ) ) {
+    if( length(x)==0 ){
+      catn( "( pure SYMBOLIC reference -", get.sym(x), ")" )
+    }else{
+      cat( "Names: " );
+      catn( names(x) );
+      catn( "( SYMBOLIC reference -", get.sym(x), ")" )
+    }
+  }else{
+    print.data.frame(x);
+  }
+}
+print.pedlist <- function( x, ... ) {
+  if( is.sym( x ) ) {
+    if( length(x)==0 ){
+      catn( "( pure SYMBOLIC reference -", get.sym(x), ")" )
+    }else{
+      cat( "Names: " );
+      catn( names(x) );
+      catn( "( SYMBOLIC reference -", get.sym(x), ")" )
+    }
+  }else{
+    for( i in 1:length(x) ){
+      cat( names(x)[i], "\n\n", sep="" );
+      print( x[[i]] );
+    }
+  }
+}
 
 ####################################################################
 # read.ped(...)   <EXTERNAL>                                       #
@@ -39,11 +75,12 @@ is.pedlist <- function( obj ) {
 #        format=="ped":      RETURN dataframe with markers         #
 #                                   subscripted as .a, .b          #
 #                                   (class 'ped')                  #
-#        format=="pedfile":   RETURN list with markers being lists #
+#        format=="pedlist":   RETURN list with markers being lists #
 #                                    with members $a, $b           #
-#                                    (class 'pedfile')             #
+#                                    (class 'pedlist')             #
+#        sym                 Toggles symbolic reading (sets attr ) #
 ####################################################################
-read.ped <- function( filename, format="ped", lowercase=TRUE, ... ) {
+read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... ) {
   #--------------------------------------------------------------------
   # http://www.biostat.harvard.edu/~clange/default.htm                -
   #  * Following the FBAT convention, PBAT pedigree files have the    -
@@ -72,8 +109,23 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, ... ) {
   #warning( "DO WE NEED TO DO ANYTHING WITH MISSINGNESS???" );
 
   filename <- str.file.extension( filename, ".ped" );
-  ped <- read.badheader( filename, na.strings="", lowercase=lowercase, ... ); # 0 is NA only for censor & sex
+  ped <- read.badheader( filename, na.strings="", lowercase=lowercase, onlyHeader=sym, max=max, ... ); # 0 is NA only for censor & sex
   firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+
+  if( sym ){
+    ## overrides other settings
+    if( length(ped$header) < max ){
+      pedlist <- data.frame( matrix( 0, nrow=1, ncol=length(firstNames)+length(ped$header) ) );
+      names( pedlist ) <- c( firstNames, ped$header );
+      class( pedlist ) <- "pedlist";
+      return( set.sym( pedlist, filename ) );
+    }else{
+      ## We hit the max on the load.. it needs to be pure symbolic
+      pedlist <- data.frame(); ## make it empty
+      class( pedlist ) <- 'pedlist';
+      return( set.sym( pedlist, filename ) );
+    }
+  }
 
   if( format=="ped" ) {
     # Then we tack on extensions to each of the markers, so, for example,
@@ -123,7 +175,15 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, ... ) {
 
 as.ped <- function( x,
                     idped="idped", idsub="idsub", idfath="idfath",
-                    idmoth="idmoth", sex="sex", affection="affection" ) {
+                    idmoth="idmoth", sex="sex", affection="affection",
+                    clearSym=FALSE )
+{
+  if( is.sym(x) ){
+    if( clearSym==TRUE )
+      return( read.ped( get.sym(x), sym=FALSE ) );
+    return( x );
+  }
+  
   if( is.ped(x) )
     return(x);
   
@@ -209,7 +269,14 @@ write.ped <- function( file, ped ) {
 
 as.pedlist <- function( x,
                         idped="idped", idsub="idsub", idfath="idfath",
-                        idmoth="idmoth", sex="sex", affection="affection" ) {
+                        idmoth="idmoth", sex="sex", affection="affection",
+                        clearSym=FALSE ) {
+  if( is.sym(x) ){
+    if( clearSym==TRUE )
+      return( read.ped( get.sym(x), sym=FALSE, format="pedlist" ) );
+    return( x );
+  }
+  
   if( is.pedlist(x) )
     return(x);
 

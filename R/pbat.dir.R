@@ -2,7 +2,9 @@
 # Thomas Hoffmann                                                  #
 # CREATED:     06/??/2005                                          #
 # MODIFIED:    06/??/2005                                          #
-# DESCRIPTION: Loading back in the output from pbat.               #
+#                                                                  #
+# DESCRIPTION:                                                     #
+#  Loading back in the output from pbat.                           #
 ####################################################################
 
 # a <intersect> b
@@ -76,9 +78,13 @@ loadPbatlog <- function( log ){
 
   ## important to make sure the logfile actually exists - otherwise
   ##  something went drastically wrong...
-  if( !file.exists(log) )
-    stop( paste("Cannot load the pbat logfile '",log,"'; file does not exist",sep="") );
-  
+  if( !file.exists(log) ) {
+    ##stop( paste("Cannot load the pbat logfile '",log,"'; file does not exist",sep="") );
+
+    ## 06/14/2006 alteration - potentially yet another alteration in the output format... either that or PBAT is crashing...
+    print( "Nonexistant pbat output file; potentially safe to ignore if running a smaller analysis with multiple processes (the output changes in every PBAT release). Ensure that the output is proper length." );
+    return( NULL );
+  }
   ## The .header & .dat file format has been _dropped_ - I really haven't seen it anymore! so we'll just assume that it has been dropped.
 
   lines <- readLines( log );
@@ -87,7 +93,7 @@ loadPbatlog <- function( log ){
 
   ## 01/26/2006
   if( NUMLINES < 1 ) {
-    warning( "Empty pbat output file; safe to ignore if running a smaller analysis with multiple processes." );
+    print( "Empty pbat output file; safe to ignore if running a smaller analysis with multiple processes. Ensure that the output is proper length." );
     return( NULL );
   }
   
@@ -112,7 +118,7 @@ loadPbatlog <- function( log ){
       print( "ERROR: No data could be found in the file. The pbat output is as follows:" );
       print( lines );
     }
-    warning( "No output in the logfile - just batch commands. (1) Pbat may have crashed. (2) You may be doing a relatively small analysis, so that some processes had nothing to do (so safe to ignore here)." );
+    print( "No output in the logfile - just batch commands. (1) Pbat may have crashed. (2) You may be doing a relatively small analysis, so that some processes had nothing to do (so completely safe to ignore in that circumstance). Ensure output is proper length." );  ## Remove the warnings for debug purposes (warnings are extremely hard to track, as most errors in R).
     return(NULL);  # I'm wondering if we can cut it into so many pieces some don't do anything
   }
 
@@ -124,7 +130,7 @@ loadPbatlog <- function( log ){
 
   ## check if the first line is a header
   dataNames <- NULL;
-  ##unlist(strsplit(lines[and.symbol],"&")) );
+  ##unlist(strsplit(lines[and.symbol],"&",fixed=TRUE)) );
   firstLine <- strsplitFix2( lines[and.symbol], "&" );
   if( firstLine[1] == "Group" ){
     dataNames <- firstLine;
@@ -240,14 +246,14 @@ loadPbatlog.bad <- function( log ) {
       lastLine=-1;
       for( i in 1:NUMLINES ){
         if( substring(line,1,strlen(MARKERSTR))==MARKERSTR ) {
-          namesVector <- make.names( unlist(strsplit(line,"&")) );
+          namesVector <- make.names( unlist(strsplit(line,"&",fixed=TRUE)) );
           ##print( namesVector );
           break;
         }else if( strfindf(line,"&")!=-1 ){
           ## all added 01/25/2006 for erroneous multiple processes output (i.e. the second one doesn't work at all!)
           ##print(line); stop(i); ## DEBUG ONLY
           
-          addiLine <- unlist(strsplit(line,"&"));
+          addiLine <- unlist(strsplit(line,"&",fixed=TRUE));
           namesVector <- "BAD"; ## less alteration of code
           header <- FALSE;
           break;
@@ -325,7 +331,6 @@ loadPbatlogExtended <- function( log ) {
   
   res <- loadPbatlog(paste(log,"_1_",numProcesses,sep=""));
   ##print( res$call );
-  ##stop("food now" );
   for( i in 2:numProcesses ){
     res2 <- loadPbatlog(paste(log,"_",i,"_",numProcesses,sep=""));
     if( !is.null(res2) ) { ## warnings provided elsewhere
@@ -347,4 +352,41 @@ loadPbatlogExtended <- function( log ) {
   rownames(res$data) <- 1:nrow(res$data);
 
   return(res);
+}
+
+## Cluster mode alteration
+loadPbatlogConcatenate <- function( log, filename, clean=FALSE ) {
+  numProcesses <- pbat.getNumProcesses();
+  if( numProcesses == 1 ) {
+    if( !clean ){
+      file.copy( from=log, to=filename );
+    }else{
+      file.rename( from=log, to=filename );
+    }
+  }
+
+  ## rename/remove the first one
+  firstlog <- paste(log,"_1_",numProcesses,sep="");
+  if( !clean ){
+    file.copy( from=firstlog, to=filename );
+  }else{
+    file.rename( from=firstlog, to=filename );
+  }
+
+  ## now reload the rest of the buggers
+  for( i in 2:numProcesses ){
+    nextlog <- paste(log,"_",i,"_",numProcesses,sep="");
+    if( file.exists( nextlog ) ){
+      file.append( filename, nextlog );
+      if( clean ) file.remove( nextlog );
+    }else{
+      cat( "Warning, not all output files exist; PBAT may have crashed or not finished running. See also 'is.finished()'\n" );
+    }
+  }
+
+  ## print a message that it's been written
+  cat( "Output has been concatenated and left in '", filename, "'.\n", sep="" );
+
+  ## and return nothing
+  return(invisible());
 }

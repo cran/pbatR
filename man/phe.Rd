@@ -12,7 +12,8 @@ as.phe( df, pid="pid", id="id" )
 
 is.phe( obj )
 
-read.phe( filename, na.strings=c("-",".","NA"), lowercase=TRUE, ... )
+read.phe( filename, na.strings=c("-",".","NA"), lowercase=TRUE,
+          sym=TRUE, ... )
 
 write.phe( file, phe )
 }
@@ -28,6 +29,10 @@ write.phe( file, phe )
     here.}
   \item{lowercase}{When TRUE (default), enforces all headers to
     lowercase for convenience.}
+  \item{sym}{When TRUE, only the header of the file is read in; only
+    PBAT will load in the file (* - see exception).  When FALSE, the
+    entire file will be
+    read in, and can be modified before using with PBAT.}
   \item{...}{Options for \code{\link{read.table}}.  Do \emph{not} put in
     \code{header=TRUE}, as this will
     cause an error, as the header is automatically loaded.
@@ -44,11 +49,7 @@ write.phe( file, phe )
   looking for if you call any of 
   the pbat*files() commands (\emph{even} if lowercase=FALSE, as some
   symbols might be modified by R naming
-  conventions).
-
-  \bold{`read.phe' mild warning solution}: For example, instead of using
-  pbat.logrank.files(...), just use the suggested pbat.m(...) or
-  pbat.obj(..) after loading in the `.phe' and `.ped' files.
+  conventions).  In general this should not happen.
 }
 \details{
   When reading in a file on disk using \code{read.ped}, a `.phe' file
@@ -68,6 +69,12 @@ write.phe( file, phe )
   The \code{write.ped} function will convert back into the missing
   format necessary for PBAT.
 
+  (*) Exception. If symbolic is true, the dataset will be temporarily
+  read in under one special circumstance.  This is when a stratification
+  variable is used in pbat.m, pbat.obj, or pbat.files.  This is because
+  the grouping values must be read in.  Alternatively, you can specify
+  these values when calling those functions (see the groups.* options)
+  in pbat.
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
@@ -85,7 +92,7 @@ x
 myPhe <- as.phe( x );
 myPhe
 
-# And just another e.g. capitolizing on prior code
+# And just another e.g. capitalizing on prior code
 names(x)[1:2] <- c("thepid","theid")
 x
 myPhe <- as.phe( x, pid="thepid", id="theid" )

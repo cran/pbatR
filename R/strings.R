@@ -2,6 +2,9 @@
 # Thomas Hoffmann                                                  #
 # CREATED:  some time ago                                          #
 # MODIFIED: 01/25/2006                                             #
+#                                                                  #
+# DESCRIPTION:                                                     #
+#  Contains string functions.                                      #
 ####################################################################
 
 ##################################################
@@ -57,6 +60,12 @@ str.extract.after <- function( s, p='~' ) {
   return( substring( s, loc+strlen(p) ) );
 }
 
+str.extract.afterb <- function( s, p='~' ) {
+  loc <- strfindb( s,p );
+  if( loc==-1 ) return("");
+  return( substring( s, loc+strlen(p) ) );
+}
+
 str.file.extension <- function( s, extension='txt' ){
   if( substring(extension,1,1)!="." ) #@$%!!!
     extension = paste(".",extension,sep="");
@@ -71,7 +80,7 @@ str.file.extension <- function( s, extension='txt' ){
 ######################################################
 ## strReplace(...)                                   #
 ## Replaces occurences of one string with another.   #
-## HOWEVER - if it's at the beginning ur the end it  #
+## HOWEVER - if it's at the beginning or the end it  #
 ##  will get lost.                                   #
 ## PARAM  str   string to replace                    #
 ##        find  string to look for                   #
@@ -100,3 +109,7 @@ strReplace <- function( str, find, repl )  {
 #  thing as substring() with the third parameter.. strange R;
 #  probably for backwards compatibility??
 
+catn <- function( ..., file="" ) {
+  cat( ..., file=file );
+  cat( '\n', file=file );
+}

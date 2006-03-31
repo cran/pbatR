@@ -2,137 +2,13 @@
 # Thomas Hoffmann                                                  #
 # CREATED:     06/07/2005                                          #
 # RE-CREATED:  06/20/2005                                          #
-# MODIFIED:    01/08/2006                                          #
+# MODIFIED:    05/28/2006                                          #
 #                                                                  #
-# DESCRIPTION: Methods for setting and getting the pbat binary     #
-#    executable filename, and methods for reading/writing          #
-#    both .phe/.ped files.                                         #
+# DESCRIPTION:                                                     #
+#  Methods for setting and getting the pbat binary                 #
+#   executable filename, and methods for reading/writing           #
+#   both .phe/.ped files ( read.badheader )                        #
 ####################################################################
-
-isWindows <- function()
-  return( Sys.info()["sysname"]=="Windows" );
-
-####################################################################
-#                                                                  #
-# PBAT PATH GET AND SET FOR THE EXECUTABLE.                        #
-#                                                                  #
-####################################################################
-
-
-
-####################################################################
-# pbat.get.fname(...)                                              #
-# DESCRIPTION: gets $HOME/.pbat.R                                  #
-# RETURN: string of what was just described.                       #
-####################################################################
-pbat.get.fname <- function() {
-  if( Sys.getenv("R_USER")=="" )
-    return( "~/.pbat.R" );  # A *nix oddity...
-  return( paste( Sys.getenv("R_USER"), "/.pbat.R", sep="" ) ); #win
-}
-
-
-####################################################################
-# pbat.get()                                                       #
-# DESCRIPTION: Returns the current stored name of the pbat         #
-#   executable.  NOTE: This is saved between sessions for a given  #
-#   user.                                                          #
-# RETURN  current stored name of the pbat executable.              #
-####################################################################
-pbat.get <- function() {
-  filename <- pbat.get.fname();
-  if( file.exists(filename)==FALSE )
-    return("pbat"); # default program name
-
-  file <- file( filename, "r" );
-  on.exit( close(file) );
-
-  tmp <- readLines(file, 1, TRUE);
-  if( tmp=="" ) tmp="pbat";
-  return( tmp );
-}
-
-
-####################################################################
-# pbat.set(...)                                                    #
-# DESCRIPTION: Sets the name of the pbat executable.  NOTE: This is#
-#   retained between sessions for a given user.                    #
-# PARAM  executableStr  String of the pbat executable name, e.g.   #
-#                         "c:/pbat/pbat25.exe"                     #
-####################################################################
-pbat.set <- function( executableStr="", CLEAR=FALSE ) {
-  if( executableStr=="" && CLEAR==FALSE ) {
-    ;# now do the work!
-    form <- tktoplevel();
-    tkwm.title( form, "P2BAT - pbat.set()" );
-    if( isWindows() ) {
-      executableStr <- tclvalue(tkgetOpenFile(filetypes="{{Pbat Executable} {.exe}}"));
-    } else{
-      executableStr <- tclvalue(tkgetOpenFile()); # Unix exe's have no extension!  You've been in windows too long!
-    }
-    if( !nchar(executableStr) ) {
-      tkdestroy(form);
-      warning( "Pbat not set." );
-      return(invisible());
-    }
-    tkdestroy(form);
-  }
-  if( executableStr!="" & file.exists(executableStr)==FALSE )
-    warning( paste("File may not exist.  If '",
-                   executableStr,
-                   "' is in your path, this is safe to ignore.  Make sure you are using '\\\\' or '/'.",
-                   sep="") );
-
-  if( CLEAR==TRUE )
-    executableStr = "";
-
-  file <- file( pbat.get.fname(), "w" );
-  on.exit( close(file) );
-
-  cat( executableStr, file=file );
-  cat( "\n", file=file );
-}  
-
-####################################################################
-# pbat.getNumProcesses()                                           #
-# DESCRIPTION: Multiple processing addition - gets the number of   #
-#  processes to spawn.  NOTE: retained within sessions.            #
-####################################################################
-pbat.getNumProcesses <- function() {
-  filename <- paste( pbat.get.fname(), "2", sep="" );
-  if( file.exists(filename)==FALSE )
-    return( 1 ); ## default
-
-  file <- file( filename, "r" );
-  on.exit( close(file) );
-
-  tmp <- readLines(file, 1, TRUE);
-  if( tmp=="" ) tmp=1;
-  return( as.integer(tmp) );  
-}
-
-####################################################################
-# pbat.setNumProcesses(...)                                        #
-# DESCRIPTION: Multiple processing addition - sets the number of   #
-#  processes to spawn.  NOTE: retained within sessions.            #
-# RETURNS: 0 if sucessful, 1 otherwise                             #
-####################################################################
-pbat.setNumProcesses <- function( n ) {
-  n <- as.integer(n);
-  if( n < 1 ) {
-    warning("Number of processes must be a positive integer.");
-    return(1);
-  }
-  
-  filename <- paste( pbat.get.fname(), "2", sep="" );
-  file <- file( filename, "w" );
-  on.exit( close(file) );
-
-  cat( n, file=file );
-  cat( "\n", file=file );
-
-  return(0);
-}
 
 ####################################################################
 #                                                                  #
@@ -146,13 +22,15 @@ pbat.setNumProcesses <- function( n ) {
 # DESCRIPTION: Use when the number of headers does not match the   #
 #              data.                                               #
 # WARNING: DO NOT do read.badheader( ...., header=T )              #
-# PARAM: file  file or filename                                    #
-#        sep   seperator                                           #
+# PARAM: file         file or filename                             #
+#        sep          seperator                                    #
+#        lowercase    makes all the headers lowercase (if onlyHeader=F)
+#        onlyHeader   for symbolic - only reads in the header      #
 #        ...   other parameters to 'read.table'; header=T not sup. #
 # RETURN $header  headers read from the file                       #
 #        $table   table read from the file (read.table(header=F))  #
 ####################################################################
-read.badheader <- function( file, sep="", lowercase=TRUE, ... ) {
+read.badheader <- function( file, sep="", lowercase=TRUE, onlyHeader=FALSE, max=100, ... ) {
   # The idea behind this is we read in the header, and then piggy-back
   #  onto the read.table function!
   # Some of this coding was taken from read.table...
@@ -162,17 +40,28 @@ read.badheader <- function( file, sep="", lowercase=TRUE, ... ) {
     file <- file(file, "r")
     on.exit(close(file))
   }
+
+  # If it's not a symbolic (onlyHeader=T), then max shouldn't apply
+  if( onlyHeader==FALSE ) max <- -1;
   
   # Read in the header line.
   header <- scan(file, what="", sep=sep,
                  nlines=1, quiet=TRUE, skip=0, strip.white=TRUE,
-                 blank.lines.skip=TRUE, comment.char="#" );
-  if( lowercase )
+                 blank.lines.skip=TRUE, comment.char="#", nmax=max );
+  if( lowercase & onlyHeader==FALSE )  ## when symbolic, the case cannot be changed; is this the best place to make that change??
     header <- tolower(header); # convenience
+
+  ## If we've reached the max, then it should be pure symbolic (no info whatsoever)
+  ##if( max>0 && length(header)==max ){
+    ##cat( 'SNPs number >', max, 'so no consistency checks will be done by pbatR on the SNPs (but still on the rest of the formula, and then PBAT will check to some extent later.' );
+    ##header <- NULL;
+  ##}
 
   # Read in the rest of the table, prevent that error described above
   #  in the "WARNING" section.
-  table <- read.table( file, sep=sep, header=FALSE, ... );
+  table <- NULL;
+  if( !onlyHeader )
+    table <- read.table( file, sep=sep, header=FALSE, ... );
 
   return( list( header=header, table=table) );
 } ### VERIFIED ###
@@ -217,18 +106,17 @@ write.badheader <- function( file, dataframe, header,
 #                eliminate                                         #
 # RETURNS dataframe with columns removed                           #
 ####################################################################
-dfr.r <- function( df, strVec ) {
-  ####################################
-  # data frame remove, using strings #
-  ####################################
-  dfr <- function( df, str ) {
-    if( sum(names(df)==str) != 1 ) {
-      warning("dfr: no headers match, or more than one header matches");
-      return( df );
-    }
-    return( df[-which(names(df)==str)] );
+#####################################
+## data frame remove, using strings #
+#####################################
+dfr <- function( df, str ) {
+  if( sum(names(df)==str) != 1 ) {
+    warning("dfr: no headers match, or more than one header matches");
+    return( df );
   }
-
+  return( df[-which(names(df)==str)] );
+}
+dfr.r <- function( df, strVec ) {
   for( i in 1:length(strVec) )
     df <- dfr( df, strVec[i] );
 

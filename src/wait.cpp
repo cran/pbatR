@@ -14,7 +14,7 @@
 #include <vector>
 #include <string>
 
-std::vector<std::string> cmds;
+static std::vector<std::string> cmds;
 
 extern "C" {
 
@@ -26,6 +26,11 @@ extern "C" {
     cmds.clear();
   }
 
+  /* I was testing if there was a maximum string length. This appears not to be the case!
+  void pprint( char **str ) {
+    std::cout << *str << std::endl;
+  }
+  */
 
 
 #ifdef WAIT_WINDOWS_DEFINE

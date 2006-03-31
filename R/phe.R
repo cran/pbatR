@@ -1,3 +1,20 @@
+####################################################################
+# Thomas Hoffmann                                                  #
+# CREATED:  2005                                                   #
+# MODIFIED: 05/23/06                                               #
+#                                                                  #
+# DESCRIPTION:                                                     #
+#  'phe' object files.                                             #
+####################################################################
+
+## The idea of symbolicially loading files was thought of after
+##  all of this infrastructure was laid.  We need the names(...)
+##  function to still do what it used to, or we need to modify a
+##  lot of things. Thus this is slightly complicated in that
+##  we set the 'sym' attribute of an object to indicate its
+##  just 'pointing' to that file if you will. Otherwise the file is
+##  redundantly written back to disk.
+
 phe <- function( x, ... )
   UseMethod( "phe" );
 
@@ -5,6 +22,16 @@ is.phe <- function( obj ) {
   if( sum( class(obj)=="phe" ) == 1 )
     return(TRUE);
   return(FALSE);
+}
+
+print.phe <- function( x, ... ) {
+  if( is.sym( x ) ) {
+    cat( "Names: " );
+    catn( names(x) );
+    catn( "( SYMBOLIC reference -", get.sym(x), ")" )
+  }else{
+    print.data.frame(x);
+  }
 }
 
  
@@ -16,9 +43,10 @@ is.phe <- function( obj ) {
 #        na.strings  strings to represend NA; '-','.' are defaults #
 #        ...         options for read.table, do NOT put in         #
 #                     header=TRUE (will cause an error - incorrect!#
+#        sym         Toggles symbolic reading (sets attr )         #
 # RETURN: dataframe representing the .phe file                     #
 ####################################################################
-read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, ... ) {
+read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, sym=TRUE, ... ) {
 
   #-----------------------------------------------------------------
   # From PBAT_overview.doc (I only have a temporary internet add...-
@@ -33,9 +61,17 @@ read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, ... 
   
   # according to other documentation, na.strings can be '-' or '.'
   filename <- str.file.extension( filename, ".phe" );
-  phe <- read.badheader( filename, na.strings=na.strings, lowercase=lowercase, ... );
-  names( phe$table ) <- make.names(  c( "pid","id", phe$header )  );
+  phe <- read.badheader( filename, na.strings=na.strings, lowercase=lowercase, onlyHeader=sym, max=-1, ... );
+
+  if( sym ){
+    phe2 <- data.frame( matrix( 0, nrow=1, ncol=2+length(phe$header) ) );
+    names( phe2 ) <- c( "pid","id", phe$header );
+    class( phe2 ) <- 'phe';
+    return( set.sym( phe2, filename ) );
+  }
   
+  names( phe$table ) <- make.names(  c( "pid","id", phe$header )  );
+
   if( lowercase )
     names( phe$table ) <- tolower( names( phe$table ) );
 
@@ -55,7 +91,7 @@ read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, ... 
 as.phe <- function( df, pid="pid", id="id" ) {
   if( is.ped(df) )
     stop( "Cannot write out the pedigree file as a phenotype file.  Did you mix up 'phe' and 'ped' objects?" );
-  
+
   # ensure proper ordering...
   pidCol <- df[pid]; idCol <- df[id];
   df <- dfr.r( df, c(pid,id) );

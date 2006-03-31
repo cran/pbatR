@@ -2,7 +2,9 @@
 # Thomas Hoffmann                                                  #
 # CREATED:     06/??/2005                                          #
 # MODIFIED:    01/18/2006                                          #
-# DESCRIPTION: The new and improved interface to pbat!             #
+#                                                                  #
+# DESCRIPTION:                                                     #
+#  The pbat.m(...) interface to pbat.                              #
 ####################################################################
 
 
@@ -12,7 +14,12 @@ PBAT.M.DEBUG <- FALSE;
 strsplitFix <- function( x, split ) {
   if( length(x) > 1 ) stop( "strSplitFix(...) only works on a single string." );
   if( length(x)==0 || x=="" ) return("");
+
+  ##print( paste( "TO BE SPLIT: (", x, "), (", split, ")", sep="") );
+  
   res=unlist( strsplit( x, split, fixed=TRUE ) ); # split, return as vector of strings
+  ##print( "SPLIT" );
+  
   return( res[res!=""] ); # eliminate any empty strings!
 }
 
@@ -47,7 +54,8 @@ pbat.m <- function(
        output="normal",
        max.mating.types=10000,
        commandfile="",
-       future.expansion=NULL )
+       future.expansion=NULL,
+       LOAD.OUTPUT=TRUE        )
 {
   # make sure some of the variables are of a certain format
   max.pheno <- as.numeric( max.pheno );
@@ -225,23 +233,23 @@ pbat.m <- function(
 
   
   # Let's just include some of the debugging in this file...
-  if( PBAT.M.DEBUG==TRUE ) {
-    # print out everything that has the # PASSING comment;
-    #  make sure we haven't forgotten anything!
-
-    print( "CENSOR" ); print( censor );
-    print( "TIME" ); print( time );
-    print( "PHENOS" ); print( phenos );
-    print( "GROUPS.VAR" ); print( groups.var );
-    print( "GROUPS" ); print( groups );
-    print( "SNPS" ); print( snps );
-    print( "HAPLOS" ); print( haplos );
-    print( "PREDS" ); print( preds );
-    print( "INTERS" ); print( inters );
-    print( "PREDS.ORDER" ); print( preds.order );
-    
-    return(NULL);
-  }
+  ##if( PBAT.M.DEBUG==TRUE ) {
+  ##  # print out everything that has the # PASSING comment;
+  ##  #  make sure we haven't forgotten anything!
+  ##
+  ##  print( "CENSOR" ); print( censor );
+  ##  print( "TIME" ); print( time );
+  ##  print( "PHENOS" ); print( phenos );
+  ##  print( "GROUPS.VAR" ); print( groups.var );
+  ##  print( "GROUPS" ); print( groups );
+  ##  print( "SNPS" ); print( snps );
+  ##  print( "HAPLOS" ); print( haplos );
+  ##  print( "PREDS" ); print( preds );
+  ##  print( "INTERS" ); print( inters );
+  ##  print( "PREDS.ORDER" ); print( preds.order );
+  ##  
+  ##  return(NULL);
+  ##}
 
   # And that should be it!  Just run it baby!
   res <- pbat.obj( phe, ped, paste("pbat",getTimeStamp(),"data",sep=""),
@@ -268,7 +276,8 @@ pbat.m <- function(
        output=output,
        max.mating.types=max.mating.types,
        commandfile=commandfile,
-       future.expansion=future.expansion );
+       future.expansion=future.expansion,
+       LOAD.OUTPUT=LOAD.OUTPUT );
 
   ##print( names(res) ); ## DEBUG
   res$call <- formula;

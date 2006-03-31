@@ -2,7 +2,10 @@
 # Thomas Hoffmann                                                  #
 # CREATED:     06/21/2005                                          #
 # MODIFIED:    07/08/2005                                          #
-# DESCRIPTION: The major pbat-interface commands.                  #
+#                                                                  #
+# DESCRIPTION:                                                     #
+#  The major pbat-interface commands.                              #
+#   ( pbat.files, pbat.obj, all of the S4 methods )                #
 ####################################################################
 
 ####################################################################
@@ -23,7 +26,7 @@ summary.pbat <- function( object, ... ) {
   }
 
   # now, print out the results?
-  print( "Results:" );
+  catn( "Results:" );
   print( x$results );
 }
 
@@ -36,14 +39,15 @@ plot.pbat <- function( x, ... ) {
 }
 
 print.pbat <- function( x, ... ) {
-  print( "Class members:" );
-  print( " $call             The formula used." );
-  print( " $pbat.call        The batch-file commands sent to pbat." );
-  print( " $results          ** The results of pbat execution in a data.frame object. **" );
-  print( " $results.logfile  Filename of the raw results of pbat (may also have extension .hdr & .dat); esp. useful if pbat outputs an unknown format that fails to be read in (in case this happens in later releases of PBAT). Note this is _in the current working directory_." );
-  print( " $rcode            Name of the file containing plots for logrank." );
-  print( " $fbat             'pc','gee', or 'logrank'" );
-  print( "Type '?pbat' for more details." );
+  catn( "Class members:" );
+  catn( " $call             The formula used." );
+  catn( " $pbat.call        The batch-file commands sent to pbat." );
+  catn( " $results          ** The results of pbat execution in a data.frame object. **" );
+  catn( " $results.logfile  Filename of the raw results of pbat (may also have extension .hdr & .dat); esp. useful if pbat outputs an unknown format that fails to be read in (in case this happens in later releases of PBAT). Note this is _in the current working directory_." );
+  catn( " $rcode            Name of the file containing plots for logrank." );
+  catn( " $fbat             'pc','gee', or 'logrank'" );
+  catn( " $commandfile      Name of the file cantaining pbat batchfile." );
+  catn( "Type '?pbat' for more details." );
 }
 
 write.pbat <- function(x, filename) {
@@ -129,11 +133,9 @@ write.pbat.csv <- function(x, filename) {
 #                                                                  #
 # Functions that work on the files.                                #
 #                                                                  #
-# Hmm... lots of redundant code here... thought it would make the  #
-#  options clearer, but I'm not so sure anymore...                 #
-#                                                                  #
 ####################################################################
 
+## 05/23/06 - MASSIVE alterations in this coding!
 ############################################################################
 # \name{pbat.files}                                                        #
 # \description{                                                            #
@@ -154,79 +156,124 @@ write.pbat.csv <- function(x, filename) {
 #   \item{...}{Pbat options, as described in the function                  #
 #     \code{\link{pbat.create.commandfile}}. }                             #
 ############################################################################
-pbat.files <- function( pedfile, fbat="gee",
+pbat.files <- function( pedfile, phefile,
+                        fbat="gee",
                         commandfile="",
                         logrank.outfile="",
+                        LOAD.OUTPUT=TRUE,
                         ... )
 {
   curTimeStamp = getTimeStamp();
-  if( isTimeStamped(pedfile) )
+  if( isTimeStamped(pedfile) ) {
     curTimeStamp = extractTimeStamp( pedfile );
-  
+  }else if( isTimeStamped(phefile) ) {
+    curTimeStamp = extractTimeStamp( phefile );
+  }
+  ##print( "curTimeStamp" );
+  ##print( curTimeStamp );
+  ## It time-stamps correctly, even with symbolic
+
   if( commandfile=="" )
     commandfile <- paste("pbat",curTimeStamp,"cmd.txt",sep="");
   
   # Create the command file
-  logfile = pbat.create.commandfile( pedfile, fbat=fbat,
+  logfile <- pbat.create.commandfile( pedfile=pedfile, phefile=phefile, fbat=fbat, ## 05/31/06 fix
     commandfile=commandfile, ... );
 
   if( logrank.outfile=="" & fbat=="logrank" ) { # so we get the same timestamp :)
-    #logrank.outfile <- paste( substring(logfile,1,strlen(pedfile)-3), "phe", sep="" );
     logrank.outfile <- paste( "pbat",curTimeStamp,".R", sep="" );
   }
 
-  # NEW NEW
   # Kill the 'spluscode.txt' file
   if( file.exists( "spluscode.txt" ) )
     file.remove( "spluscode.txt" );
-  # NEW NEW
-  
   
   # call the system 'pbat' command
-  #system( paste( pbat.get(), commandfile ) );
-  TMPOUT <- paste( "pbat", curTimeStamp, "output.txt", sep="" );
-  #if( file.exists( TMPOUT ) )
-  #  file.remove( TMPOUT ); # see if pbat was killed by user?
-  ##print( "COMMAND TO BE RUN:" ); # DEBUG ONLY!!!
-  ##print( paste( pbat.get(), commandfile, "> ", TMPOUT ) );
-  ##print( "PATH:" );
-  ##print( getwd() );
-  ##system( paste( pbat.get(), commandfile, "> ", TMPOUT ), intern=TRUE );
-  # 10/07/2005 -- output redirection failing!!!
-  ##  Instead it should fail when trying to load some of the input in...
-
+  #TMPOUT <- paste( "pbat", curTimeStamp, "output.txt", sep="" );
   ## 01/09/2006 rewrite for multiple processes
   ## 01/18/2006 fix to allow spaces in windows
-  ## 01/24/2006 Windows version of system spin-locks!! removing comletely
-  numProcesses <- pbat.getNumProcesses();
-  if( numProcesses == 1 ) {
-    ##if( isWindows() ){
-    ##  system( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ),
-    ##          intern=TRUE );
-    ##}else{
-    ##  system( paste( pbat.get(), commandfile ), intern=TRUE );
-    ##}
+  ## 01/24/2006 Windows version of system spin-locks!! removing completely
+  ## 05/23/2006 Altering for potential new clustering method...
+  mode <- pbat.getmode()
+  numProcesses <- mode$jobs;
+  CLUSTER.TIME <- mode$refresh;
 
-    clearCommands();
-    if( isWindows() ){
-      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) );
+  if( mode$mode == "single" ){
+    ## The original
+    clearCommands()
+    if( isWindows() ) {
+      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, sep="" ) );
     }else{
+      ##print( "SINGLE Command" );
+      ##print( paste( pbat.get(), commandfile ) );
       addCommand( paste( pbat.get(), commandfile ) );
     }
     runCommands();
-  }else{
+  }else if( mode$mode != "cluster" ){
+    ## The original multiple spawning method
     clearCommands();
     for( i in 1:numProcesses ) {
       if( isWindows() ) {
         addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
-                           " ", i, " ", numProcesses, sep="" ) );
+                          " ", i, " ", numProcesses, sep="" ) );
       }else{
+        ##print( "MULTIPLE Command" );
+        ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
         addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
       }
     }
     runCommands();
-  }
+  }else{
+    ## The bsub method for clusters... rather inefficient, but it's for clusters that don't support the above.
+    
+    clearCommands(); ## remember otherwise it spin-locks
+    
+    filenameSH <- rep( "", numProcesses );
+    filenameTouch <- rep( "", numProcesses );
+    finished <- 0;
+    
+    for( i in 1:numProcesses ) {
+      ## set the filenames
+      filenameSH[i] <- paste( 'pbatCluster', curTimeStamp, '.', i, '.sh', sep="" );
+      filenameTouch[i] <- paste( 'pbatCluster', curTimeStamp, '.', i, '.touch', sep="" );
 
+      ## create the shell file
+      file <- file( filenameSH[i], 'w' );
+      ##print( "CLUSTER Command" );
+      ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
+      catn( pbat.get(), commandfile, i, numProcesses, file=file );
+      catn( 'touch', filenameTouch[i], file=file );  ## add an is.finished() command for some people?
+      close(file);
+
+      ## run the shell file (well, add it to the queue)
+      addCommand( paste( mode$cluster, filenameSH[i] ) );
+    }
+
+    ## now run all of the shell files
+    runCommands();
+
+    ## wait for all the files to have been 'touched'
+    if( CLUSTER.TIME>0 ){
+      while( finished != numProcesses ) {
+        if( file.exists(filenameTouch[finished+1]) ){
+          ## The next file in line finished
+          finished <- finished+1;
+        }else{
+          ## It isn't finished, so sleep so it doesn't eat up CPU time
+          Sys.sleep( CLUSTER.TIME );
+        }
+      }
+    }else{
+      print( "Commands have been batched. When you quit, save your workspace [q(save='yes')], and restore it later. Check whether it has finished with is.finished(res) to be sure." );
+      LOAD.OUTPUT <- FALSE;
+    }
+
+    ## Delete all the .sh and .touch files
+    for( i in 1:numProcesses ) {
+      file.remove( filenameSH[i] );
+      file.remove( filenameTouch[i] );
+    }
+  }
 
   ##if( !file.exists( TMPOUT ) )
   ##  stop( "Either pbat execution was terminated, or pbat executable couldn't be found.  In the latter case, you need the 'pbat' software - see set.pbat() for more details and a web-link to download." ); # this might not work... seems to so far though :)
@@ -243,8 +290,11 @@ pbat.files <- function( pedfile, fbat="gee",
   ##print( "loading logfile" );
   ##print( logfile );
   ##res <- loadPbatlog( logfile );
-  res <- loadPbatlogExtended( logfile ); ## 01/09/2006
-  ###print( res );
+  if( LOAD.OUTPUT ) {
+    res <- loadPbatlogExtended( logfile ); ## 01/09/2006
+  }else{
+    res <- NULL;
+  }
 
   pbatObj <- list();
   pbatObj$call <- NULL; # set by upper function
@@ -254,13 +304,59 @@ pbat.files <- function( pedfile, fbat="gee",
   pbatObj$results.logfile <- logfile;
   if( fbat!="logrank" ) pbatObj$rcode <- "";
   pbatObj$fbat <- fbat;
+  pbatObj$commandfile <- commandfile; ## Addition so it can be cleaned
   ##print( names(pbatObj) );
   class(pbatObj) <- c("pbat", "list");
   ##print( names(pbatObj) );
 
+  if( CLUSTER.TIME==0 && mode$mode=='cluster' ){
+    ## new additions for is.finished
+    pbatObj$filenameTouch <- filenameTouch;
+    pbatObj$filenameSH <- filenameSH;
+  }
+  
   return( pbatObj );
 }
 
+## CLUSTER mode alteration 1
+## Check to see if the cluster mode has finished
+is.finished <- function( pbatObj=NULL, clean=TRUE ){
+  if( is.null(pbatObj) ) pbatObj <- pbat.last();
+
+  if( is.null(pbatObj$filenameTouch) || length(pbatObj)==0 )
+    return( NA );
+
+  ## see if all the filenames have been touched
+  for( i in 1:length(pbatObj$filenameTouch) ){
+    if( !file.exists(pbatObj$filenameTouch[i]) )
+      return(FALSE);
+  }
+
+  ## and clean up if they've finished
+  if( clean ){
+    for( i in 1:length(pbatObj$filenameTouch) ){
+      file.remove( pbatObj$filenameSH[i] );
+      file.remove( pbatObj$filenameTouch[i] );
+    }
+  }
+  return( TRUE );
+}
+
+## CLUSTER mode alteration 2
+## Reloading in the output file
+pbat.load <- function( pbatObj=NULL ){
+  if( is.null(pbatObj) ) pbatObj <- pbat.last();
+
+  pbatObj$results <- loadPbatlogExtended( pbatObj$results.logfile );
+  return( pbatObj );
+}
+
+## CLUSTER mode alteration 3
+pbat.concatenate <- function( pbatObj=NULL, filename="myResults.txt", clean=FALSE ){
+  if( is.null(pbatObj) ) pbatObj <- pbat.last();
+
+  loadPbatlogConcatenate( pbatObj$results.logfile, filename, clean );
+}
 
 ####################################################################
 #                                                                  #
@@ -268,6 +364,9 @@ pbat.files <- function( pedfile, fbat="gee",
 #                                                                  #
 ####################################################################
 
+## Ordering on phe and ped here is opposite to that of
+##  pbat.files! Not so good! But we potentially break
+##  others coding if we change it now.
 ####################################################################
 # pbat.obj(..)           <EXTERNAL>                                #
 # DESCRIPTION: takes a phe object and a ped "object" {not          #
@@ -280,10 +379,41 @@ pbat.files <- function( pedfile, fbat="gee",
 # (PARAM) ...  pbat options, as referenced to in the function      #
 #                pbat.files().                                     #
 ####################################################################
-pbat.obj <- function( phe, ped, file.prefix, ... ) {
-  write.phe( paste( file.prefix, ".phe", sep="" ), phe );
-  write.ped( paste( file.prefix, ".ped", sep="" ), ped );
-  return( pbat.files( file.prefix, ... ) );
+pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
+  #write.phe( paste( file.prefix, ".phe", sep="" ), phe );
+  #write.ped( paste( file.prefix, ".ped", sep="" ), ped );
+  #return( pbat.files( file.prefix, ... ) );
+
+  ## Write out files to disk if necessary
+  if( !is.sym(ped) ) {
+    write.ped( paste( file.prefix, ".ped", sep="" ), ped );
+    pedname <- file.prefix;
+  }else{
+    pedname <- get.sym( ped );
+  }
+
+  if( !is.sym(phe) ) {
+    write.phe( paste( file.prefix, ".phe", sep="" ), phe );
+    phename <- file.prefix;
+  }else{
+    phename <- get.sym( phe );
+  }
+
+  ## run the command
+  res <- pbat.files( pedname, phename, LOAD.OUTPUT=LOAD.OUTPUT, ... );
+
+  ## take note of what was symbollic (for the clean routine)
+  ##  Nevermind - the clean routine doesn't need this!
+  #if( is.sym(ped) )
+  #  res$pedSym <- TRUE;
+  #if( is.sym(phe) )
+  #  res$pheSym <- TRUE;
+
+  #if( CLEAN & LOAD.OUTPUT )
+  #  pbat.clean( res ); ## doesn't delete the logrank stuff
+
+  ## and return the result
+  return( res );
 }
 
 ####################################################################
