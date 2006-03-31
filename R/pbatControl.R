@@ -49,9 +49,11 @@ programControl <- function( program, commands, filename='systemControl.sh', inte
   ##cat( sh, "\n" );
   ##cat( paste( sh, filename ) );
 
-  if( isWindows() )
-    return( system( paste( sh, filename ), intern=FALSE ) ); ## confuses our output pipes otherwise
-  
+  if( isWindows() ){
+    ##return( system( paste( sh, filename ), intern=FALSE ) ); ## confuses our output pipes otherwise
+    return( .C( "launchPbatPower", file=filename  ) );
+  }
+    
   return( system( paste( sh, filename ), intern=intern ) );
 }
 

@@ -66,10 +66,6 @@ power.choiceForm <- function() {
 
   tkgrid( but1, but2 );
   tkgrid( but3, but4 );
-
-  ## wait for completion
-  tkwait.window( form );
-  return(invisible());
 }
 
 power.textEntry <- function( form, label, value="" ) {

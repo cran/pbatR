@@ -179,6 +179,7 @@ pbat.files <- function( pedfile, phefile,
   # Create the command file
   logfile <- pbat.create.commandfile( pedfile=pedfile, phefile=phefile, fbat=fbat, ## 05/31/06 fix
     commandfile=commandfile, ... );
+  ##print( logfile ); ## DEBUG ONLY
 
   if( logrank.outfile=="" & fbat=="logrank" ) { # so we get the same timestamp :)
     logrank.outfile <- paste( "pbat",curTimeStamp,".R", sep="" );

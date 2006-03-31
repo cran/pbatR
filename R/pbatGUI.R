@@ -1501,21 +1501,15 @@ pbatGUI.mainForm <- function() {
       rb.subframe[[i]] <- tkframe( frame.mode, relief='groove', borderwidth=1 );
     lbl <- tklabel(frame.mode,text='Multiprocessor Mode: ');
     tkgrid( lbl, rb.subframe[[1]], rb.subframe[[2]], rb.subframe[[3]] );
-
+    
     ## create each choice
     for( i in 1:length(modes) ){
       rb.modes[[i]] <- tkradiobutton( rb.subframe[[i]] );
       tkconfigure( rb.modes[[i]], variable=globs$rbVal.modes, value=modes[i] );
       rb.lbl[[i]] <- tklabel( rb.subframe[[i]], text=modes[i] );
       tkgrid( rb.modes[[i]], rb.lbl[[i]] );
-
     }
-
-    ## If we are in windows, then we want to disable the cluster button...
-    if( isWindows() ) {
-      tkconfigure( rb.modes[[3]], state="disabled" );
-      tkconfigure( rb.lbl[[3]], state="disabled" );
-    }
+    
   }
   
   {
@@ -1551,14 +1545,6 @@ pbatGUI.mainForm <- function() {
       tkgrid.configure( lbl.refresh, sticky='ew' );
       tkgrid.configure( globs$te.cluster, sticky='w' );
       tkgrid.configure( globs$te.refresh, sticky='w' );
-
-      ## disable the cluster if we are in windows
-      if( isWindows() ){
-        tkconfigure( lbl.cluster, state="disabled" );
-        tkconfigure( globs$te.cluster, state="disabled" );
-        tkconfigure( lbl.refresh, state="disabled" );
-        tkconfigure( globs$te.refresh, state="disabled" );
-      }
     }
   }
 

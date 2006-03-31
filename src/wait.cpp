@@ -1,7 +1,6 @@
 // Leave the following in for windows, but not for *nix
 //#define WAIT_WINDOWS_DEFINE
 
-
 #ifdef WAIT_WINDOWS_DEFINE
  #include <windows.h>
  #include <stdio.h>

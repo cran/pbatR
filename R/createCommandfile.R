@@ -378,8 +378,15 @@ pbat.create.commandfile <- function(
   ## New overriding
   if( LOGFILE.OVERRIDE ) {
     potlogfile <- str.extract.afterb(logfile, '/' );
-    if( potlogfile=="" )
+    if( potlogfile=="" ) {
       potlogfile <- str.extract.afterb(logfile, '\\' );
+    }else{
+      #addi 09/05/2006
+      potlogfile2 <- str.extract.afterb(logfile, '\\' );
+      if( potlogfile2!="" )
+        potlogfile <- potlogfile2;
+      #idda
+    }
 
     if( potlogfile != "" )
       logfile <- potlogfile;
