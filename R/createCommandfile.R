@@ -31,11 +31,11 @@ getPbatdata <- function() {
 
   ## Carry on with downloading
   pbatpath <- str.getpath(pbat.get());
-  zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );
-  if( pbatpath=="" ) zipfile <- "./pbatdata.zip";
+  ######zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );  ## not used
+  ######if( pbatpath=="" ) zipfile <- "./pbatdata.zip";         ## ?codetools.
   ###download.file( PBATDATAURL, zipfile );
   download.file( PBATDATAURL, "./pbatdata.zip" );
-  Sys.sleep(1); ## Just in case this is why it was getting corrupted
+  Sys.sleep(2); ## Just in case this is why it was getting corrupted
   pbatdatafile <- zip.file.extract( file="pbatdata.txt", zipname="pbatdata.zip" );
   destfile <- paste( pbatpath, "/pbatdata.txt", sep="" );
   if( pbatpath=="" ) destfile <- "pbatdata.txt";
@@ -360,7 +360,19 @@ pbat.create.commandfile <- function(
   ##-----------------------------
   ## fix up extensions / naming -
   ##-----------------------------
-  pedfile <- str.file.extension( pedfile, ".ped" );
+  ####pedfile <- str.file.extension( pedfile, ".ped" );
+  pedfile.ext <- file.extension( pedfile );
+  #print( "pedfile" );
+  #print( pedfile );
+  #print( "pedfile.ext" );
+  #print( pedfile.ext );
+  if( pedfile.ext!="ped" & pedfile.ext!="pped" ) {
+    pedfile <- paste( pedfile, ".ped", sep="" );
+    pedfile.ext <- "ped";
+  }
+  #print( "pedfile" );
+  #print( pedfile );
+
   if( phefile=="" ) {
     phefile <- paste( substring(pedfile,1,strlen(pedfile)-3), "phe", sep="" );
   }else{
@@ -452,7 +464,10 @@ pbat.create.commandfile <- function(
   #ped.b <- read.badheader( pedfile );
   #posSnps <- ped.b$header[3:length(ped.b$header)];
   ##posSnps <- read.badheader( pedfile )$header;
-  posSnps <- read.badheader( pedfile, onlyHeader=TRUE )$header;
+  posSnps <- NULL;
+  if( pedfile.ext != "pped" )
+    posSnps <- read.badheader( pedfile, onlyHeader=TRUE )$header;
+  ####print( "got past here" );
 
   # phenotype file information
   phe <- read.phe( phefile, sym=TRUE );
@@ -485,6 +500,8 @@ pbat.create.commandfile <- function(
   errorIfAnyMatch( censor, phenos, "censor", "phenos" );
   errorIfAnyMatch( time, phenos, "time", "phenos" );
 
+  ####print( "got past here 2" );
+
   ## Enforce haplotype mode for multiprocessing
   ## 01/18/2006 rewrite - this should _always_ be done!
   ##if( pbat.getNumProcesses() > 1 && is.null(haplos) ) {
@@ -498,11 +515,17 @@ pbat.create.commandfile <- function(
       # - on a second note, it's really the only way to be able to fix
       #   this on such a low level to guarantee that the command-line
       #   stuff will also work without a massive changes?
-      junk <- read.ped( pedfile ); ##, lowercase=FALSE ); ## that lowercase...
-      allSnps <- names( as.pedlist( junk ) );
-      haplos[[1]] <- NULL;
-      if( !is.null(allSnps) )
-        haplos[[1]] <- allSnps[7:length(allSnps)];  ## 01/18/06 fix - list
+
+      ####### 09/08/2006 - what is going on here?
+      #junk <- read.ped( pedfile ); ##, lowercase=FALSE ); ## that lowercase...
+      #allSnps <- names( as.pedlist( junk ) );
+      #haplos[[1]] <- NULL;
+      #if( !is.null(allSnps) )
+      #  haplos[[1]] <- allSnps[7:length(allSnps)];  ## 01/18/06 fix - list
+      ####### 09/08/2006 - what is going on here?
+
+      # it now suffices just to do 'haplos 1 end' for them all; this is pure symbolic!
+      haplos[[1]] <- snps; ## additien 09/08/2006ish
     }else{
       haplos[[1]] <- snps;
     }
@@ -511,6 +534,8 @@ pbat.create.commandfile <- function(
     length.haplos <- 1;
     adj.snps <- TRUE;
   }  
+
+  ####print( "got past here 3" );
 
   # Verification of the haplos structure
   if( !is.null(haplos) && !is.list(haplos) )
@@ -544,6 +569,9 @@ pbat.create.commandfile <- function(
   errorRangeCheck( "max.mating.types", max.mating.types );
   ##warning( "Range checking for 'max.mating.types' is _NOT_ realistic!" );
   
+
+  ####print( "got past here 5" );
+
   #-------------------------
   # now do the actual work -
   #-------------------------
@@ -554,7 +582,16 @@ pbat.create.commandfile <- function(
   if( logfile!="" )
     writeCommand( "logfile", logfile, outfile=outfile );
   
-  writeCommand( "pedfile", pedfile, outfile=outfile);     # (1)
+  ####print( "TESTING 1" );
+  ##writeCommand( "pedfile", pedfile, outfile=outfile);     # (1)
+  if( pedfile.ext=="ped" ) {  # (1)
+    writeCommand( "pedfile", pedfile, outfile=outfile );
+  }else if( pedfile.ext=="pped" ) {
+    writeCommand( "ppedfile", pedfile, outfile=outfile );
+  }else{
+    stop( paste( "The pedigree file '", pedfile, "' has the extension '", pedfile.ext, "', which is not supported (must be 'ped' or 'pped'." ) );
+  }
+  ####print( "TESTING 2" );
   writeCommand( "phenofile", phefile, outfile=outfile );  # (3)
 
   #if( snps!="" )

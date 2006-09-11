@@ -215,10 +215,10 @@ pbatGUI.tkClearText <- function( obj ) {
 pbatGUI.tkSetText <- function( obj, text, READONLY=TRUE ) {
   loadTclTkOrDie()  ## has to be here to pass the check
 
-  if( READONLY ) tkconfigure( obj, state="normal" );
+  if( READONLY ) try( tkconfigure( obj, state="normal" ) );  ## try
   pbatGUI.tkClearText( obj );
   tkinsert( obj, "end", text );
-  if( READONLY ) tkconfigure( obj, state="readonly" );
+  if( READONLY ) try( tkconfigure( obj, state="readonly" ) );  ## try
 }
 
 
@@ -300,6 +300,7 @@ pbatGUI.phenotypesForm <- function(){
   cmdOK <- function() {
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
     ##print( phenosIndex );
+    if( phenosIndex==-999 ) print( "Strange." );
 
     on.exit();
     tkdestroy(form);
@@ -365,9 +366,9 @@ pbatGUI.logrankForm <- function(){
     tclvalue(tclvar.censor) <- globs$phenos[2];
   }
   te.time <- tkentry( form, width=LISTWIDTH, textvariable=tclvar.time );
-  tkconfigure( te.time, state="readonly" );
+  try( tkconfigure( te.time, state="readonly" ) );  ## try
   te.censor <- tkentry( form, width=LISTWIDTH, textvariable=tclvar.censor );
-  tkconfigure( te.censor, state="readonly" );
+  try( tkconfigure( te.censor, state="readonly" ) );
 
   # and grid everything
   tkgrid( te.time, tklabel(form,text=""), te.censor );
@@ -883,6 +884,7 @@ pbatGUI.groupForm <- function() {
   cmdOK <- function() {
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
     ##print( phenosIndex );
+    if( phenosIndex==-999 ) print( "Strange." );
 
     on.exit();
     tkdestroy(form);
@@ -909,10 +911,10 @@ pbatGUI.optionsForm <- function() {
   # get the globals
   globs <- getPbatGUI( "globs" );
 
-  isP <- FALSE;
+  ######isP <- FALSE;
   isG <- FALSE;
   isL <- FALSE;
-  if( tclvalue(globs$rbVal.pbat) == "pc" ) isP <- TRUE;
+  ######if( tclvalue(globs$rbVal.pbat) == "pc" ) isP <- TRUE;
   if( tclvalue(globs$rbVal.pbat) == "gee" ) isG <- TRUE;
   if( tclvalue(globs$rbVal.pbat) == "logrank" ) isL <- TRUE;
   
@@ -1382,44 +1384,44 @@ pbatGUI.write <- function() {
 pbatGUI.mainForm <- function() {
   loadTclTkOrDie()  ## has to be here, period.
   
-  # get the globals
+  ## get the globals
   globs <- getPbatGUI( "globs" );
     
-  # Create the window
+  ## Create the window
   globs$form <- tktoplevel();
   tkwm.deiconify( globs$form );
   tkfocus( globs$form );
   tkwm.title( globs$form, "P2BAT" );
 
-  # Create all of the buttons and objects on the form
+  ## Create all of the buttons and objects on the form
 
   {
-    # Frame 1
+    ## Frame 1
     frame.prelim <- tkframe( globs$form, relief="groove", borderwidth=2 );
     tkgrid( frame.prelim );
     tkgrid.configure( frame.prelim, sticky="news" );
 
-    ;# Pbat executable
+    ## Pbat executable
     but.pbat <- tkbutton( frame.prelim, text="Pbat exe...", command=pbatGUI.pbatset );
     globs$tclVar.pbat <- tclVar( pbat.get() );
     globs$te.pbat <- tkentry( frame.prelim, width=ENTRYWIDTH, textvariable=globs$tclVar.pbat );
-    tkconfigure( globs$te.pbat, state="readonly" );
+    try( tkconfigure( globs$te.pbat, state="readonly" ) ); ## try
     tkgrid( but.pbat, globs$te.pbat );
     tkgrid.configure( but.pbat, sticky="ew" );
     
-    ;# - pedigree file line
+    ## - pedigree file line
     but.ped <- tkbutton( frame.prelim, text="Pedigree File ...", command=pbatGUI.pedFileChoice );
     globs$tclVar.ped <- tclVar();
     globs$te.ped <- tkentry( frame.prelim, width=ENTRYWIDTH, textvariable=globs$tclVar.ped );
     tkgrid( but.ped, globs$te.ped );
-    tkconfigure( globs$te.ped, state="readonly" );
+    try( tkconfigure( globs$te.ped, state="readonly" ) ); ## try
     tkgrid.configure( but.ped, sticky="ew" );
 
-    ;# - phenotype file line
+    ## - phenotype file line
     but.phe <- tkbutton( frame.prelim, text="Phenotype File ...", command=pbatGUI.pheFileChoice );
     globs$tclVar.phe <- tclVar();
     globs$te.phe <- tkentry( frame.prelim, width=ENTRYWIDTH, textvariable=globs$tclVar.phe );
-    tkconfigure( globs$te.phe, state="readonly" );
+    try( tkconfigure( globs$te.phe, state="readonly" ) ); ## try
     tkgrid( but.phe, globs$te.phe );
   }
 
@@ -1476,7 +1478,7 @@ pbatGUI.mainForm <- function() {
     but.group <- tkbutton( frame.misc, text="Group ...", command=pbatGUI.group );
     globs$tclVar.group <- tclVar();
     globs$te.group <- tkentry( frame.misc, width=ENTRYWIDTH, textvariable=globs$tclVar.group );
-    tkconfigure( globs$te.group, state="readonly" );
+    try( tkconfigure( globs$te.group, state="readonly" ) ); ## try
     tkgrid( but.group, globs$te.group );
     tkgrid.configure( but.group, sticky="we" );
     

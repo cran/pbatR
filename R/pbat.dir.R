@@ -70,10 +70,25 @@ strsplitFix2 <- function( x, split ) {
   return( res[res!=""] ); # eliminate any empty strings!
 }
 
+
+## _much_, __much__ faster version! stupid!!!
+loadPbatlog <- function( log ){
+  ##pbatlogfile <- log;
+  callfile <- paste( log, ".call", sep="" );
+  resultfile <- paste( log, ".csv", sep="" );
+  ##apped <- 0
+  .C( "launchPbatlog", log, callfile, resultfile, as.integer(0) );
+
+  pbatCall <- readLines( callfile );
+  pbatData <- read.csv( resultfile );
+
+  return( list( call=pbatCall, data=pbatData ) );
+}
+
 ## This is somewhat slow, but there is no logical reason why a piece of
 ##  loadPbatlog.bad won't work (slightly more efficient, but not all that much better).
 ## If this comes to be a real problem, then I will rewrite it in C code.
-loadPbatlog <- function( log ){
+loadPbatlog.slow.but.good <- function( log ){
   pbatCall <- NULL; pbatData <- NULL;
 
   ## important to make sure the logfile actually exists - otherwise
@@ -323,8 +338,23 @@ loadCurrentPbatLog <- function( beforeLogs ) {
   return( loadPbatlog( strLog ) );
 }
 
-## Added 01/09/2006 - works with multiple processes
 loadPbatlogExtended <- function( log ) {
+  ##pbatlogfile <- log;
+  callfile <- paste( log, ".call", sep="" );
+  resultfile <- paste( log, ".csv", sep="" );
+  ##append <- 0
+  numProcesses <- pbat.getNumProcesses();
+  if( numProcesses==1 ) return( loadPbatlog( log ) );
+  .C( "launchPbatlogExtended", log, callfile, resultfile, as.integer(numProcesses) );
+  
+  pbatCall <- readLines( callfile );
+  pbatData <- read.csv( resultfile );
+  
+  return( list( call=pbatCall, data=pbatData ) );
+}  
+
+## Added 01/09/2006 - works with multiple processes
+loadPbatlogExtended.slower <- function( log ) {
   numProcesses <- pbat.getNumProcesses();
   if( numProcesses == 1 )
     return( loadPbatlog(log) );

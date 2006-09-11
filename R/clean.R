@@ -20,7 +20,7 @@
 ########################################################################
 pbat.clean <- function( pbatObj, plots=TRUE, all.output=FALSE ){
   if( is.null(pbatObj) )
-    pbat.obj <- pbat.last();
+    pbatObj <- pbat.last();
   
   # Safely delete a file, useful warning on error
   safedel <- function( filename, warn=NULL ){

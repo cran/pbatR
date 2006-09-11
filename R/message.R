@@ -77,7 +77,7 @@ isPackageLoaded <- function( package ){
 ## Does just that.                                          #
 #############################################################
 loadTclTkOrDie <- function(){
-  if( !require(tcltk) )
+  if( !require("tcltk") )
     stop('You need to have loaded tcl/tk to use this function {e.g. library(tcltk)}.');
 }
 

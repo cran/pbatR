@@ -315,6 +315,19 @@ pbat.files <- function( pedfile, phefile,
     pbatObj$filenameTouch <- filenameTouch;
     pbatObj$filenameSH <- filenameSH;
   }
+
+  ## New 09/11/2006 - another PBAT hack to try; this time we try to header
+  ##  the data that comes out of PBAT
+  if( !is.null( pbatObj$results ) &&
+     ncol(pbatObj$results)==14 && names(pbatObj$results)[1]=="C0" ){
+    ## at least this get's the defaults, but it's really not the best
+    names(pbatObj$results) <-
+      c( "Group", "snps", "haplotype",  "hap.freq", "model",
+        "X..info.fam",  "FBAT.Wilcoxon", "power", "FBAT.LOGRANK", "power.1",
+        "weighted.FBAT.LOGRANK", "power.2", "optimal.FBAT.LOGRANK", "power.3" );
+    warning( "Miscommunication with PBAT - column headers guessed." );
+  }
+  ## weN 09/11/2006
   
   return( pbatObj );
 }

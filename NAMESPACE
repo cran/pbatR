@@ -20,8 +20,11 @@ export(
 
        pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
 
+
        write.pbat, write.pbat.csv
        )
+
+import( tcltk )
 
 S3method( print, pbat )
 S3method( summary, pbat )

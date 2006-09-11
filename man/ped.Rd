@@ -29,9 +29,9 @@ as.pedlist( x,
             idmoth="idmoth", sex="sex", affection="affection",
             clearSym=FALSE )
 
-is.ped( obj );
+is.ped( obj, pure.ped=FALSE )
 
-is.pedlist( obj );
+is.pedlist( obj )
 
 read.ped( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... )
 
@@ -92,6 +92,10 @@ write.ped( file, ped )
   
   \item{clearSym}{When TRUE, if a symbolic file is found, it will be
     read in; otherwise, it will stay symbolic.}
+
+  \item{pure.ped}{When FALSE, tests if an object is a `ped' or
+    `pped'. When TRUE, tests only if the object is a `ped'.  (Currently
+    `pped' support is a work in progress.)}
 }
 \examples{
 # A highly artificial example with not enough subjects to be run;

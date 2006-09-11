@@ -113,3 +113,33 @@ catn <- function( ..., file="" ) {
   cat( ..., file=file );
   cat( '\n', file=file );
 }
+
+
+## Additions 09/07/2006
+
+## returns the extension of a file, _assuming_ that there is one
+file.extension <- function( filename ){
+  loc <- strfindb( filename, "." );
+  if( loc!=-1 ) {
+    ## then it was found, so extract and return
+    return( substring( filename, first=loc+1 ) );
+  }
+  return( "" );
+} ## Debugged
+#file.extension( "badger.pped" );
+#file.extension( "buck.badger.pped" );
+#file.extension( "badger.ped" );
+#file.extension( "badger" );
+
+file.strip.extension <- function( filename ){
+  loc <- strfindb( filename, "." );
+  if( loc!=-1 ){
+    ## then it was found, so extract and return
+    return( substring( filename, first=1, last=loc-1 ) );
+  }
+  return( "" );
+} ## Debugged
+#file.strip.extension( "badger.pped" );
+#file.strip.extension( "buck.badger.pped" );
+#file.strip.extension( "badger.ped" );
+#file.strip.extension( "badger" );

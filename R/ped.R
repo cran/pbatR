@@ -24,10 +24,15 @@ ped <- function( x, ... )
 pedlist <- function( x, ... )
   UseMethod( "pedlist" );
 
-is.ped <- function( obj ) {
-  if( sum( class(obj)=="ped" ) == 1 )
-    return(TRUE);
-  return(FALSE);
+## Modified 09/07/2006 for the pped
+is.ped <- function( obj, pure.ped=FALSE ) {
+  if( !pure.ped ){
+    if( sum( class(obj)=="ped" ) == 1 )
+      return(TRUE);
+    return(FALSE);
+  }else{
+    return( is.ped( obj, pure.ped=FALSE ) & !is.pped(obj) );
+  }
 }
 
 is.pedlist <- function( obj ) {
@@ -309,3 +314,53 @@ as.pedlist <- function( x,
   
 }
                        
+## pped stuff
+is.pped <- function( obj ){
+  if( is.sym(obj) & file.extension(get.sym(obj))=="pped" )
+    return(TRUE);
+  return(FALSE);
+}
+read.pped <- function( filename ){
+  ## mirrors the symbolic piece of read.ped
+  filename <- str.file.extension( filename, "pped" );
+  if( !file.exists(filename) )
+    stop( paste( "Cannot open '", filename, "' - file does not exist.", sep="" ) );
+
+  pedlist <- data.frame();
+  class( pedlist ) <- 'pedlist';
+  return( set.sym( pedlist, filename ) );
+}
+as.pped <- function( ped, ppedname="" ){
+  ## Get the filename
+  kill <- FALSE;
+  pedname <- "";
+  if( ppedname=="" ){
+    if( is.sym(ped) ) {
+      pedname <- get.sym( ped );
+      ppedname <- file.strip.extension( pedname ); ## get rid of the .ped
+      ppedname <- paste( ppedname, ".pped", sep="" );
+    }else{
+      ## need to write out the ped, and then translate
+      pedname <- "killme.ped";  kill <- TRUE;
+      ppedname <- "pped.pped";
+    }
+  }
+
+  ## create the batchfile to convert
+  pbatfile <- file( "killme.txt", open="w" );
+  cat( "pedfile ", pedname, "\n", sep="", file=pbatfile );
+  cat( "xwriteped ", ppedname, "\n", sep="", file=pbatfile );
+  close( pbatfile );
+  #print( paste( pbat.get(), "killme.txt" ) ); ## debug only
+  system( paste( pbat.get(), "killme.txt" ) ); ## assuming don't need pbatdata.txt?
+
+  ## and kill the temp files
+  file.remove( "killme.txt" );
+  if( pedname == "killme.ped" & kill==TRUE )
+    file.remove( "killme.ped" );
+
+  print( pedname );
+  print( ppedname );
+  
+  return( read.pped( ppedname ) );
+}

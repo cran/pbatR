@@ -147,7 +147,7 @@ pbat.m <- function(
     tmp <- strsplitFix( groups.var, " " );
     if( length(tmp)>1 ) {
       groups.var=tmp[1];
-      groups.order <- tmp[-1];
+      #######groups.order <- tmp[-1];   ### 09/11/06 - there is no such thing
     }
   }
 
