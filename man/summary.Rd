@@ -10,11 +10,11 @@
   Only a logrank analysis can be plotted.
 }
 \usage{
-print.pbat(x,...)
+\method{print}{pbat}(x,...)
 
-summary.pbat(object,...)
+\method{summary}{pbat}(object,...)
 
-plot.pbat(x,...)
+\method{plot}{pbat}(x,...)
 }
 \arguments{
   \item{x}{`pbat' object (result of pbat.m(...) or pbat().}

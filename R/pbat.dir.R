@@ -79,8 +79,9 @@ loadPbatlog <- function( log ){
   ##apped <- 0
   .C( "launchPbatlog", log, callfile, resultfile, as.integer(0) );
 
-  pbatCall <- readLines( callfile );
-  pbatData <- read.csv( resultfile );
+  pbatCall <- NULL;  pbatData <- NULL;
+  try(  pbatCall <- readLines( callfile )  );
+  try(  pbatData <- read.csv( resultfile )  );
 
   return( list( call=pbatCall, data=pbatData ) );
 }

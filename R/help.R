@@ -7,7 +7,8 @@ pbat.help <- function() {
   cat( "R:    ", version$version.string, "\n", sep="" );
   cat( "-----------------------------------------------\n" );
   cat( "** P2BAT v",installed.packages()["pbatR","Version"],"**\n", sep="" );
-  cat( "pbatR v", installed.packages()["pbatR","Version"], " (check to ensure this is most recent [http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html])\n", sep="" );
+  cat( "pbatR v", installed.packages()["pbatR","Version"], "\n", sep="" );
+  pbat.current();  ## does the version check
   cat( "pbat v? \n" );
   cat( "[Run the binary/executable file by clicking on it in windows to find, or running it from the command prompt if that doesn't work in linux.]\n" );
   cat( "-----------------------------------------------\n" );

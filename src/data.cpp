@@ -1,5 +1,7 @@
 /* Converts pbat output to a csv */
 
+//#define _DATA_CPP_DEBUG_ // only defined when debugging, so I can run it from the command line
+
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -8,6 +10,32 @@ using namespace std;
 
 const int LINE_SIZE = 10000;
 const int GROUP_LEN = 5;
+
+
+// partially gets a line; if it's too big, it truncates the line.
+// returns if it was a partial line
+bool getPartialLine( ifstream &infile, char *str, int length )
+{
+  int i;
+  for( i=0; i<length-1 && !infile.eof(); i++ ){
+    str[i] = infile.get();
+    if( str[i] == '\r' ) {
+      i--;
+      continue;  // windows just in case
+    }
+    if( str[i] == '\n' ) {
+      str[i] = '\0'; // make it null terminate, and overwrite the '\n'
+      return(false); // not a partial line
+    }
+  }
+  
+  str[i] = '\0'; // null terminate it
+  if( infile.eof() ) {
+    str[i-1] = '\0'; // otherwise it turns up a really wierd character at the end!!!
+    return(false); // file didn't end in a '\n'
+  }
+  return(true); // it was a partial line
+} // new addition
 
 int numChars( const char *str, char c='&' )
 {
@@ -103,15 +131,26 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
 
   // now start reading in the input
   char line[LINE_SIZE];
+  strcpy( line, "" );
   bool pastAnd = false;
   bool firstTimePast = true;
-  while( infile.getline( line, LINE_SIZE ) ){
+  while( !infile.eof() ){
+    // gets the input even if the line was too long...
+    // [results lines should _never_ be to long]
+
+    bool partial = getPartialLine( infile, line, LINE_SIZE-1 );
+
+    // and then continue along with the code...
+
     ////cout << line << endl;
     if( !pastAnd ){
       if( containsChar( line ) )
 	pastAnd=true;
-      else if( append == 0 )
-	outfileCall << line << endl;
+      else if( append == 0 ) {
+	outfileCall << line;
+	if( !partial )
+	  outfileCall << endl;
+      }
     }
 
     if( pastAnd ){
@@ -164,9 +203,11 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
   outfileResult.close();
 }
 
-/*
+#ifdef _DATA_CPP_DEBUG_
+
 int main( int argc, const char* argv[] )
 {
+  /*
   char str[100];
   strcpy( str, "testing ... ,,, , ," );
   terminateStr( str );
@@ -174,6 +215,7 @@ int main( int argc, const char* argv[] )
 
   cout << headerFix( "OH,I,WISH,I,WERE,A,PBAT" ) << endl;
   return(0);
+  */
 
   if( argc != 5 ) {
     cout << "Usage: data <pbatlogfile> <callfile> <resultfile> <append>" << endl;
@@ -216,7 +258,8 @@ int main( int argc, const char* argv[] )
   convertPbatlog( pbatlogfile, callfile, resultfile, append );
   // and fully debugged!!! now all we have to do is bring it into p2bat
 }
-*/
+
+#else
 
 extern "C" {
   // c++ version of loadPbatlog; _must_ be followed up in R
@@ -247,3 +290,5 @@ extern "C" {
     }
   }
 }
+
+#endif

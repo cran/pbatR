@@ -37,7 +37,7 @@ programControl <- function( program, commands, filename='systemControl.sh', inte
   for( i in 1:length(commands) )
     cat( commands[i], '\n', sep='', file=file );
   
-  cat( '\EOF', file=file );
+  cat( '\nEOF', file=file );
   close( file );
 
   sh <- 'sh';

@@ -207,6 +207,9 @@ pbat.getNumProcesses <- function()
   pbat.loadMetadata();
   print( pbat.getmode() );
 
+  ## newest - version check
+  pbat.current();
+
   ##print( libname )
   ##print( pkgname )
 }

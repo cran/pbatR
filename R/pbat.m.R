@@ -47,7 +47,7 @@ pbat.m <- function(
        screening="conditional power", distribution="continuous",
        logfile="",
        max.gee=1,
-       max.ped=7, min.info=20,
+       max.ped=14, min.info=20,
        incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,

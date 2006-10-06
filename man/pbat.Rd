@@ -66,7 +66,7 @@ pbat.m( formula, phe, ped, fbat="",
         screening="conditional power", distribution="continuous",
         logfile="",
         max.gee=1,
-        max.ped=7, min.info=20,
+        max.ped=14, min.info=20,
         incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
         sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
         overall.haplo=FALSE, cutoff.haplo=FALSE,
@@ -228,7 +228,7 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{offset}{Specification of the covariate/predictor variables
     adjustment:
     
-    \code{"no"} = No adjustments for covariates/predictor variables
+    \code{"none"} = No adjustments for covariates/predictor variables
     
     \code{"max power"} = Offset (=FBAT adjustment for covariates and interaction
     variables) that maximizes the power of the FBAT-statistic
@@ -244,7 +244,7 @@ pbat.create.commandfile( pedfile, phefile="",
     variables) based on standard phenotypic residuals obtained by
     GEE-estimation including all covariates and interaction variables.
     
-    \code{"default"} = The default choice is \code{"gee"} (\code{"no"}
+    \code{"default"} = The default choice is \code{"gee"} (\code{"none"}
     for dichotomous traits).
   }
   

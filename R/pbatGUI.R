@@ -121,7 +121,7 @@ pbatGUI.setglobs <- function() {
   globs$screening <- tclVar("conditional power");
   globs$distribution <- tclVar("continuous");
   globs$max.gee <- tclVar("1");
-  globs$max.ped <- tclVar("7");
+  globs$max.ped <- tclVar("14");
   globs$min.info <- tclVar("20");
   globs$incl.ambhaplos <- tclVar("TRUE");
   globs$infer.mis.snp <- tclVar("FALSE");
