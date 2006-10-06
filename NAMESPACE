@@ -20,6 +20,7 @@ export(
 
        pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
 
+       pbat.help,
 
        write.pbat, write.pbat.csv
        )

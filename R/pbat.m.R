@@ -112,6 +112,13 @@ pbat.m <- function(
   ###############################################
   if( lhs=="ALL" ) lhs="";
   if( rhs=="NONE" ) rhs="";
+
+  ###########################################################################
+  ## ALL doesn't function right. Removing. Doesn't make much sense anyway. ##
+  ###########################################################################
+  if( lhs=="" )
+    stop( "You must specify some phenotype. These are from the names of the columns in the phenotype file/object, and the keyword 'AffectionStatus' which stands for the affection status of an individual. ALL is no longer supported." );
+  
   
   ########################
   # take care of the lhs #

@@ -445,21 +445,33 @@ pbat.create.commandfile( pedfile, phefile="",
 data.phe <- read.phe( "data" )
 data.ped <- read.ped( "data" )
 
-# empty model, does all phenotypes, no predictor covariates, and all
-#  snps for a snps analysis.
-# The ALL and NONE are special phrases that should only be used here,
-#  although they are case sensative.
-res <- pbat.m( ALL ~ NONE, phe, ped, fbat="pc", ... )
+# This model does just the affection status (always given as
+#  AffectionStatus) as the phenotype, no predictor covariates, and all
+#  the snps for a snps analysis.
+# Since affection status is dichotomous, we additionally set
+#  distribution='categorical'
+#  offset='none'
+# NONE is a special keyword to indicate none, and can be only used in
+#  this case (note that it is _case_ _sensative_);
+#  otherwise one specifies values from the phenotype object, after and
+#  including AffectionStatus.
+res <- pbat.m( AffectionStatus ~ NONE, phe, ped, fbat="gee",
+               distribution='categorical', offset='none', ... )
 summary( res )
 res  # equivalent to print(res)
 
 # basic model with one phenotype, does all snps (if none specified)
 pbat.m( phenos1 ~ preds1, phe, ped, fbat="gee" )
 
-# same model, but with more phenotypes
+# same model, but with more phenotypes; here we test them all at once
 pbat.m( phenos1 + phenos2 + phenos3 ~ preds1, phe, ped, fbat="gee" )
 
-# does all snps, the mi() tells it should be a marker interaction
+# same model as just before, but now supposing that these phenotypes are
+#  instead from a longitudinal study
+pbat.m( phenos1 + phenos2 + phenos3 ~ preds1, phe, ped, fbat="pc" )
+
+# like our second model, but the mi() tells it should be a marker
+#  interaction
 pbat.m( phenos1 ~ mi(preds1), phe, ped, fbat="gee" )
 
 # logrank analysis - fbat need not be set

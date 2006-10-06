@@ -115,7 +115,8 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
 
   filename <- str.file.extension( filename, ".ped" );
   ped <- read.badheader( filename, na.strings="", lowercase=lowercase, onlyHeader=sym, max=max, ... ); # 0 is NA only for censor & sex
-  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+  ##firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
 
   if( sym ){
     ## overrides other settings
@@ -225,7 +226,8 @@ as.ped <- function( x,
     df <- dfr.r( x, c(idped,idsub,idfath,idmoth,sex,affection) );
     df <- cbind( idpedCol, idsubCol, idfathCol, idmothCol,
                  idsexCol, idAffectionCol, df );
-    names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","affection");
+    ##names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","affection");
+    names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","AffectionStatus");
     class(df) <- c("ped", "data.frame" );
     return( df );
   }
@@ -292,7 +294,8 @@ as.pedlist <- function( x,
     stop( "'x' must be of class 'ped' or 'data.frame'." );
 
   header <- unique( rem.dot.a( names(x)[-c(1:6)] ) );
-  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+  ##firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
+  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
 
   # keep each of the markers the same, but each marker will be a
   #  list of 'a' and 'b' for the two.

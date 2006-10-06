@@ -29,8 +29,8 @@ pbat.concatenate( pbatObj=NULL, filename="myResults.txt", clean=FALSE )
     job submission interface (but no other results, and not the
     command-files sent to pbat); see also pbat.clean.  If FALSE, nothing
     else is done.  NOTE, when TRUE (which is the default), if you run
-    this more than once, you will get TRUE the first time, and then
-    FALSE the rest of the times.
+    this more than once, you will get TRUE only once, and then FALSE the
+    rest of the times.
 
     \emph{pbat.concatenate}:  If clean is TRUE, then output that went into the
     concatenated file will be deleted.  Default is FALSE, as this has

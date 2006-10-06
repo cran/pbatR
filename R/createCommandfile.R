@@ -472,6 +472,7 @@ pbat.create.commandfile <- function(
   # phenotype file information
   phe <- read.phe( phefile, sym=TRUE );
   posPhenos <- names(phe);
+  posPhenos <- c( posPhenos, "AffectionStatus" ); ## When, where, and _why_ did this get lost??
 
   # check containment of various options...
   if( !is.null(posSnps) )

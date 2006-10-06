@@ -328,6 +328,13 @@ pbat.files <- function( pedfile, phefile,
     warning( "Miscommunication with PBAT - column headers guessed." );
   }
   ## weN 09/11/2006
+
+  if( is.null(pbatObj$results)
+     || nrow(pbatObj$results)==0 ){
+    cat( "There are no results.  If you see anything to the effect of 'pbat: command not found', use pbat.set() and set the location of pbat if you have X or windows, otherwise use pbat.set('<full path to pbat>').  Note that the pbat you have will probably have a version number on it.\n" );
+  }
+  
+
   
   return( pbatObj );
 }
@@ -398,6 +405,11 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
   #write.ped( paste( file.prefix, ".ped", sep="" ), ped );
   #return( pbat.files( file.prefix, ... ) );
 
+  ## Common error by people - check for it and more helpful message
+  if( !(is.ped(ped) || is.pedlist(ped) ) || !is.phe(phe) ){
+    stop( "`phe' must be a phenotype object, and `ped' must be a pedigree object.  A common mistake is to pass the pedigree as the phenotype and vice versa." );
+  }
+  
   ## Write out files to disk if necessary
   if( !is.sym(ped) ) {
     write.ped( paste( file.prefix, ".ped", sep="" ), ped );
@@ -425,7 +437,7 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
 
   #if( CLEAN & LOAD.OUTPUT )
   #  pbat.clean( res ); ## doesn't delete the logrank stuff
-
+  
   ## and return the result
   return( res );
 }
