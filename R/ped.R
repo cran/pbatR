@@ -352,6 +352,10 @@ as.pped <- function( ped, ppedname="" ){
   ## Get the filename
   kill <- FALSE;
 
+  ## we _do_ need the 'pbatdata.txt' file, despite it doing
+  ##  absolutely nothing!  ah well, probably need it later anyway
+  checkAndGetPbatdata();
+
   pedname <- "killme.ped";
   if( is.sym(ped) ) {
     pedname <- get.sym( ped );
@@ -380,8 +384,13 @@ as.pped <- function( ped, ppedname="" ){
   cat( "xwriteped ", ppedname, "\n", sep="", file=pbatfile );
   close( pbatfile );
   #print( paste( pbat.get(), "killme.txt" ) ); ## debug only
-  system( paste( pbat.get(), "killme.txt" ) ); ## assuming don't need pbatdata.txt?
 
+  if( isWindows() ) {
+    system( paste( "\"", pbat.get(), "\" killme.txt", sep="") ); ## assuming don't need pbatdata.txt?
+  }else{
+    system( paste( pbat.get(), "killme.txt" ) );
+  }
+  
   ## and kill the temp files
   file.remove( "killme.txt" );
   ## important to be very safe with this

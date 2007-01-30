@@ -1350,6 +1350,19 @@ pbatGUI.pedFileChoice <- function() {
     # Load in the phefile
     globs$phe <- read.phe( globs$phefile );
     globs$pheset <- TRUE;
+  }else{
+    ## Try again
+    phefile <- paste( substring(globs$pedfile,1,nchar(globs$pedfile)-4), "phe", sep="" );
+    ## (and just a copy above the code now that we are trying again...)
+    if( file.exists(phefile) ) {
+      ## File exists!  Assume this is probably what the user wants...
+      globs$phefile <- phefile;
+      pbatGUI.tkSetText( globs$te.phe, phefile );
+      
+      ## Load in the phefile
+      globs$phe <- read.phe( globs$phefile );
+      globs$pheset <- TRUE;
+    }
   }
 
   # Set the globals
@@ -1456,6 +1469,17 @@ pbatGUI.write <- function() {
 ## addition -- compression
 pbatGUI.compress <- function() {
   globs <- getPbatGUI( "globs" );
+
+  ## copy from onProcess() 02/02/2007 -- rewrite 05/24/06 for modes
+  numProcesses <- tclvalue( globs$tclVar.pbatNP );
+  mode <- tclvalue( globs$rbVal.modes );
+  if( mode=='single' ) numProcesses <- 1;
+  if( numProcesses==1 ) mode <- 'single';
+  cluster <- tclvalue( globs$tclVar.cluster );
+  refresh <- tclvalue( globs$tclVar.refresh );
+  pbat.setmode( mode=mode, jobs=numProcesses, clusterCommand=cluster, clusterRefresh=refresh );
+  
+  ## and then do the work
   if( is.pped(globs$ped) ){
     print( "File already is compressed." );
     return();
@@ -1682,9 +1706,6 @@ pbatGUI.mainForm <- function() {
       if( numProcesses==1 ) mode <- 'single';
       cluster <- tclvalue( globs$tclVar.cluster );
       refresh <- tclvalue( globs$tclVar.refresh );
-      #print( mode );
-      #print( cluster );
-      #print( refresh );
       pbat.setmode( mode=mode, jobs=numProcesses, clusterCommand=cluster, clusterRefresh=refresh );
       ## -- and an additon for repressing loading the output in
       LOAD.OUTPUT <- tclvalue(globs$tclVar.loadInput)==1;

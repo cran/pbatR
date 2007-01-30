@@ -207,7 +207,7 @@ pbat.files <- function( pedfile, phefile,
     ## The original
     clearCommands()
     if( isWindows() ) {
-      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, sep="" ) );
+      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) );
     }else{
       ##print( "SINGLE Command" );
       ##print( paste( pbat.get(), commandfile ) );
