@@ -5,6 +5,9 @@
 \alias{is.pedlist}
 \alias{read.ped}
 \alias{write.ped}
+\alias{is.pped}
+\alias{as.pped}
+\alias{read.pped}
 \title{Pedigree Object}
 \description{
   Creates, tests, reads, or writes objects of type \code{ped} or
@@ -17,6 +20,10 @@
   The \code{pedlist} class inherits the \code{list} structure, and is almost
   identical to the \code{list} object described to create it, only with
   some special reserved names.
+
+  The `pped' functions provide support for a more compressed form of
+  input, that can be read in faster, and so may be faster when running
+  in clustered mode.
 }
 \usage{
 as.ped( x,
@@ -36,6 +43,12 @@ is.pedlist( obj )
 read.ped( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... )
 
 write.ped( file, ped )
+
+is.pped( obj )
+
+read.pped( filename, max=100 )
+
+as.pped( ped, ppedname="" )
 }
 \arguments{
   \item{x}{
@@ -94,8 +107,11 @@ write.ped( file, ped )
     read in; otherwise, it will stay symbolic.}
 
   \item{pure.ped}{When FALSE, tests if an object is a `ped' or
-    `pped'. When TRUE, tests only if the object is a `ped'.  (Currently
-    `pped' support is a work in progress.)}
+    `pped'. When TRUE, tests only if the object is a `ped'.}
+
+  \item{ppedname}{Name of the `pped' file.  If a symbolic ped, it
+    defaults to that name except with a pped extension; otherwise, it
+    defaults to `pped.pped'.}
 }
 \examples{
 # A highly artificial example with not enough subjects to be run;

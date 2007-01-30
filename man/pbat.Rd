@@ -67,20 +67,28 @@ pbat.m( formula, phe, ped, fbat="",
         logfile="",
         max.gee=1,
         max.ped=14, min.info=20,
-        incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
+        incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
         sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
         overall.haplo=FALSE, cutoff.haplo=FALSE,
         output="normal",
         max.mating.types=10000,
         commandfile="",
         future.expansion=NULL,
-        LOAD.OUTPUT=TRUE )
+        LOAD.OUTPUT=TRUE,
+        monte=0,
+        mminsnps=NULL, mmaxsnps=NULL,
+        mminphenos=NULL, mmaxphenos=NULL,
+        env.cor.adjust=FALSE,
+        gwa=FALSE,
+        snppedfile=FALSE,
+        extended.pedigree.snp.fix=FALSE )
 
 pbat.obj( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... )
 
 pbat.files( pedfile, phefile, fbat="gee",
             commandfile="",
             logrank.outfile="",
+            preds="", preds.order="",
             LOAD.OUTPUT=TRUE,
             ... )
 
@@ -102,14 +110,21 @@ pbat.create.commandfile( pedfile, phefile="",
        logfile="",
        max.gee=1,
        max.ped=7, min.info=20,
-       haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
+       haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
        output="normal",
        max.mating.types=10000,
        commandfile="",
        future.expansion=NULL,
-       LOGFILE.OVERRIDE=TRUE )
+       LOGFILE.OVERRIDE=TRUE,
+       monte=0,
+       mminsnps=NULL, mmaxsnps=NULL,
+       mminphenos=NULL, mmaxphenos=NULL,
+       env.cor.adjust=FALSE,
+       gwa=FALSE,
+       snppedfile=FALSE,
+       extended.pedigree.snp.fix=FALSE )
 }
 \arguments{
   \item{formula}{Symbolic expression describing what should be
@@ -335,7 +350,8 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{output}{
     \code{"normal"} = Normal PBAT output.
     
-    \code{"short"} = Short output.
+    \code{"short"} = Shorter output.  This is mostly for use in
+    conjunction with 'gwa', where there is a lot of output.
     
     \code{"detailed"} = Detailed output for each family is created.
   }
@@ -398,6 +414,36 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{LOAD.OUTPUT}{When TRUE, loads the output into R (generally
     recommended). When FALSE, it leaves it in the output left from PBAT
     (in case output is too large to load into memory).}
+
+  \item{monte}{When this is nonzero, monte-carlo based methods are used
+    to compute the p-values instead, according to the number of
+    iterations supplied. 1000 iterations is suggested.}
+
+  \item{mminsnps}{Multi-marker multi-phenotype tests: the minimum number
+    of snps to be tested.}
+  \item{mmaxsnps}{Multi-marker multi-phenotype tests: the maximum number
+    of snps to be tested.}
+  \item{mminphenos}{Multi-marker multi-phenotype tests: the minimum number
+    of phenotypes to be tested.}
+  \item{mmaxphenos}{Multi-marker multi-phenotype tests: the maximum number
+    of phenotypes to be tested.}
+
+  \item{env.cor.adjust}{Whether to adjust for environmental
+    correlation.}
+
+  \item{gwa}{Whether to use (g)enome (w)ide (a)cceleration mode.  This
+    is faster for genome-wide association tests, and has slightly less
+    output.}
+
+  \item{snppedfile}{Whether the pedigree file contains just snps. When
+    this is true, it employs a more optimal storage technique and uses
+    much less memory. It is especially advantageous for genome-wide
+    studies.}
+
+  \item{extended.pedigree.snp.fix}{Set to TRUE when you are using a
+    dataset with large extended pedigrees. This will not work with any
+    mode but `single' mode currently [see pbat.set(...)].
+  }
 }
 \value{
   `pbat', `pbat.last', `pbat.m', `pbat.obj', and `pbat.files'
@@ -424,6 +470,16 @@ pbat.create.commandfile( pedfile, phefile="",
   an unpreventable result of pbat always sending this output to only one
   filename.  Workaround to race condition: create another directory and
   use that as your current working directory instead.
+
+  Note that multi-marker / multi-phenotype mode is not supported in
+  parallel at this time, so if you are having problems try running the
+  command \code{pbat.setmode("single")}, or setting it to single from
+  the graphical interface before running these tests.
+
+  WARNING: Note the 'extended.pedigree.snp.fix' option, which is
+  important for getting more accurate results in very extended
+  pedigrees.  It uses a slower but more accurate pedigree reconstruction
+  method.
 }
 \examples{
 
@@ -494,6 +550,12 @@ pbat.m( time & censor ~ preds1^2 + preds2^3 | block1snp1
 # set any of the various options
 pbat.m( phenos ~ preds, phe, ped, fbat="pc",
         null="linkage, no association", alpha=0.1 )
+
+## New multimarker test (as described above)
+# mmaxphenos and mmaxsnps are set to the minimum if not specified
+pbat.m( phenos1 + phenos2 + phenos3 ~ preds | m1 | m2 | m3 | m4, phe,
+        ped, fbat="pc", mminphenos=2, mminsnps=2 )
+        
 }
 
 
@@ -533,14 +595,48 @@ res
 
 }
 \references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
   This was taken with only slight modification to accomodate the
   interface from Christoph Lange's description of the commands for the
   pbat program, (which was available with the software at the time of
-  this writing).
+  this writing), available at the PBAT webpage:
+  \url{http://www.biostat.harvard.edu/~clange/default.htm}
 
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}  
+  P2BAT webpage:
+  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
+
+  FBAT webpage (lists a lot of references in relation to both of these
+  programs):
+  \url{http://biosun1.harvard.edu/~fbat/fbat.htm}
+
+  More pbat references:
+
+  Hoffmann, T. and Lange, C. (2006) P2BAT: a massive parallel
+  implementation of PBAT for genome-wide association studies in
+  R. Bioinformatics. Dec 15;22(24):3103-5.
+
+  Jiang, H., et al. (2006) Family-based association test for
+  time-to-onset data with time-dependent differences between the hazard
+  functions. Genet. Epidemiol, 30, 124-132.
+  
+  Laird, N.M. and Lange, C. (2006) Family-based designs in the age of
+  large-scale gene-association studies. Nat. Rev. Genet, 7.
+  
+  Lange, C., et al. (2003) Using the noninformative families in
+  family-based association tests: a powerful new testing
+  strategy. Am. J. Hum. Genet, 73, 801-811.
+  
+  Lange, C., et al. (2004a) A family-based association test for
+  repeatedly measured quantitative traits adjusting for unknown
+  environmental and/or polygenic effects. Stat. Appl. Genet. Mol. Biol,
+  3.
+  
+  Lange, C., et al. (2004b) Family-based association tests for survival
+  and times-to-onset analysis. Stat. Med, 23, 179-189.
+  
+  Van Steen, K., et al. (2005) Genomic screening and replication using
+  the same data set in family-based association testing. Nat. Genet, 37,
+  683-691.
+
 }
 \seealso{
   \code{\link{summary.pbat}},

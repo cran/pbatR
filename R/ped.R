@@ -323,12 +323,27 @@ is.pped <- function( obj ){
     return(TRUE);
   return(FALSE);
 }
-read.pped <- function( filename ){
+read.pped <- function( filename, max=100 ){
   ## mirrors the symbolic piece of read.ped
   filename <- str.file.extension( filename, "pped" );
   if( !file.exists(filename) )
     stop( paste( "Cannot open '", filename, "' - file does not exist.", sep="" ) );
 
+  ## addition to load in the names of the compressed format if possible
+  file <- file( filename, open="r" );
+  numNames <- as.numeric( readLines( file, n=1 ) );
+  if( numNames < max ) {
+    firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
+    new.names <- readLines( file, n=numNames );
+    close( file );
+    pedlist <- data.frame( matrix( 0, nrow=1, ncol=length(firstNames)+length(new.names) ) );
+    names( pedlist ) <- c( firstNames, new.names );
+    class( pedlist ) <- "pedlist";
+    return( set.sym( pedlist, filename ) );
+  }
+  close( file );
+
+  ## otherwise back to being pure symbolic...
   pedlist <- data.frame();
   class( pedlist ) <- 'pedlist';
   return( set.sym( pedlist, filename ) );
@@ -336,19 +351,29 @@ read.pped <- function( filename ){
 as.pped <- function( ped, ppedname="" ){
   ## Get the filename
   kill <- FALSE;
-  pedname <- "";
-  if( ppedname=="" ){
-    if( is.sym(ped) ) {
-      pedname <- get.sym( ped );
+
+  pedname <- "killme.ped";
+  if( is.sym(ped) ) {
+    pedname <- get.sym( ped );
+    if( ppedname=="" ){
       ppedname <- file.strip.extension( pedname ); ## get rid of the .ped
       ppedname <- paste( ppedname, ".pped", sep="" );
-    }else{
-      ## need to write out the ped, and then translate
-      pedname <- "killme.ped";  kill <- TRUE;
-      ppedname <- "pped.pped";
     }
+  }else{
+    kill <- TRUE;
+    ## pedname is set
+    if( ppedname=="" )
+      ppedname <- "pped.pped";
   }
 
+  ## make sure the file doesn't exist
+  if( file.exists(ppedname) )
+    stop( paste( "The file '", ppedname, "' already exists.", sep="" ) );
+  
+  ## do we need to write a temporary pedigree file?
+  if( kill )
+    write.ped( pedname, ped );
+  
   ## create the batchfile to convert
   pbatfile <- file( "killme.txt", open="w" );
   cat( "pedfile ", pedname, "\n", sep="", file=pbatfile );
@@ -359,6 +384,7 @@ as.pped <- function( ped, ppedname="" ){
 
   ## and kill the temp files
   file.remove( "killme.txt" );
+  ## important to be very safe with this
   if( pedname == "killme.ped" & kill==TRUE )
     file.remove( "killme.ped" );
 

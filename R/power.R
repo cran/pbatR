@@ -100,9 +100,9 @@ pbat.binaryFamily <-
             2, ## Select genetic model from the menu
             model.modelNum,
             matchLoc( model, c("additive", "multi", "recessive", "dominant" ) ),
-            ##matchLoc( model, c("additive", "recessive", "dominant", c(0,2,3) ) ),
             model.afreq, model.incrAfreq,
             model.extraParms );
+  if( model.modelNum == 2 ) cmds <- cmds[-(length(cmds)-2-length(model.extraParms))]; ## bugfix 01/29/07
   if( as.numeric(model.incrAfreq)==0 )
     cmds <- c( cmds, as.numeric(model.disLocIsMarker) );
   

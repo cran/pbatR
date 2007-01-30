@@ -347,16 +347,27 @@ pbat.create.commandfile <- function(
        logfile="",
        max.gee=1,
        max.ped=7, min.info=20,
-       haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
+       haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
        output="normal",
        max.mating.types=10000,
        commandfile="",
        future.expansion=NULL,
-       LOGFILE.OVERRIDE=TRUE ## But FALSE for the GUI!?
+       LOGFILE.OVERRIDE=TRUE, ## But FALSE for the GUI!?
+       monte=0,
+       mminsnps=NULL, mmaxsnps=NULL,
+       mminphenos=NULL, mmaxphenos=NULL,
+       env.cor.adjust=FALSE,
+       gwa=FALSE,
+       snppedfile=FALSE,
+       extended.pedigree.snp.fix=FALSE
                                     )
 {
+  ## Fix up a couple of variables passed in
+  gwa <- (gwa==TRUE); ## in case it was a string
+  snppedfile <- (snppedfile==TRUE);
+  
   ##-----------------------------
   ## fix up extensions / naming -
   ##-----------------------------
@@ -458,6 +469,23 @@ pbat.create.commandfile <- function(
   if( phenos[1]!="" & time[1]!="" )
     stop( "Both 'phenos' and 'time' cannot have values set to them.  See the help file for more details." );
 
+  # New debugging -- Christoph explains...
+  if( scan.genetic=="all" &&
+     !is.null(mminsnps) && !is.null(mmaxsnps) && !is.null(mminphenos) && !is.null(mmaxphenos) ) {
+    stop( "Multimarker mode (mminsnps, mmaxsnps, mminphenos, mmaxphenos) is not supported for scan.genetic='all'. Try doing each one in turn." );
+  }
+  if( gwa ) {
+    if( output!="short" ){
+      output <- "short";
+      warning( "gwa mode only supported with short output format; short output format enforced." );
+    }
+    if( !snppedfile ){
+      msg <- "Ensure that you don't really have just snps. This will go much faster (storage enhancment) if it is and you specify 'snppedfile=TRUE'. Stop this and try again if that is the case.";
+      print( msg ); ## need to try to get it to the user as fast as possible
+      warning( msg );
+    }
+  }
+  
   # much more advanced debugging!
 
   # pedigree file information
@@ -501,12 +529,11 @@ pbat.create.commandfile <- function(
   errorIfAnyMatch( censor, phenos, "censor", "phenos" );
   errorIfAnyMatch( time, phenos, "time", "phenos" );
 
-  ####print( "got past here 2" );
-
   ## Enforce haplotype mode for multiprocessing
   ## 01/18/2006 rewrite - this should _always_ be done!
+  ## 01/29/2007 son of a ... apparently not always...
   ##if( pbat.getNumProcesses() > 1 && is.null(haplos) ) {
-  if( is.null(haplos) ) {
+  if( is.null(haplos) && extended.pedigree.snp.fix==FALSE ) {
     haplos <- list();
     if( is.null(snps) || snps[1]=="" ) {
       # simple hack - we need to insert the names into the haplotypes...
@@ -534,7 +561,11 @@ pbat.create.commandfile <- function(
     sub.haplos <- TRUE;
     length.haplos <- 1;
     adj.snps <- TRUE;
-  }  
+  }
+
+  ## caveat -- extended pedigree snp fix can only be done in single mode...
+  if( extended.pedigree.snp.fix=="TRUE" && pbat.getmode()$mode!="single" )
+    stop( "The extended pedigree SNP fix can only be done in single mode currently." );
 
   ####print( "got past here 3" );
 
@@ -569,7 +600,12 @@ pbat.create.commandfile <- function(
   errorRangeCheck( "length.haplos", length.haplos );
   errorRangeCheck( "max.mating.types", max.mating.types );
   ##warning( "Range checking for 'max.mating.types' is _NOT_ realistic!" );
-  
+
+  ## Newer range checking
+  monte <- as.integer( monte ); ## force to be an integer
+  errorRangeCheck( "monte", monte, min=0 );
+
+  errorRangeCheck( "cutoff.haplo", cutoff.haplo, min=0, max=1 );
 
   ####print( "got past here 5" );
 
@@ -706,7 +742,8 @@ pbat.create.commandfile <- function(
   }
   
   writeCommandStrMatch( "overallhaplo", overall.haplo, c(FALSE,TRUE), outfile=outfile );
-  writeCommandStrMatch( "cutoffhaplo", cutoff.haplo, c(FALSE,TRUE), outfile=outfile );
+  #writeCommandStrMatch( "cutoffhaplo", cutoff.haplo, c(FALSE,TRUE), outfile=outfile );
+  writeCommand( "cutoffhaplo", as.numeric(cutoff.haplo), outfile=outfile ); # 12/29/06
   
   # (35-36)
   if( output=="short" )
@@ -723,6 +760,39 @@ pbat.create.commandfile <- function(
     for( i in 1:length(future.expansion) )
       writeLines( future.expansion[i], con=outfile );
   }
+
+  ## 12/29/2006 additions
+
+  ## monte carlo method -- 0 indicates not to use it
+  writeCommand( "montecarloiteration", monte, outfile=outfile );
+
+  ## MFBAT -- multi-phenotype multi-marker tests
+  if( !is.null(mmaxsnps) || !is.null(mminsnps) || !is.null(mmaxphenos) || !is.null(mminphenos) ) {
+    if( is.null(mminsnps) ) mminsnps <- 1;
+    if( is.null(mmaxsnps) ) mmaxsnps <- mminsnps;
+    if( is.null(mminphenos) ) mminphenos <- 1;
+    if( is.null(mmaxphenos) ) mmaxphenos <- mminphenos;
+
+    writeCommand( "MFBAT", "1", outfile=outfile );
+    writeCommand( "mminsnps", mminsnps, outfile=outfile );
+    writeCommand( "mmaxsnps", mmaxsnps, outfile=outfile );
+    writeCommand( "mminphenos", mminphenos, outfile=outfile );
+    writeCommand( "mmaxphenos", mmaxphenos, outfile=outfile );
+
+    ## and debugging
+    if( pbat.getmode()$mode != "single" )
+      stop( "Multi-marker / multi-phenotype tests are not supported under any mode but 'single' at this time. Please use pbat.setmode('single') and rerun." );
+  }
+
+  ## environmental correlation adjust (GFBAT)
+  writeCommand( "GFBAT", as.integer(env.cor.adjust), outfile=outfile );
+  
+  ## genome-wide acceleration
+  writeCommand( "gwa", as.integer(gwa), outfile=outfile );
+
+  ## apparently this can only be written when specified!
+  if( snppedfile )
+    writeCommand( "snppedfile", as.integer(snppedfile), outfile=outfile );
   
   return( logfile );  # for future processing!
 }

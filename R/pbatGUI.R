@@ -129,9 +129,22 @@ pbatGUI.setglobs <- function() {
   globs$length.haplos <- tclVar("2");
   globs$adj.snps <- tclVar("FALSE");
   globs$overall.haplo <- tclVar("FALSE");
-  globs$cutoff.haplo <- tclVar("FALSE");
+  ###globs$cutoff.haplo <- tclVar("FALSE");
+  globs$cutoff.haplo <- tclVar("0");
   globs$max.mating.types <- tclVar("10000");
   globs$future.expansion <- tclVar("");
+  ## newest (12/29/2006)
+  globs$monte <- tclVar("0");
+  globs$mminsnps <- tclVar("0");
+  globs$mmaxsnps <- tclVar("0");
+  globs$mminphenos <- tclVar("0");
+  globs$mmaxphenos <- tclVar("0");
+  globs$env.cor.adjust <- tclVar("FALSE");
+  globs$gwa <- tclVar("FALSE");
+  ## 01/19/2006
+  globs$snppedfile <- tclVar("FALSE");
+  ## 01/26/2006
+  globs$extended.pedigree.snp.fix <- tclVar("FALSE");
 
   globs$res <- NULL;
 
@@ -244,6 +257,7 @@ pbatGUI.phenotypesForm <- function(){
   allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$preds );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
+  posPhenos <- c("AffectionStatus",posPhenos);
 
   if( length(posPhenos) < 2 ) {
     tkmessageBox( title="ERROR",
@@ -1208,11 +1222,14 @@ pbatGUI.optionsForm <- function() {
              gridframe=dg$f2);
     }
 
-    newTE( globs$cutoff.haplo, "Min Haplotype Freq.",
-          helps="The minimum haplotypes frequency so that a haplotypes is included in the overall test." );
-    
-    newTE( globs$max.mating.types, "Max Mating Types",
-          helps="Maximal number of mating types in the haplotype analysis." );
+    {
+      dg <- dblGrid();
+      newTE( globs$cutoff.haplo, "Min Haplotype Freq.",
+            helps="The minimum haplotypes frequency so that a haplotypes is included in the overall test.", gridframe=dg$f1 );
+      
+      newTE( globs$max.mating.types, "Max Mating Types",
+            helps="Maximal number of mating types in the haplotype analysis.", gridframe=dg$f2 );
+    }
     
     newTE( globs$future.expansion, "(Future Expansion)", width=40,
           helps="(Only included for future expansion of pbat.) Lines to write to the batchfile for pbat." );
@@ -1220,8 +1237,60 @@ pbatGUI.optionsForm <- function() {
     ;##############################
     ;# draw in all of the options #
     ;##############################
+
+    ## new options 12/29/2007
+    newTE( globs$monte, "Monte Carlo Iterations",
+           helps="When this is nonzero, monte-carlo based methods are used to compute the p-values instead, according to the number of iterations supplied. 1000 iterations is suggested." );
+    {
+      dg <- dblGrid();
+      newTE( globs$mminsnps, "MM SNP min",
+             helps="Multi-marker multi-phenotype tests: the minimum number of snps to be tested.",
+             gridframe=dg$f1 );
+      newTE( globs$mmaxsnps, "MM SNP max",
+             helps="Multi-marker multi-phenotype tests: the maximum number of snps to be tested.",
+             gridframe=dg$f2 );
+
+    }
+    
+    {
+      dg <- dblGrid();
+      newTE( globs$mminphenos, "MM phenotype min",
+             helps="Multi-marker multi-phenotype tests: the minimum number of phenotypes to be tested.",
+             gridframe=dg$f1 );
+      newTE( globs$mmaxphenos, "MM phenotype max",
+             helps="Multi-marker multi-phenotype tests: the maximum number of phenotypes to be tested.",
+             gridframe=dg$f2 );
+
+    }
+    
+    {
+      dg <- dblGrid();
+      newOpt( globs$env.cor.adjust, "Environment Correlation Adjust",
+              helps=c("Environment Correlation",
+                "Do not adjust for",
+                "Adjust for"),
+              gridframe=dg$f1 );
+      newOpt( globs$gwa, "Genome-Wide Accelerated mode",
+              helps=c("Whether to use (g)enome (w)ide (a)cceleration mode.  This is faster for genome-wide association tests, and has slightly less output.",
+                "Don't use",
+                "Use"),
+              gridframe=dg$f2 );
+    }
+
+    {
+      dg <- dblGrid();
+      newOpt( globs$snppedfile, "snppedfile",
+              helps=c("snppedfile","The pedigree file does not contain just snps.","The pedigree file does just contain snps. This is advantageous to specify as the storage mode is much more compact, and the program will use much less memory."),
+              gridframe=dg$f1 );
+      newOpt( globs$extended.pedigree.snp.fix, "Extended pedigree snps fix",
+              helps=c("Set to true when you have more extended pedigrees in your dataset, as the pedigree reconstruction will be more accurate. Note this mode is only compatible with `single' mode, so be sure to set that as well.",
+                "Haplotype accelerated mode - faster and good when this isn't the case.",
+                "Slow, but good."),
+              gridframe=dg$f2 );
+    }
   }
 
+  
   
     
   # lastly, an OK button
@@ -1258,13 +1327,17 @@ pbatGUI.pedFileChoice <- function() {
   tkdelete( globs$te.ped, 0, 999999 );
   
   # See if we can get the filename; return if cancelled
-  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Pedigree File} {.ped}}"));
+  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed Pedigree File} {.ped .pped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}}"));
   if( !nchar(tempstr) ) return();
   globs$pedfile <- tempstr;
   pbatGUI.tkSetText( globs$te.ped, tempstr );
 
   # Load in the data file
-  globs$ped <- read.ped( globs$pedfile );
+  if( file.extension(tempstr)=="ped" ) {
+    globs$ped <- read.ped( globs$pedfile );
+  }else{
+    globs$ped <- read.pped( globs$pedfile );
+  }
   globs$pedset <- TRUE;
 
   # Now, also set the phefile
@@ -1380,6 +1453,18 @@ pbatGUI.write <- function() {
   return(FALSE); # failed to write
 }
 
+## addition -- compression
+pbatGUI.compress <- function() {
+  globs <- getPbatGUI( "globs" );
+  if( is.pped(globs$ped) ){
+    print( "File already is compressed." );
+    return();
+  }
+  globs$ped <- as.pped( globs$ped );
+  pbatGUI.tkSetText( globs$te.ped, get.sym( globs$ped ) );
+  setPbatGUI( "globs", globs );
+}
+
 # draw the main form, wait until everything is all done
 pbatGUI.mainForm <- function() {
   loadTclTkOrDie()  ## has to be here, period.
@@ -1413,7 +1498,11 @@ pbatGUI.mainForm <- function() {
     but.ped <- tkbutton( frame.prelim, text="Pedigree File ...", command=pbatGUI.pedFileChoice );
     globs$tclVar.ped <- tclVar();
     globs$te.ped <- tkentry( frame.prelim, width=ENTRYWIDTH, textvariable=globs$tclVar.ped );
-    tkgrid( but.ped, globs$te.ped );
+    ## -- addi for compression
+    but.compress <- tkbutton( frame.prelim, text="Compress", command=pbatGUI.compress );
+    ## -- idda
+    ##tkgrid( but.ped, globs$te.ped );
+    tkgrid( but.ped, globs$te.ped, but.compress );
     try( tkconfigure( globs$te.ped, state="readonly" ) ); ## try
     tkgrid.configure( but.ped, sticky="ew" );
 
@@ -1677,6 +1766,7 @@ pbatGUI.mainForm <- function() {
       #################
       # CALL PBAT!!!! #
       #################
+      zero.to.null <- function( x ){ if(x<=0) return(NULL); return(x); };
       globs$res <- pbat.m(
                           formula,
                           globs$phe, globs$ped,
@@ -1706,7 +1796,16 @@ pbatGUI.mainForm <- function() {
                           cutoff.haplo=tclvalue(globs$cutoff.haplo),
                           max.mating.types=tclvalue(globs$max.mating.types),
                           future.expansion=tclvalue(globs$future.expansion),
-                          LOAD.OUTPUT=LOAD.OUTPUT
+                          LOAD.OUTPUT=LOAD.OUTPUT,
+                          monte=tclvalue(globs$monte),
+                          mminsnps=zero.to.null(tclvalue(globs$mminsnps)),
+                          mmaxsnps=zero.to.null(tclvalue(globs$mmaxsnps)),
+                          mminphenos=zero.to.null(tclvalue(globs$mminphenos)),
+                          mmaxphenos=zero.to.null(tclvalue(globs$mmaxphenos)),
+                          env.cor.adjust=tclvalue(globs$env.cor.adjust),
+                          gwa=tclvalue(globs$gwa),
+                          snppedfile=tclvalue(globs$snppedfile),
+                          extended.pedigree.snp.fix=tclvalue(globs$extended.pedigree.snp.fix)
                           );
 
       # save any results

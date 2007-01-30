@@ -2,6 +2,8 @@ export(
        as.phe, as.ped, as.pedlist,
        is.phe, is.ped, is.pedlist,
        read.ped, read.phe, write.ped, write.phe,
+
+       is.pped, as.pped, read.pped,
        
        pbat.create.commandfile,
        pbat.files, pbat.obj, pbat.m,
@@ -22,7 +24,9 @@ export(
 
        pbat.help,
 
-       write.pbat, write.pbat.csv
+       write.pbat, write.pbat.csv,
+
+       c2bat
        )
 
 import( tcltk )

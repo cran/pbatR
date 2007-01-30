@@ -48,14 +48,22 @@ pbat.m <- function(
        logfile="",
        max.gee=1,
        max.ped=14, min.info=20,
-       incl.ambhaplos=TRUE, infer.mis.snp=TRUE,
+       incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
        output="normal",
        max.mating.types=10000,
        commandfile="",
        future.expansion=NULL,
-       LOAD.OUTPUT=TRUE        )
+       LOAD.OUTPUT=TRUE,
+       monte=0,
+       mminsnps=NULL, mmaxsnps=NULL,
+       mminphenos=NULL, mmaxphenos=NULL,
+       env.cor.adjust=FALSE,
+       gwa=FALSE,
+       snppedfile=FALSE,
+       extended.pedigree.snp.fix=FALSE
+                   )
 {
   # make sure some of the variables are of a certain format
   max.pheno <- as.numeric( max.pheno );
@@ -258,6 +266,8 @@ pbat.m <- function(
   ##  return(NULL);
   ##}
 
+  if( is.null(mminsnps) ) mminsnps <- NULL; ## WHAT THE HELL??
+
   # And that should be it!  Just run it baby!
   res <- pbat.obj( phe, ped, paste("pbat",getTimeStamp(),"data",sep=""),
        snps=snps,
@@ -284,7 +294,15 @@ pbat.m <- function(
        max.mating.types=max.mating.types,
        commandfile=commandfile,
        future.expansion=future.expansion,
-       LOAD.OUTPUT=LOAD.OUTPUT );
+       LOAD.OUTPUT=LOAD.OUTPUT,
+       monte=monte,
+       mminsnps=mminsnps, mmaxsnps=mmaxsnps,
+       mminphenos=mminphenos, mmaxphenos=mmaxphenos,
+       env.cor.adjust=env.cor.adjust,
+       gwa=gwa,
+       snppedfile=snppedfile,
+       extended.pedigree.snp.fix=extended.pedigree.snp.fix
+                  );
 
   ##print( names(res) ); ## DEBUG
   res$call <- formula;

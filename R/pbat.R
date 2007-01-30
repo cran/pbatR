@@ -160,6 +160,7 @@ pbat.files <- function( pedfile, phefile,
                         fbat="gee",
                         commandfile="",
                         logrank.outfile="",
+                        preds="", preds.order="",
                         LOAD.OUTPUT=TRUE,
                         ... )
 {
@@ -178,7 +179,9 @@ pbat.files <- function( pedfile, phefile,
   
   # Create the command file
   logfile <- pbat.create.commandfile( pedfile=pedfile, phefile=phefile, fbat=fbat, ## 05/31/06 fix
-    commandfile=commandfile, ... );
+                                      commandfile=commandfile,
+                                      preds=preds, preds.order=preds.order,
+                                      ... );
   ##print( logfile ); ## DEBUG ONLY
 
   if( logrank.outfile=="" & fbat=="logrank" ) { # so we get the same timestamp :)
@@ -199,6 +202,7 @@ pbat.files <- function( pedfile, phefile,
   numProcesses <- mode$jobs;
   CLUSTER.TIME <- mode$refresh;
 
+  ## now go through the modes
   if( mode$mode == "single" ){
     ## The original
     clearCommands()
@@ -291,7 +295,7 @@ pbat.files <- function( pedfile, phefile,
   ##print( "loading logfile" );
   ##print( logfile );
   ##res <- loadPbatlog( logfile );
-  if( LOAD.OUTPUT ) {
+  if( LOAD.OUTPUT==TRUE ) {
     res <- loadPbatlogExtended( logfile ); ## 01/09/2006
   }else{
     res <- NULL;
@@ -318,15 +322,88 @@ pbat.files <- function( pedfile, phefile,
 
   ## New 09/11/2006 - another PBAT hack to try; this time we try to header
   ##  the data that comes out of PBAT
-  if( !is.null( pbatObj$results ) &&
-     ncol(pbatObj$results)==14 && names(pbatObj$results)[1]=="C0" ){
-    ## at least this get's the defaults, but it's really not the best
-    names(pbatObj$results) <-
-      c( "Group", "snps", "haplotype",  "hap.freq", "model",
-        "X..info.fam",  "FBAT.Wilcoxon", "power", "FBAT.LOGRANK", "power.1",
-        "weighted.FBAT.LOGRANK", "power.2", "optimal.FBAT.LOGRANK", "power.3" );
+  ###if( !is.null( pbatObj$results ) &&
+  ###   ncol(pbatObj$results)==14 && names(pbatObj$results)[1]=="C0" ){
+  ###  ## at least this get's the defaults, but it's really not the best
+  ###  names(pbatObj$results) <-
+  ###    c( "Group", "snps", "haplotype",  "hap.freq", "model",
+  ###      "X..info.fam",  "FBAT.Wilcoxon", "power", "FBAT.LOGRANK", "power.1",
+  ###      "weighted.FBAT.LOGRANK", "power.2", "optimal.FBAT.LOGRANK", "power.3" );
+  ###  warning( "Miscommunication with PBAT - column headers guessed." );
+  ###}
+
+  ## further modified 01/19/2006
+  if( !is.null( pbatObj$results ) && names(pbatObj$results)[1]=="C0" ){
+    if( fbat=="logrank" && ncol(pbatObj$results)==14 ){
+      names(pbatObj$results) <-
+        c( "Group", "snps", "haplotype",  "hap.freq", "model",
+           "X..info.fam",  "FBAT.Wilcoxon", "power", "FBAT.LOGRANK", "power.1",
+           "weighted.FBAT.LOGRANK", "power.2", "optimal.FBAT.LOGRANK", "power.3" );
+    }else if( fbat=="gee" || fbat=="pc" ){
+      ## The typical name guessing
+      pre.names <- c("group","snps","haplotype","hap.freq","model","X..info.fam","FBAT","FBAT.GxE","power.FBAT","power.FBAT.GxE", "WALD.main", "WALD.GxE");
+      post.names <- c("heritability");
+      phe <- read.phe( phefile );
+      mid.names <- c( names(phe)[-c(1,2)], "AffectionStatus");
+      ## now we go further, for predictors of higher order...
+      ## - the next three lines come into play depending on Christoph's answer
+      if( !is.null(preds.order) &&
+          length(preds.order)>=1 &&
+          !( is.character(preds.order[1]) && preds.order[1]=="" ) ){
+        new.order <- order( match(preds,names(phe)) );
+        preds <- preds[new.order];
+        preds.order <- preds.order[new.order];
+        for( i in length(preds.order):1 )
+          if( as.integer(preds.order[i]) > 1 )
+            for( o in as.integer(preds.order[i]):2 )
+              post.names <- c( paste(preds[i],".",o,sep=""), post.names );
+      }
+      ## and paste together the names!
+      guessed.names <- c( pre.names, mid.names, post.names );
+      if( length(guessed.names) == ncol(pbatObj$results) ){
+        names(pbatObj$results) <- guessed.names;
+      }else if( length(guessed.names) > ncol(pbatObj$results) ){
+        ## try again -- short output is bloody different
+        post.names <- c("formula","heritability");
+        guessed.names <- c( pre.names, post.names ); ## leave out the middles
+        if( length(guessed.names) == ncol(pbatObj$results) ){
+          names(pbatObj$results) <- guessed.names;
+        }else{
+          warning("Guessed names length did not match actual column width.");
+        }
+      }else{
+        ## indicates the guessed names fall short of the number
+        ##  of columns that are actually there
+        
+        ## Generally this means that there is something here with
+        ##  the mi(...), but I don't yet understand then how this
+        ##  is titled...
+        ## Also tends to have a column of 1's at the end of the
+        ##  analysis sometimes.. haven't figured out that either
+
+        if( length(guessed.names) + 9 <= ncol(pbatObj$results) ) {
+          mi.names <- c("GxE.DAG.main.effect",
+                        "GxE.DAG.main.effect.std",
+                        "GxE.DAG.main.effect.p",
+                        "GxE.DAG.itx.effect",
+                        "GxE.DAG.itx.effect.std",
+                        "GxE.DAG.itx.effect.p",
+                        "GxE.FBATI",
+                        "GxE.main.heritability",
+                        "GxE.itx.heritability");
+          names(pbatObj$results) <- c(guessed.names,
+                                      rep("NA", ncol(pbatObj$results)-length(guessed.names)-length(mi.names)),
+                                      mi.names);
+          
+        }else{
+          names(pbatObj$results) <- c(guessed.names,
+                                      rep("NA", ncol(pbatObj$results)-length(guessed.names)) );
+        }
+      }
+    }
     warning( "Miscommunication with PBAT - column headers guessed." );
   }
+  
   ## weN 09/11/2006
 
   if( is.null(pbatObj$results)

@@ -347,9 +347,10 @@ loadPbatlogExtended <- function( log ) {
   numProcesses <- pbat.getNumProcesses();
   if( numProcesses==1 ) return( loadPbatlog( log ) );
   .C( "launchPbatlogExtended", log, callfile, resultfile, as.integer(numProcesses) );
-  
-  pbatCall <- readLines( callfile );
-  pbatData <- read.csv( resultfile );
+
+  pbatCall <- NULL; pbatData <- NULL;
+  try( pbatCall <- readLines( callfile ) );
+  try( pbatData <- read.csv( resultfile ) );
   
   return( list( call=pbatCall, data=pbatData ) );
 }  

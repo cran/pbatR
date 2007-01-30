@@ -156,6 +156,9 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
     if( pastAnd ){
       // need to replace all of the &'s with ,'s
       replaceChar( line );
+
+      // new -- replace all the stupid *'s
+      replaceChar( line, '*', ' ' );
       ////cout << line << endl;
 
       // see if it's a header / need a header
@@ -175,6 +178,7 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
 	  //first wasn't a group
 	  if( append == 0 ) {
 	    // then we need to create and put a header on it!
+	    terminateStr( line ); // 1/22/07 update fix remove NA's...?
 	    int numCols = numChars( line, ',' ) + 1;
 	    ////cout << "numCols = " << numCols << endl;
 	    for( int j=0; j<numCols; j++ ) {
