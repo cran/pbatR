@@ -129,7 +129,9 @@ pbat.create.commandfile( pedfile, phefile="",
 \arguments{
   \item{formula}{Symbolic expression describing what should be
     processed.  See `examples' for more information.}
-  \item{phe}{`phe' object as described in \code{\link{write.phe}}.}
+  \item{phe}{`phe' object as described in \code{\link{write.phe}}. If
+    you do not have a phe file set this to NULL (i.e when you are only
+    using AffectionStatus from the pedigree).}
   \item{ped}{`ped' object as described in \code{\link{write.ped}}.}
 
   \item{file.prefix}{Prefix of the output datafile (phe & ped must match)}
@@ -137,7 +139,9 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{pedfile}{Name of the pedigree file (.ped) in PBAT-format
     (extension `.ped' is optional).}
   \item{phefile}{Name of the phenotype file (.phe) in PBAT-format.
-    The default assumes the same prefix as that in 'pedfile'.}
+    The default assumes the same prefix as that in 'pedfile'. Leave
+    empty or set to the empty string "" if you do not have a phenotype
+    file (i.e. you are only using AffecitonStatus).}
 
   \item{...}{Options in higher level functions to be passed to
     'pbat.create.commandfile'.}

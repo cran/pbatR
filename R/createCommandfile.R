@@ -386,6 +386,8 @@ pbat.create.commandfile <- function(
 
   if( phefile=="" ) {
     phefile <- paste( substring(pedfile,1,strlen(pedfile)-3), "phe", sep="" );
+    ## But we don't need a phe file for AffectionStatus
+    if( !file.exists( phefile ) ) phefile <- "";
   }else{
     phefile <- str.file.extension( phefile, ".phe" );
   }
@@ -460,7 +462,7 @@ pbat.create.commandfile <- function(
     stop( paste("The pedigree file '",
                 pedfile, "' does not exist.  Current working directory is '",
                 getwd(), "'.", sep="") );
-  if( !file.exists(phefile) )
+  if( phefile!="" && !file.exists(phefile) )
     stop( paste("The phenotype file '",
                 phefile, "' does not exist.  Current working directory is '",
                 getwd(), "'.", sep="") );
@@ -498,8 +500,11 @@ pbat.create.commandfile <- function(
   ####print( "got past here" );
 
   # phenotype file information
-  phe <- read.phe( phefile, sym=TRUE );
-  posPhenos <- names(phe);
+  posPhenos <- c();
+  if( !is.null(phefile) && phefile!="" ){
+    phe <- read.phe( phefile, sym=TRUE );
+    posPhenos <- names(phe);
+  }
   posPhenos <- c( posPhenos, "AffectionStatus" ); ## When, where, and _why_ did this get lost??
 
   # check containment of various options...
@@ -629,7 +634,8 @@ pbat.create.commandfile <- function(
     stop( paste( "The pedigree file '", pedfile, "' has the extension '", pedfile.ext, "', which is not supported (must be 'ped' or 'pped'." ) );
   }
   ####print( "TESTING 2" );
-  writeCommand( "phenofile", phefile, outfile=outfile );  # (3)
+  if( phefile != "" )
+    writeCommand( "phenofile", phefile, outfile=outfile );  # (3)
 
   #if( snps!="" )
   writeCommand( "snps", c(snps), outfile=outfile, end=TRUE ); # (2)

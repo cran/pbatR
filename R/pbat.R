@@ -343,8 +343,11 @@ pbat.files <- function( pedfile, phefile,
       ## The typical name guessing
       pre.names <- c("group","snps","haplotype","hap.freq","model","X..info.fam","FBAT","FBAT.GxE","power.FBAT","power.FBAT.GxE", "WALD.main", "WALD.GxE");
       post.names <- c("heritability");
-      phe <- read.phe( phefile );
-      mid.names <- c( names(phe)[-c(1,2)], "AffectionStatus");
+      phe <- NULL; mid.names <- c("AffectionStatus");
+      if( phefile!="" ) {
+        phe <- read.phe( phefile );
+        mid.names <- c( names(phe)[-c(1,2)], "AffectionStatus");
+      }
       ## now we go further, for predictors of higher order...
       ## - the next three lines come into play depending on Christoph's answer
       if( !is.null(preds.order) &&
@@ -483,9 +486,14 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
   #return( pbat.files( file.prefix, ... ) );
 
   ## Common error by people - check for it and more helpful message
-  if( !(is.ped(ped) || is.pedlist(ped) ) || !is.phe(phe) ){
-    stop( "`phe' must be a phenotype object, and `ped' must be a pedigree object.  A common mistake is to pass the pedigree as the phenotype and vice versa." );
-  }
+  ##if( !(is.ped(ped) || is.pedlist(ped) ) || !is.phe(phe) ){
+  ##  stop( "`phe' must be a phenotype object, and `ped' must be a pedigree object.  A common mistake is to pass the pedigree as the phenotype and vice versa." );
+  ##}
+  ## Update 02/25/2007 - phe can be empty
+  if( !( is.ped(ped) || is.pedlist(ped) ) )
+    stop( "'ped' must be a pedigree object. A common mistake is to switch the order of the phenotype and pedigree object when passing them to the function." );
+  if( !is.phe(phe) )
+    warning( "'phe' object is either of a wrong class, or unspecified (when you are just using AffectionStatus safe to ignore)." );
   
   ## Write out files to disk if necessary
   if( !is.sym(ped) ) {
@@ -495,13 +503,16 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
     pedname <- get.sym( ped );
   }
 
-  if( !is.sym(phe) ) {
-    write.phe( paste( file.prefix, ".phe", sep="" ), phe );
-    phename <- file.prefix;
-  }else{
-    phename <- get.sym( phe );
+  phename <- "";  ## don't always need a phefile
+  if( !is.null(phe) && class(phe)=="phe" ) {
+    if( !is.sym(phe) ) {
+      write.phe( paste( file.prefix, ".phe", sep="" ), phe );
+      phename <- file.prefix;
+    }else{
+      phename <- get.sym( phe );
+    }
   }
-
+  
   ## run the command
   res <- pbat.files( pedname, phename, LOAD.OUTPUT=LOAD.OUTPUT, ... );
 

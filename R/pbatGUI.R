@@ -254,12 +254,14 @@ pbatGUI.phenotypesForm <- function(){
   tkwm.title( form, "P2BAT - Phenotypes" );
 
   ## get the possible/impossible arrays of phenos
-  allPhenos <- names( globs$phe[-c(1,2)] );
+  allPhenos <- c();
+  if( class(globs$phe) == 'phe' )
+    allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$preds );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
   posPhenos <- c("AffectionStatus",posPhenos);
 
-  if( length(posPhenos) < 2 ) {
+  if( length(posPhenos) < 1 ) { ## why was it 2?
     tkmessageBox( title="ERROR",
                   message="Not enough phenotypes ",
                   icon="error", type="ok" );
@@ -341,7 +343,9 @@ pbatGUI.logrankForm <- function(){
   tkwm.title( form, "P2BAT - Time / Censor" );
 
   # get the possible/impossible arrays of phenos
-  allPhenos <- names( globs$phe[-c(1,2)] );
+  allPhenos <- c();
+  if( class(globs$phe) == 'phe' )
+    allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$preds );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
 
@@ -472,7 +476,9 @@ pbatGUI.predictorsForm <- function(){
   tkwm.title( form, "P2BAT - Predictors" );
 
   # get the possible/impossible arrays of phenos
-  allPhenos <- names( globs$phe[-c(1,2)] );
+  allPhenos <- c();
+  if( class(globs$phe)=="phe" )
+    allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$phenos );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
 
@@ -1383,7 +1389,7 @@ pbatGUI.pheFileChoice <- function() {
   pbatGUI.tkSetText( globs$te.phe, tempstr );
 
   # Load in the data file
-  globs$phefile <- read.phe( globs$phefile );
+  globs$phe <- read.phe( globs$phefile );  ## phe, not phefile!!!! 
   globs$pheset <- TRUE;
 
   # Set the globals
@@ -1398,10 +1404,15 @@ pbatGUI.ensureDataLoaded <- function() {
   globs <- getPbatGUI( "globs" );
 
   # make sure 'phe' and 'ped' aren't null
-  #if( 0==globs$phe[[1]] | 0==globs$ped[[1]] ) {
-  if( !globs$pheset | !globs$pedset ) {
+  ##if( !globs$pheset | !globs$pedset ) {
+  ##  tkmessageBox( title="ERROR",
+  ##                message="You need to load in the pedigree and phenotype files first.",
+  ##                icon="error", type="ok" );
+  ##  return( FALSE );
+  ##}
+  if( !globs$pedset ) {
     tkmessageBox( title="ERROR",
-                  message="You need to load in the pedigree and phenotype files first.",
+                  message="You need to at least load in a pedigree file first, and also a phenotype file unless you plan on just using AffectionStatus.",
                   icon="error", type="ok" );
     return( FALSE );
   }
@@ -1718,7 +1729,10 @@ pbatGUI.mainForm <- function() {
       if( !pbatGUI.ensureDataLoaded() ) return( FALSE );
       
       globs <- getPbatGUI( "globs" );
-      allPhenos <- names( globs$phe[-c(1,2)] );
+      allPhenos <- c();
+      if( class(globs$phe)=="phe" )
+        allPhenos <- names( globs$phe[-c(1,2)] );
+      allPhenos <- c( "AffectionStatus", allPhenos );
       
       ;# First put the R command together...
       ;# We'll be calling pbat.m(...)
