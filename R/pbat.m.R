@@ -44,7 +44,7 @@ pbat.m <- function(
        scan.pred="all", scan.inter="all",
        scan.genetic="additive",
        offset="default",
-       screening="conditional power", distribution="continuous",
+       screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
        max.ped=14, min.info=20,

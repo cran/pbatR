@@ -251,7 +251,7 @@ DWORD WINAPI handleInputThread( LPVOID lpvThreadParam )
   int curLine=0;
   
   char strLine[1000];
-  while( threadRun && curLine<commands.size() ){
+  while( threadRun && curLine<(int)commands.size() ){
     while( !justGotInput )
       Sleep(1000);
     Sleep(1000); // still wait a little more

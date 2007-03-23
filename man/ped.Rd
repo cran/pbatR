@@ -122,10 +122,10 @@ x <- data.frame( idped =     c(1,1,1,1,1),
                  idmoth =    c(5,5,5,0,0),
                  sex =       c(1,2,1,1,2),
                  affection = c(1,0,0,1,0),
-                 m1.a =      c(1,1,4,4,4),
-                 m1.b =      c(2,3,2,2,3),
+                 m1.a =      c(1,1,1,1,1),
+                 m1.b =      c(1,2,1,1,2),
                  m2.a =      c(4,4,4,4,4),
-                 m2.b =      c(1,1,1,4,1) )
+                 m2.b =      c(3,3,3,4,3) )
 x
 myPed <- as.ped( x )          # Mark it with the class 'ped'
 myPedlist <- as.pedlist( x )  # Instead mark it with 'pedlist'

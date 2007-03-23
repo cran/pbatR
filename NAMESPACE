@@ -8,7 +8,7 @@ export(
        pbat.create.commandfile,
        pbat.files, pbat.obj, pbat.m,
        
-       pbat.get, pbat.set,
+       pbat.get, pbat.set, pbat.setVersionCheck,
 
        pbat.getmode, pbat.setmode, pbat.setmode.defaults,
 
@@ -23,10 +23,13 @@ export(
        pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
 
        pbat.help,
+       pbat.firsttime,
 
        write.pbat, write.pbat.csv,
 
-       c2bat
+       c2bat,
+
+       obfuscate
        )
 
 import( tcltk )

@@ -145,6 +145,8 @@ pbatGUI.setglobs <- function() {
   globs$snppedfile <- tclVar("FALSE");
   ## 01/26/2006
   globs$extended.pedigree.snp.fix <- tclVar("FALSE");
+  ## 03/22/2006
+  globs$distribution <- tclVar("default");
 
   globs$res <- NULL;
 
@@ -925,7 +927,9 @@ pbatGUI.groupForm <- function() {
 # OPTIONS...                                                       #
 #                                                                  #
 ####################################################################
-pbatGUI.optionsForm <- function() {
+pbatGUI.optionsForm <- function( whichForm=0 ) {
+  ## whichForm - 0 means them all, otherwise now we're cutting it into 2 pieces
+  
   loadTclTkOrDie()  ## has to be here to pass the check
 
   # get the globals
@@ -1063,7 +1067,7 @@ pbatGUI.optionsForm <- function() {
   #newTE( junk2, "Max Matring Types", helps="Yes, wouldn't you like help?" )
 
 
-  {
+  if( whichForm==0 || whichForm==1 ){
     ;##############################
     ;# draw in all of the options #
     ;##############################
@@ -1150,23 +1154,34 @@ pbatGUI.optionsForm <- function() {
              "Offset (=FBAT adjustment for covariates and interaction variables) based on standard phenotypic residuals obtained by GEE-estimation including all covariates and interaction variables. The default choice is 'gee' ('no' for dichotomous traits).") );
 
     {
-      dg <- dblGrid();
+      ##dg <- dblGrid();
       
       newOpt( globs$screening, "Screening",
              options=c("conditional power","wald"),
              helps=c("Specification of the screening methods to handle the multiple comparison problem for multiple SNPs/haplotypes and a set of phenotypes.",
                "Screening based on conditional power (parametric approach)",
-               "Screening based on Wald-tests (non-parametric approach)"),
-             gridframe=dg$f1 );
+               "Screening based on Wald-tests (non-parametric approach)") );
+      ##       gridframe=dg$f1 );
       
-      newOpt( globs$distribution, "Phenotype Distribution",
-             options=c("continuous","categorical"),
-             helps=c("Specification of the phenotypic distribution",
-               "Phenotypes are treated as continuous phenotypes in the power calculation",
-               "Phenotypes are treated as categorical/integer variables. This option is especially recommended for analysis of time-to-onset data and affection status."),
-             gridframe=dg$f2 );
+      #newOpt( globs$distribution, "Phenotype Distribution",
+      #       options=c("continuous","categorical"),
+      #       helps=c("Specification of the phenotypic distribution",
+      #         "Phenotypes are treated as continuous phenotypes in the power calculation",
+      #         "Phenotypes are treated as categorical/integer variables. This option is especially recommended for analysis of time-to-onset data and affection status."),
+      #       gridframe=dg$f2 );
+      newOpt( globs$distribution, "Empirical Pheno Distn",
+              options=c("default","jiang","murphy","naive","observed"),
+              helps=c(
+                "Specification of the phenotype distribution for screening.",
+                "Default",
+                "Approach by Jiang et. al 2006",
+                "Approach by Murphy et. al 2006",
+                "Naive allele frequency estimators",
+                "Observed allele frequencies") );
     }
+  }
 
+  if( whichForm==0 || whichForm==2 ) {
     if( isG )
       newTE( globs$max.gee, "Max GEE Iterations",
             helps="Specification of the maximal number of iterations in the GEE-estimation procedure." );
@@ -1451,12 +1466,18 @@ pbatGUI.group <- function() {
   pbatGUI.groupForm();
 }
 
-pbatGUI.options <- function() {
+pbatGUI.options <- function(whichForm=0) {
   #pbatGUI.debug("options\n");
   #if( !pbatGUI.ensureDataLoaded() ) return( FALSE );
 
-  pbatGUI.optionsForm();
+  pbatGUI.optionsForm(whichForm=whichForm);
 }
+
+pbatGUI.options1 <- function()
+  pbatGUI.options(1);
+pbatGUI.options2 <- function()
+  pbatGUI.options(2);
+
 
 pbatGUI.write <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
@@ -1606,10 +1627,20 @@ pbatGUI.mainForm <- function() {
     tkgrid( but.group, globs$te.group );
     tkgrid.configure( but.group, sticky="we" );
     
-    ;# - options
-    but.options <- tkbutton( frame.misc, text="Options ...", command=pbatGUI.options );
-    tkgrid( but.options );
-    tkgrid.configure( but.options, sticky="we" );
+    ## - options
+    ## -- old, all on one form
+    #but.options <- tkbutton( frame.misc, text="Options ...", command=pbatGUI.options );
+    #tkgrid( but.options );
+    #tkgrid.configure( but.options, sticky="we" );
+
+    ## -- two options forms
+    but.options1 <- tkbutton( frame.misc, text="Options (1) ...", command=pbatGUI.options1 );
+    tkgrid( but.options1 );
+    tkgrid.configure( but.options1, sticky="we" );
+    
+    but.options2 <- tkbutton( frame.misc, text="Options (2) ...", command=pbatGUI.options2 );
+    tkgrid( but.options2 );
+    tkgrid.configure( but.options2, sticky="we" );
   }
 
   {

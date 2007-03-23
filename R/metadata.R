@@ -41,6 +41,8 @@ pbat.setmode.defaults <- function( save=TRUE ){
   pbatenv.set( "processors", 1 );
   pbatenv.set( "cluster", "batch -f" );  ## default used to be bsub, but I still don't have access to the goddamned server...
   pbatenv.set( "refresh", CLUSTER.TIME.DEFAULT );
+  pbatenv.set( "version.check", 1 ); ## yes, do it!
+  pbatenv.set( "firsttime", 1 );  ## yes, it's our first...
 }
 
 ## Loading in the metadata
@@ -54,15 +56,21 @@ pbat.loadMetadata <- function(){
   tmp <- readLines(file);
   close(file);
 
-  if( length(tmp)<5 ){
-    warning( "Potentially malformed metadata. Rerun pbat.setmode() and pbat.set() for multiple processing modes." );
+  if( length(tmp)<5 ){ ## previous version was 5, so set that
+    warning( "Potentially malformed metadata (or from a previous version of pbatR). Please check pbat.get() to make sure everything is in order, or ensure it is still set correctly in the GUI." );
     return();
   }
+
+  ##if( length(tmp)==6 )
+  pbatenv.set( "firsttime", 0 ); ## it's been done before if we got this far
+  
   pbatenv.set( "executable", tmp[1] );
   pbatenv.set( "mode", tmp[2] );
   pbatenv.set( "processors", tmp[3] );
   pbatenv.set( "cluster", tmp[4] );
   pbatenv.set( "refresh", tmp[5] );
+  if( length(tmp)==6 )
+    pbatenv.set( "version.check", tmp[6] );  ## don't lose settings from prev version
 }
 
 ## Writing the metadata
@@ -75,6 +83,7 @@ pbat.writeMetadata <- function(){
   catn( pbatenv.get("processors"), file=file );
   catn( pbatenv.get("cluster"), file=file );
   catn( pbatenv.get("refresh"), file=file );
+  catn( pbatenv.get("version.check"), file=file );
   close(file);
 }
 
@@ -196,6 +205,13 @@ pbat.set <- function( executableStr="", CLEAR=FALSE ) {
   pbat.writeMetadata();
 }
 
+## New, setting version checking information
+pbat.setVersionCheck <- function( check=TRUE )
+{
+  pbatenv.set( "version.check", as.integer(check) );
+  pbat.writeMetadata();
+}
+
 ## Deprecated for the most part
 pbat.getNumProcesses <- function()
   return( pbat.getmode()$jobs );
@@ -205,10 +221,31 @@ pbat.getNumProcesses <- function()
 .onLoad <- function(libname, pkgname){
   pbat.setmode.defaults( save=FALSE );
   pbat.loadMetadata();
-  print( pbat.getmode() );
+  ##print( pbat.getmode() );
+
+  ## even newer -- firsttime user help!
+  if( pbatenv.get("firsttime")==1 ) {
+    pbat.firsttime();
+  }
+
+  m <- pbat.getmode();
+  cat( "##############################\n" );
+  cat( "# The current pbatR mode is:\n" )
+  cat( "#  PBAT executable:", m$executable, "\n" );
+  cat( "#  mode:", m$mode, "\n" );
+  cat( "#  jobs:", m$jobs, "\n" );
+  cat( "#  cluster command:", m$cluster, "\n" );
+  cat( "#  cluster refresh:", m$refresh, "\n" );
+  cat( "##############################\n" );
 
   ## newest - version check
-  pbat.current();
+  if( pbatenv.get("version.check")==1 ) {
+    pbat.current(libname);
+  }else{
+    cat( "Warning: Version checking is turned off.  Issue the command:\n" );
+    cat( " pbat.setVersionCheck()\n" );
+    cat( "to turn version checking back on.\n" );
+  }
 
   ##print( libname )
   ##print( pkgname )

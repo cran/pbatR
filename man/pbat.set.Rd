@@ -4,6 +4,7 @@
 \alias{pbat.setmode}
 \alias{pbat.setmode.defaults}
 \alias{pbat.getmode}
+\alias{pbat.setVersionCheck}
 \title{Set Pbat Parameters}
 \description{
   All of these values are retained, even after closing and restarting R.
@@ -16,6 +17,8 @@
   \code{pbat.setmode.defaults} returning it to default values.
 
   \code{pbat.getmode} returns the current mode specifications.
+
+  \code{pbat.setVersionCheck} sets whether to check the version on startup.
 }
 \usage{
 pbat.set( executableStr="", CLEAR=FALSE )
@@ -25,6 +28,8 @@ pbat.setmode.defaults( save=TRUE )
 pbat.setmode( mode=NULL, jobs=NULL, clusterCommand=NULL,
               clusterRefresh=NULL )
 pbat.getmode()
+
+pbat.setVersionCheck( check=TRUE )
 }
 \arguments{
   \item{executableStr}{String of the pbat executable name,
@@ -42,6 +47,9 @@ pbat.getmode()
     cluster. The default is 'bsub'.}
   \item{clusterRefresh}{How often (in seconds) to check if jobs have
     finished.}
+
+  \item{check}{Whether to perform the version check on startup
+    (recommended).}
 }
 \value{
   \code{pbat.get} returns a string of the currently stored name of the

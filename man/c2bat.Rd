@@ -38,6 +38,15 @@ c2bat( snps,
     \code{"approximate"} = approximate likelihood function
   }
 }
+\details{
+  The output is formatted as follows:
+  SNP, case.aa, case.Aa, case.AA, control.aa, control.Aa, control.AA,
+  Monte-Carlo p-value, p-value, non-centrality parameter (for power
+  calculations), modelc2-based OR, allelic OR.
+
+  Note that the non-centrality parameter and the ORs are independent of
+  the pvalues.
+}
 \examples{
 \dontrun{
 c2bat( snps=c("snp1","snp2"),

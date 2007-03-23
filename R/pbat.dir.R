@@ -7,6 +7,24 @@
 #  Loading back in the output from pbat.                           #
 ####################################################################
 
+## New c kludge routines
+kludgeConvertAwful <- function( csv.infilename, csv.outfilename ) {
+  warning( "Kludge pbat input level 2 reached (output is unfixable, padded)." );
+  
+  .C( "kludgeConvertAwful", as.character(csv.infilename), as.character(csv.outfilename) );
+}
+
+kludgeConvert <- function( csv.infilename, csv.outfilename ) {
+  warning( "Kludge pbat input level 1 reached (tries to fix output, should be okay?)." );
+  
+  status = as.integer(0);
+  status <- .C( "kludgeConvert", as.character(csv.infilename), as.character(csv.outfilename), status )[[3]];
+  print( status )
+
+  #if( status != 1 )
+  #  kludgeConvertAwful( csv.infilename, csv.outfilename );
+}
+
 # a <intersect> b
 vectorIntersection <- function( a, b ) {
   remList <- c();
@@ -81,7 +99,24 @@ loadPbatlog <- function( log ){
 
   pbatCall <- NULL;  pbatData <- NULL;
   try(  pbatCall <- readLines( callfile )  );
-  try(  pbatData <- read.csv( resultfile )  );
+
+  read <- FALSE;
+  try(  { pbatData <- read.csv( resultfile );
+          read <- TRUE; } );
+  if( !read ) {
+    kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
+    kludgeConvert( resultfile, kludgeLog );
+    try(  { pbatData <- read.csv( kludgeLog );
+            read <- TRUE }  );
+    if( !read ) {
+      kludgeConvertAwful( resultfile, kludgeLog );
+      try(  { pbatData <- read.csv( kludgeLog );
+              read <- TRUE }  );
+
+    }
+    if( !read )
+      warning( "Data could not be read in, despite kludges." );
+  }
 
   return( list( call=pbatCall, data=pbatData ) );
 }
@@ -350,7 +385,24 @@ loadPbatlogExtended <- function( log ) {
 
   pbatCall <- NULL; pbatData <- NULL;
   try( pbatCall <- readLines( callfile ) );
-  try( pbatData <- read.csv( resultfile ) );
+
+  read <- FALSE;
+  try(  { pbatData <- read.csv( resultfile );
+          read <- TRUE; } );
+  if( !read ) {
+    kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
+    kludgeConvert( resultfile, kludgeLog );
+    try(  { pbatData <- read.csv( kludgeLog );
+            read <- TRUE }  );
+    if( !read ) {
+      kludgeConvertAwful( resultfile, kludgeLog );
+      try(  { pbatData <- read.csv( kludgeLog );
+              read <- TRUE }  );
+
+    }
+    if( !read )
+      warning( "Data could not be read in, despite kludges." );
+  }
   
   return( list( call=pbatCall, data=pbatData ) );
 }  

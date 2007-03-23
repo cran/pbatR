@@ -63,7 +63,7 @@ pbat.m( formula, phe, ped, fbat="",
         scan.pred="all", scan.inter="all",
         scan.genetic="additive",
         offset="default",
-        screening="conditional power", distribution="continuous",
+        screening="conditional power", distribution="default",
         logfile="",
         max.gee=1,
         max.ped=14, min.info=20,
@@ -106,7 +106,7 @@ pbat.create.commandfile( pedfile, phefile="",
        scan.pred="all", scan.inter="all",
        scan.genetic="additive",
        offset="default",
-       screening="conditional power", distribution="continuous",
+       screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
        max.ped=7, min.info=20,
@@ -278,14 +278,17 @@ pbat.create.commandfile( pedfile, phefile="",
     \code{"wald"} = Screening based on Wald-tests (non-parametric approach)
   }
   \item{distribution}{
-    Specification of the phenotypic distribution
+    Screening specification of the empirical phenotypic distribution
     
-    \code{"continuous"} = Phenotypes are treated as continuous phenotypes in the power
-    calculation
+    \code{"default"}
     
-    \code{"categorical"} = Phenotypes are treated as categorical/integer variables 
-    This option is especially recommended for analysis of time-to-onset
-    data and affection status.
+    \code{"jiang"} = Approach by Jiang et al (2006)
+    
+    \code{"murphy"} = Approach by Murphy et al (2006)
+    
+    \code{"naive"} = Naive allele freq estimator
+    
+    \code{"observed"} = Observed allele frequencies
   }
   
   \item{logfile}{Specification of the log-file. By default, PBAT
@@ -459,11 +462,16 @@ pbat.create.commandfile( pedfile, phefile="",
 \details{
   These commands require `pbatdata.txt' to be in the working directory;
   if not found, the program will attempt to (1) copy the file from the
-  directory where pbat is, (2) copy it from anywhere in the path, or (3)
-  download it from the internet.
+  directory where pbat is, (2) copy it from anywhere in the path, or
+  (3) complain and die.
+
+  Linux warning: the file `pbatdata.txt' appears not to have shipped
+  with the current (as of writing this) linux version; to fix this just
+  download the windows version as well and copy the file from there to
+  the same directory as pbat.
 
   It is recommended to set 'LOAD.OUTPUT' to 'FALSE' when dealing with
-  large numbers of SNPs.
+  very large numbers of SNPs.
 
   These commands will also generate a lot of output files in the current
   working directory when interfacing with pbat.  These files will be

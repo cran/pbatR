@@ -96,7 +96,7 @@ string headerFix( const char *str, char c=',' )
   string header = "\"";
   header += str;
   header += "\"";
-  for( int i=0; i<header.size(); i++ ){
+  for( int i=0; i<(int)header.size(); i++ ){
     if( header[i] == c ){
       header = header.substr( 0, i ) + "\",\"" + header.substr( i+1, header.size() );
       i+=2; // need to advance past the comma since it moved!

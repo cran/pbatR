@@ -1,8 +1,17 @@
-getVersion <- function() {
-  return(  installed.packages()["pbatR","Version"]  );
+## libname alteration for user-wide installation...
+getVersion <- function( libname="" ) {
+  ##print( "getVersion" );
+  ##print( libname );
+
+  if( libname=="" ) libname <- NULL;
+  
+  return(  installed.packages(lib.loc=libname)["pbatR","Version"]  );
+
+  ## if the above doesn't work, this is the previous
+  ##return(  installed.packages()["pbatR","Version"]  );
 }
 
-pbat.current <- function(){
+pbat.current <- function( libname="" ){
   cat( "Checking version of pbatR... " );
   try( {
     filename <- "http://www.people.fas.harvard.edu/~tjhoffm/pbatRversion.txt";
@@ -12,7 +21,7 @@ pbat.current <- function(){
     fixes <- lines[2];
     notes <- lines[3];
     close( file );
-    if( curVersion == getVersion() ) {
+    if( curVersion == getVersion(libname) ) {
       cat( "version is current.\n" );
     }else{
       cat( "version is NOT CURRENT. Consider updating (see http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html for details).\n" );
@@ -21,6 +30,9 @@ pbat.current <- function(){
       }else{
         cat( "No version fixes specified.\n" );
       }
+
+      ## this function has a few issues when user-installed -- NO - PATCHED!
+      ##cat( "aside: your version may be current if this was not installed as super-user if you are on a linux machine, current version is ", curVersion, ".\n" );
     }
 
     if( nchar( notes ) > 0 )
@@ -31,3 +43,4 @@ pbat.current <- function(){
   cat( "version check FAILED.\n" );
   return( invisible() );
 }
+ 

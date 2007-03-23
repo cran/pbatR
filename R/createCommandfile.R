@@ -17,6 +17,8 @@ PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
 ## Gets the 'pbatdata.txt' file, from the internet.                 #
 #####################################################################
 getPbatdata <- function() {
+  return(); ## sigh... this file was removed!!!
+  
   ## Give the user a chance to say yes or no:
   msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
                   PBATDATAURL,
@@ -343,7 +345,7 @@ pbat.create.commandfile <- function(
        scan.pred="all", scan.inter="all",
        scan.genetic="additive",
        offset="default",
-       screening="conditional power", distribution="continuous",
+       screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
        max.ped=7, min.info=20,
@@ -709,7 +711,8 @@ pbat.create.commandfile <- function(
 
   writeCommandStrMatch1( "screening", screening, c("conditional power","wald"), outfile=outfile );
   #warning( "replace with is.factor??" );
-  writeCommandStrMatch( "distribution", distribution, c("continuous","categorical"), outfile=outfile );
+  ## AHHHHH... he changed this!!! Wow, it's backwards?
+  ##writeCommandStrMatch( "distribution", distribution, c("continuous","categorical"), outfile=outfile );
 
   #warning( "I commented out logfile." );
   #writeCommand( "logfile", logfile );  # (23)
@@ -799,6 +802,9 @@ pbat.create.commandfile <- function(
   ## apparently this can only be written when specified!
   if( snppedfile )
     writeCommand( "snppedfile", as.integer(snppedfile), outfile=outfile );
+
+  ## hmm... this was changed a bit...
+  writeCommandStrMatch( "distribution", distribution, c("default","jiang","murphy","naive","observed"), outfile=outfile );
   
   return( logfile );  # for future processing!
 }
