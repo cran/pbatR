@@ -16,6 +16,11 @@
 #                                                                  #
 ####################################################################
 
+## New 05/17/07
+spaceInFilename <- function( str )
+  return( length( unlist( strsplit( str, " " ) ) ) > 1 )
+spaceInFilenameError <- function( str )
+  return( paste( "The filename specified, '", str, "', contains spaces (i.e. the file itself contains spaces or the pathname contains spaces). This is not supported in P2BAT. Please rename the file or move it to a path that does not contain spaces. This is regretably unfixable.", sep="" ) )
 
 ####################################################################
 # read.badheader(...)                                              #
@@ -94,7 +99,7 @@ write.badheader <- function( file, dataframe, header,
   cat( "\n", file=file );
 
   # write the table
-  write.table( dataframe, file, col.names=col.names, row.names=row.names, sep=sep, quote=FALSE );
+  write.table( dataframe, file, col.names=col.names, row.names=row.names, sep=sep, quote=FALSE, ... ); ## 05/14/07 update ...
 } ## VERIFIED ##
 
 

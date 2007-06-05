@@ -71,6 +71,12 @@ print.pedlist <- function( x, ... ) {
     }
   }
 }
+sort.ped <- function( x, decreasing=FALSE, ... ) {
+  if( !is.sym(x) )
+    return( ped[ order(x$pid, x$id, decreasing=decreasing), ] )
+  stop( "Not symbolic, i.e. data not read into R. Try loading in with read.ped(...,sym=FALSE)) if you really want to do this." )
+}
+
 
 ####################################################################
 # read.ped(...)   <EXTERNAL>                                       #
@@ -114,9 +120,10 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
   #warning( "DO WE NEED TO DO ANYTHING WITH MISSINGNESS???" );
 
   filename <- str.file.extension( filename, ".ped" );
+  if( spaceInFilename(filename) )
+    stop( spaceInFilenameError(filename) ) ## added 5/17
   ped <- read.badheader( filename, na.strings="", lowercase=lowercase, onlyHeader=sym, max=max, ... ); # 0 is NA only for censor & sex
-  ##firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
-  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
+  firstNames <- c( "pid", "id", "idfath", "idmoth", "sex", "AffectionStatus" );
 
   if( sym ){
     ## overrides other settings
@@ -180,7 +187,7 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
 } ## VERIFIED ## (with 'total' dataset)
 
 as.ped <- function( x,
-                    idped="idped", idsub="idsub", idfath="idfath",
+                    pid="pid", id="id", idfath="idfath",
                     idmoth="idmoth", sex="sex", affection="affection",
                     clearSym=FALSE )
 {
@@ -217,17 +224,16 @@ as.ped <- function( x,
     # The we just need to ensure the proper ordering...
     
     # ensure proper ordering
-    idpedCol <- x[idped];
-    idsubCol <- x[idsub];
+    idpedCol <- x[pid];
+    idsubCol <- x[id];
     idfathCol <- x[idfath];
     idmothCol <- x[idmoth];
     idsexCol <- x[sex];
     idAffectionCol <- x[affection];
-    df <- dfr.r( x, c(idped,idsub,idfath,idmoth,sex,affection) );
+    df <- dfr.r( x, c(pid,id,idfath,idmoth,sex,affection) );
     df <- cbind( idpedCol, idsubCol, idfathCol, idmothCol,
                  idsexCol, idAffectionCol, df );
-    ##names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","affection");
-    names(df)[1:6] <- c("idped","idsub","idfath","idmoth","sex","AffectionStatus");
+    names(df)[1:6] <- c("pid","id","idfath","idmoth","sex","AffectionStatus");
     class(df) <- c("ped", "data.frame" );
     return( df );
   }
@@ -275,7 +281,7 @@ write.ped <- function( file, ped ) {
 }
 
 as.pedlist <- function( x,
-                        idped="idped", idsub="idsub", idfath="idfath",
+                        pid="pid", id="id", idfath="idfath",
                         idmoth="idmoth", sex="sex", affection="affection",
                         clearSym=FALSE ) {
   if( is.sym(x) ){
@@ -288,14 +294,13 @@ as.pedlist <- function( x,
     return(x);
 
   if( is.data.frame(x) )
-    x <- as.ped( x, idped, idsub, idfath, idmoth, sex, affection );
+    x <- as.ped( x, pid, id, idfath, idmoth, sex, affection );
 
   if( !is.ped(x) )
     stop( "'x' must be of class 'ped' or 'data.frame'." );
 
   header <- unique( rem.dot.a( names(x)[-c(1:6)] ) );
-  ##firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "affection" );
-  firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
+  firstNames <- c( "pid", "id", "idfath", "idmoth", "sex", "AffectionStatus" );
 
   # keep each of the markers the same, but each marker will be a
   #  list of 'a' and 'b' for the two.
@@ -333,7 +338,7 @@ read.pped <- function( filename, max=100 ){
   file <- file( filename, open="r" );
   numNames <- as.numeric( readLines( file, n=1 ) );
   if( numNames < max ) {
-    firstNames <- c( "idped", "idsub", "idfath", "idmoth", "sex", "AffectionStatus" );
+    firstNames <- c( "pid", "id", "idfath", "idmoth", "sex", "AffectionStatus" );
     new.names <- readLines( file, n=numNames );
     close( file );
     pedlist <- data.frame( matrix( 0, nrow=1, ncol=length(firstNames)+length(new.names) ) );
@@ -401,4 +406,50 @@ as.pped <- function( ped, ppedname="" ){
   print( ppedname );
   
   return( read.pped( ppedname ) );
+}
+
+## NEW! Plotting routines
+plotPed <- function( ped, sink=NULL ) {
+  library( kinship )
+  
+  ## is it symbolic? it can't be for these routines...
+  if( is.sym(ped) )
+    ped <- as.ped( clearSym=TRUE )
+  
+  ## move it to their format
+  if( any( ped$sex==0 ) )
+    ped$sex[ped$sex==0] <- 3;
+
+  ## Huh? the documentation on this package doesn't make much sense...
+  ped$affection <- 0
+  ped$affection[ped$AffectionStatus==2] <- 1
+  
+  ## If sink = filename, sink each plot to a file!
+  ## See if we should sink it to file
+  if( !is.null(sink) ) {
+    pdf( sink );
+  }else{
+    par(ask=TRUE);
+  }
+
+  for( pid in unique(ped$pid) ) {
+    ## pull out the pedigree piece
+    subPed <- ped[ ped$pid==pid, ]
+    ## fix it so it's their program happy
+    pedigr <- pedigree( subPed$id, subPed$idfath, subPed$idmoth, subPed$sex, subPed$affection )
+    #print( pedigr )
+
+    SUCCESS <- FALSE;  ## sometimes it fails...
+    try( {
+      plot( pedigr );
+      title( pid );
+      SUCCESS <- TRUE;
+    } );
+    if( !SUCCESS )
+      print( paste( "Plotting pedigree", pid, "failed." ) );
+  }
+
+  ## Close off the filename if necessary
+  if( !is.null(sink) )
+    dev.off()
 }

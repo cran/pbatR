@@ -6,12 +6,14 @@
   Writes a `pbat' object (the result of calling \code{pbat.m}) to disk.
 }
 \usage{
-write.pbat( x, filename )
-write.pbat.csv( x, filename )
+write.pbat( x, filename, resultsOnly=FALSE )
+write.pbat.csv( x, filename, resultsOnly=FALSE )
 }
 \arguments{
   \item{x}{Object of class \code{pbat}.}
   \item{filename}{Filename to save to.}
+  \item{resultsOnly}{When TRUE, this only prints the results to file,
+    and not how the function was called. Typically not used.}
 }
 \details{
   With \code{write.pbat}, a text file is written out with an `&' symbol

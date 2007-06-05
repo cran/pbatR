@@ -54,14 +54,14 @@ getPbatGUI <- function( x, mode="any" )
 ####################################################################
 pbatGUI.setglobs <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   globs <- list();
   globs$form <- 0;
   globs$rbVal.pbat <- tclVar("gee");
 
   globs$tclVar.pbat <- 0;
   globs$te.pbat <- 0;
-  
+
   globs$tclVar.ped <- 0;
   globs$te.ped <- 0;
   globs$tclVar.phe <- 0;
@@ -88,14 +88,14 @@ pbatGUI.setglobs <- function() {
   ##globs$allPhenosMI <- c();
   globs$mi <- c();
   globs$order <- c();
-  
+
   globs$cb.phenos <- list();
   globs$cbValue.phenos <- list();
   globs$cbInitialized.phenos <- 0;
 
   globs$rbVal.time <- tclVar();
   globs$rbVal.censor <- tclVar();
-  
+
   globs$cb.preds <- list();
   globs$cbValue.preds <- list();
   globs$cbInitialized.preds <- 0;
@@ -117,7 +117,7 @@ pbatGUI.setglobs <- function() {
   globs$scan.pred <- tclVar("all");
   globs$scan.inter <- tclVar("all");
   globs$scan.genetic <- tclVar("additive");
-  globs$offset <- tclVar("none");
+  globs$offset <- tclVar("gee");
   globs$screening <- tclVar("conditional power");
   globs$distribution <- tclVar("continuous");
   globs$max.gee <- tclVar("1");
@@ -167,7 +167,7 @@ pbatGUI.setglobs <- function() {
   globs$tclVar.refresh <- NULL;
 
   globs$tclVar.loadInput <- NULL;
-  
+
   setPbatGUI( "globs", globs );
 }
 ##pbatGUI.setglobs();  ## this shouldn't be necessary here
@@ -203,7 +203,7 @@ pbat <- function() {
 }
 pbatGUI.errorMessage <- function( message ) {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   tkmessageBox( title="ERROR",
                 message=message,
                 icon="error", type="ok" );
@@ -247,7 +247,7 @@ pbatGUI.phenotypesForm <- function(){
 
   ## get the globals
   globs <- getPbatGUI( "globs" );
-  
+
   ## create a modal dialog
   form <- tktoplevel();
   tkwm.deiconify(form);
@@ -282,7 +282,7 @@ pbatGUI.phenotypesForm <- function(){
                            yscrollcommand=function(...)tkset(scr.phenos,...) );
   tkgrid( lst.phenos, scr.phenos );
   tkgrid.configure( scr.phenos, sticky="ns" );
-  
+
   ## Add in only the possible phenotypes
   pbatGUI.populateList( lst.phenos, posPhenos );
 
@@ -292,12 +292,12 @@ pbatGUI.phenotypesForm <- function(){
     selPhenos <- c();
     for( i in 1:length(globs$phenos) )
       selPhenos <- c( selPhenos, which(globs$phenos[i]==posPhenos) );
-    
+
     ## and select them!
     for( i in 1:length(selPhenos) )
       tkselection.set( lst.phenos, selPhenos[i]-1 );
   }
-  
+
   on.exit <- function() {
     ## Need to translate any selected phenotypes to globs$phenos
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
@@ -305,15 +305,19 @@ pbatGUI.phenotypesForm <- function(){
       globs$phenos <- c();
     }else{
       globs$phenos <- posPhenos[phenosIndex+1];
+
+      ## 5/17 if AffectionStatus, turn it the offset to 'none'
+      if( globs$phenos[1] == "AffectionStatus" )
+        globs$offset <- tclVar("none")
     }
-    
+
     ## set the global variables
     setPbatGUI( "globs", globs );
   }
 
   ## Bind mouse presses to on.exit(), since we can't capture closing the form!
   tkbind( lst.phenos, "<ButtonRelease>", on.exit );
-    
+
   ## lastly, an OK button
   cmdOK <- function() {
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
@@ -333,10 +337,10 @@ pbatGUI.phenotypesForm <- function(){
 }
 pbatGUI.logrankForm <- function(){
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   # get the globals
   globs <- getPbatGUI( "globs" );
-  
+
   # create a modal dialog
   form <- tktoplevel();
   tkwm.deiconify(form);
@@ -371,7 +375,7 @@ pbatGUI.logrankForm <- function(){
   # populate the lists with possible phenotypes
   pbatGUI.populateList( lst.time, posPhenos );
   pbatGUI.populateList( lst.censor, posPhenos );
-  
+
   # and select anything if it's been chosen before
   if( length( globs$phenos )==2 ) {
     tkselection.set( lst.time, which(globs$phenos[1]==posPhenos) );
@@ -437,16 +441,16 @@ pbatGUI.logrankForm <- function(){
                     icon="error", type="ok" );
       globs$phenos="";
     }
-    
+
     # set the global variables
     setPbatGUI( "globs", globs );
   }
-    
-    
+
+
   # Bind mouse presses to functions since selection won't persist
   tkbind( lst.time, "<ButtonRelease>", on.time );
   tkbind( lst.censor, "<ButtonRelease>", on.censor );
-  
+
   # lastly, an OK button
   cmdOK <- function() {
     tkdestroy(form);
@@ -469,7 +473,7 @@ pbatGUI.predictorsForm <- function(){
 
   # get the globals
   globs <- getPbatGUI( "globs" );
-  
+
   # create a modal dialog
   form <- tktoplevel();
   tkwm.deiconify(form);
@@ -490,7 +494,7 @@ pbatGUI.predictorsForm <- function(){
     globs$mi <- rep(FALSE,length(allPhenos));
     setPbatGUI( "globs", globs );
   }
-  
+
   # First get the header onto it
   tkgrid( tklabel( form, text="Select Phenotypes:" ),
           tklabel( form, text="" ),
@@ -519,7 +523,7 @@ pbatGUI.predictorsForm <- function(){
   popList <- function(firsttime=FALSE) {
     ## See if anything is selected (reselect later)
     cursel <- tkcurselection(lst.phenos);
-    
+
     ## clear the list --> need to take into account order and mi...
     for( i in 1:length(allPhenos) )
       tkdelete( lst.phenos, "end" ); # this might error...
@@ -553,7 +557,7 @@ pbatGUI.predictorsForm <- function(){
           silent=TRUE );
     }
   }
-  
+
   ## Create the 'add' button
   cmdAdd <- function() {
     ## get the globals
@@ -573,7 +577,7 @@ pbatGUI.predictorsForm <- function(){
   cmdRemove <- function() {
     # get the globals
     globs <- getPbatGUI( "globs" );
-        
+
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
     if( length(phenosIndex)<1 ) return;
     tkdelete( lst.phenos, phenosIndex );
@@ -608,7 +612,7 @@ pbatGUI.predictorsForm <- function(){
 
     ## repopulate list...
     popList();
-    
+
     tkfocus(but.mi)  ## So we can process key events...
   }
   but.mi <- tkbutton( form, text="Toggle (M)arker Interaction", command=cmdMI );
@@ -671,17 +675,17 @@ pbatGUI.predictorsForm <- function(){
 
   but.orderP <- tkbutton( form, text="+ Order (p)", command=cmdOrderP );
   but.orderM <- tkbutton( form, text="- Order (s)", command=cmdOrderM );
-  
+
   tkbind( lst.phenos, "<ButtonRelease>", function(){tkfocus(but.mi)} );
 
   ## Don't forget to populate the list for the first time!
   popList(firsttime=TRUE);
-  
+
   ## lastly, an OK button
   cmdOK <- function() {
     tkdestroy(form);
   }
-  
+
   but.ok <- tkbutton( form, text="   OK   ", command=cmdOK );
 
   tkgrid( tklabel(form,text=""),tklabel(form,text=""), but.mi );
@@ -689,7 +693,7 @@ pbatGUI.predictorsForm <- function(){
   tkgrid( but.ok, tklabel(form,text=""), but.orderM );
 
   tkfocus( form );
-  
+
   tkwait.window( form ); # this makes it go modal
 }
 
@@ -741,12 +745,12 @@ pbatGUI.snpsForm <- function() {
   cmdAddBlock <- function() {
     # get the globals
     globs <- getPbatGUI( "globs" );
-    
+
     snpsChosen <- allSnps[ as.numeric(tkcurselection(lst.snp)) + 1 ];
     if( nchar(snpsChosen[1]) < 1 ) return; ##############
     #print( snpsChosen );  # DEBUG only
     tkselection.clear( lst.snp, 0, 'end' );
-    
+
     #newEntry <- pasteVector( snpsChosen, SQUOTE=FALSE, COMMASEP=TRUE );
     newEntry <- pasteVector2( snpsChosen, sep=" + " );
     if( sum(newEntry==globs$blocks) > 0 ) {
@@ -754,7 +758,7 @@ pbatGUI.snpsForm <- function() {
     }else {
       globs$blocks <- c( globs$blocks, newEntry );
       tkinsert( lst.block, "end", newEntry );
-      
+
       # set the global variables
       setPbatGUI( "globs", globs );
     }
@@ -762,7 +766,7 @@ pbatGUI.snpsForm <- function() {
   cmdAddSnp <- function() {
     # get the globals
     globs <- getPbatGUI( "globs" );
-    
+
     snpsChosen <- allSnps[ as.numeric(tkcurselection(lst.snp)) + 1 ];
     if( length(snpsChosen<1) || nchar(snpsChosen)<1 ) return;
     tkselection.clear( lst.snp, 0, 'end' );
@@ -774,7 +778,7 @@ pbatGUI.snpsForm <- function() {
       }else {
         globs$blocks <- c( globs$blocks, newEntry );
         tkinsert( lst.block, "end", newEntry );
-        
+
         ;# set the global variables
         setPbatGUI( "globs", globs );
       }
@@ -783,20 +787,20 @@ pbatGUI.snpsForm <- function() {
   cmdRemove <- function() {
     # get the globals
     globs <- getPbatGUI( "globs" );
-        
+
     snpIndex <- as.numeric(tkcurselection(lst.block));
     if( length(snpIndex)<1 ) return;
-    
+
     tkdelete( lst.block, snpIndex );
     globs$blocks <- globs$blocks[-(snpIndex+1)];
-    
+
     ;# set the global variables
     setPbatGUI( "globs", globs );
   }
   but.addBlock <- tkbutton( form, text= "  Add Block -->  ", command=cmdAddBlock );
   but.addSnp <- tkbutton( form, text  = "  Add SNPS  -->  ", command=cmdAddSnp );
   but.remove <- tkbutton( form, text  = "  <-- Delete entry  ", command=cmdRemove );
-  
+
   # and put everything on the grid
   tkgrid( lst.snp, scr.snp, lst.block, scr.block );
   tkgrid.configure( scr.snp, sticky="ns" );
@@ -804,14 +808,14 @@ pbatGUI.snpsForm <- function() {
   tkgrid( but.addBlock, tklabel(form,text=""), but.remove );
 #  tkgrid( but.addSnp );
 
-  
+
   # lastly, an OK button
   cmdOK <- function() {
     # Store anything on the form that we need!
 
     # set the global variables
     #setPbatGUI( "globs", globs ); # NO - DON't set them!!!
-    
+
     # and lastly kill the form
     tkdestroy(form);
   }
@@ -828,10 +832,10 @@ pbatGUI.snpsForm <- function() {
 ####################################################################
 pbatGUI.groupForm <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   # get the globals
   globs <- getPbatGUI( "globs" );
-  
+
   # create a modal dialog
   form <- tktoplevel();
   tkwm.deiconify(form);
@@ -863,7 +867,7 @@ pbatGUI.groupForm <- function() {
                            yscrollcommand=function(...)tkset(scr.phenos,...) );
   tkgrid( lst.phenos, scr.phenos );
   tkgrid.configure( scr.phenos, sticky="ns" );
-  
+
   # Add in only the possible phenotypes
   pbatGUI.populateList( lst.phenos, posPhenos );
 
@@ -872,7 +876,7 @@ pbatGUI.groupForm <- function() {
     selPhenos <- which(globs$group==posPhenos);
     tkselection.set( lst.phenos, selPhenos-1 );
   }
-  
+
   on.exit <- function() {
     ## Need to translate any selected phenotypes to globs$phenos
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
@@ -889,7 +893,7 @@ pbatGUI.groupForm <- function() {
 
   # Bind mouse presses to on.exit(), since we can't capture closing the form!
   tkbind( lst.phenos, "<ButtonRelease>", on.exit );
-  
+
   # draw out the button for NONE
   but.none <- tkbutton( form, text="NONE",
                        command=function(){
@@ -901,7 +905,7 @@ pbatGUI.groupForm <- function() {
                        } );
   tkgrid( but.none );
   tkgrid.configure( but.none, sticky="we" );
-    
+
   # lastly, an OK button
   cmdOK <- function() {
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
@@ -919,7 +923,7 @@ pbatGUI.groupForm <- function() {
   tkfocus( form );
   tkwait.window( form ); # this makes it go modal
   ##on.exit(); # run after going modal --> doesn't work anymore!
-  
+
 }
 
 ####################################################################
@@ -929,7 +933,7 @@ pbatGUI.groupForm <- function() {
 ####################################################################
 pbatGUI.optionsForm <- function( whichForm=0 ) {
   ## whichForm - 0 means them all, otherwise now we're cutting it into 2 pieces
-  
+
   loadTclTkOrDie()  ## has to be here to pass the check
 
   # get the globals
@@ -941,7 +945,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
   ######if( tclvalue(globs$rbVal.pbat) == "pc" ) isP <- TRUE;
   if( tclvalue(globs$rbVal.pbat) == "gee" ) isG <- TRUE;
   if( tclvalue(globs$rbVal.pbat) == "logrank" ) isL <- TRUE;
-  
+
   # create a modal dialog
   form <- tktoplevel();
   tkwm.deiconify(form);
@@ -962,7 +966,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
     tkgrid.configure( frame, sticky=sticky );
     return(frame)
   };
-  newOpt <- function( tclVar, option, options=c("FALSE","TRUE"), helps=NULL, gridframe=form ) {   
+  newOpt <- function( tclVar, option, options=c("FALSE","TRUE"), helps=NULL, gridframe=form ) {
     if( length(options)<2 ) return( "ERROR" );
     frame <- newframe( borderwidth=3, gridframe=gridframe );
     but <- NULL;
@@ -977,13 +981,13 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
                          msg(msgText)
                        } );
     }
-    
+
     lab <- tklabel( frame, text=paste(option, ":  ", sep="" ) );
-    
+
     subframe <- list();
     for( i in 1:length(options) )
       subframe[[i]] <- newframe(gridframe=frame,grid=FALSE)
-    
+
     if( length(options)==2 ) {
       if( is.null(but) ) {
         tkgrid( lab, subframe[[1]], subframe[[2]] );
@@ -1014,11 +1018,11 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
       }else{
         tkgrid(lab,but);
       }
-      
+
       for( i in 1:length(options) )
         tkgrid(subframe[[i]]);
     }
-    
+
     for( i in 1:length(options) ) {
       rb <- tkradiobutton( subframe[[i]] );
       tkconfigure( rb, variable=tclVar, value=options[i] );
@@ -1037,7 +1041,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
     }
     lab <- tklabel( frame, text=option );
     entry <- tkentry( frame, width=width, textvariable=tclVar );
-    if( !is.null(but) ) {      
+    if( !is.null(but) ) {
       tkgrid( lab, entry, but );
     }else{
       tkgrid( lab, entry );
@@ -1074,7 +1078,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     if( !isL ) {
       dg <- dblGrid();
-      
+
       newTE( globs$max.pheno, "Max Phenotypes",
             helps="The maximum number of phenotypes that will be analyzed in the FBAT-statistic.",
             gridframe=dg$f1 );
@@ -1086,14 +1090,14 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     {
       dg <- dblGrid();
-      
+
       newOpt( globs$null, "Null Hypothesis",
              options=c("no linkage, no association", "linkage, no association"),
              helps=c("Specification of the null-hypothesis.",
                "Null-hypothesis of no linkage and no association.",
                "Null-hypothesis of linkage, but no association." ),
              gridframe=dg$f1 );
-      
+
       newTE( globs$alpha, "Alpha",
             helps="Specification of the significance level.",
             gridframe=dg$f2 );
@@ -1104,7 +1108,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
              "no transformation (default)",
              "transformation to ranks",
              "transformation to normal score (recommended for quantitative phenotypes)" ) );
-           
+
     newOpt( globs$trans.pred, "Predictor Transformation",
            options=c("none","ranks","normal score"),
            helps=c("Transformation of the selected predictor variables/covariates.",
@@ -1121,7 +1125,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     if( !isL ) {
       dg <- dblGrid();
-      
+
       newOpt( globs$scan.pred, "Covariate Model",
              options=c("all","subsets"),
              helps=c("Computation of all covariate sub-models",
@@ -1135,10 +1139,10 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
                "The selected FBAT statistic is computed for all posible subsets of the interaction variables."),
              gridframe=dg$f2);
     }
-    
+
     newOpt( globs$scan.genetic, "Inheritance Mode",
            options=c("additive","dominant","recessive","heterozygous advantage", "all"),
-           helps=c("Specification of the mode of inheritance",  
+           helps=c("Specification of the mode of inheritance",
              "Additive model",
              "Dominant model",
              "Recessive model",
@@ -1146,7 +1150,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
              "The FBAT-statistics are computed for all 4 genetic models") );
 
     newOpt( globs$offset, "Covariate Offset",
-           options=c("none","max power","gee + marker score","gee","default"),
+           options=c("none","max power","gee + marker score","gee"),
            helps=c("Specification of the covariate/predictor variables adjustment",
              "No adjustments for covariates/predictor variables",
              "Offset (=FBAT adjustment for covariates and interaction  variables) that maximizes the power of the FBAT-statistic (computationally slow, efficiency dependent on the correct choice of the mode of inheritance)",
@@ -1155,14 +1159,14 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     {
       ##dg <- dblGrid();
-      
+
       newOpt( globs$screening, "Screening",
              options=c("conditional power","wald"),
              helps=c("Specification of the screening methods to handle the multiple comparison problem for multiple SNPs/haplotypes and a set of phenotypes.",
                "Screening based on conditional power (parametric approach)",
                "Screening based on Wald-tests (non-parametric approach)") );
       ##       gridframe=dg$f1 );
-      
+
       #newOpt( globs$distribution, "Phenotype Distribution",
       #       options=c("continuous","categorical"),
       #       helps=c("Specification of the phenotypic distribution",
@@ -1187,7 +1191,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
             helps="Specification of the maximal number of iterations in the GEE-estimation procedure." );
     {
       dg <- dblGrid();
-      
+
       newTE( globs$max.ped, "Max Pedigree Iterations",
             helps="Specification of the maximal number of proband in one extended pedigrees.",
             gridframe=dg$f1 );
@@ -1199,7 +1203,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     {
       dg <- dblGrid();
-      
+
       newOpt( globs$incl.ambhaplos, "Ambiguous Haplotypes",
              helps=c("This command defines the handling of ambiguous haplotypes in the haplotypes analysis.",
                "Ambiguous haplotypes (phase can not be inferred) are included in the analysis and are weighted according to their estimated frequencies in the probands.",
@@ -1215,13 +1219,13 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     {
       dg <- dblGrid();
-      
+
       newOpt( globs$sub.haplos, "Sub-Haplotypes",
              helps=c("",
                "The haplotypes defined by the all SNPs given in the haplotype-block definition are analyzed.",
                "All haplotypes are analyzed that are defined by any subset of SNPs in the haplotypes block definition."),
              gridframe=dg$f1 );
-    
+
       newTE( globs$length.haplos, "Haplotype length",
             helps="Defines the haplotype length when subhaplos=TRUE",
             gridframe=dg$f2 );
@@ -1229,13 +1233,13 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
 
     {
       dg <- dblGrid();
-      
+
       newOpt( globs$adj.snps, "Adjacent Haplotypes",
              helps=c("Takes effect when subhaplos=TRUE.",
                "All sub-haplotypes are analyzed",
                "Only the sub-haplotypes are analyzed for which the first constituting SNPs are adjacent." ),
              gridframe=dg$f1 );
-      
+
       newOpt( globs$overall.haplo, "Overall Haplotypes",
              helps=c("Specification of an overall haplotypes test. When this command is included in the batch-file, only one level of the 'groups' variable can be specified.",
                "no overall test",
@@ -1247,14 +1251,14 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
       dg <- dblGrid();
       newTE( globs$cutoff.haplo, "Min Haplotype Freq.",
             helps="The minimum haplotypes frequency so that a haplotypes is included in the overall test.", gridframe=dg$f1 );
-      
+
       newTE( globs$max.mating.types, "Max Mating Types",
             helps="Maximal number of mating types in the haplotype analysis.", gridframe=dg$f2 );
     }
-    
+
     newTE( globs$future.expansion, "(Future Expansion)", width=40,
           helps="(Only included for future expansion of pbat.) Lines to write to the batchfile for pbat." );
-    
+
     ;##############################
     ;# draw in all of the options #
     ;##############################
@@ -1272,7 +1276,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
              gridframe=dg$f2 );
 
     }
-    
+
     {
       dg <- dblGrid();
       newTE( globs$mminphenos, "MM phenotype min",
@@ -1283,7 +1287,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
              gridframe=dg$f2 );
 
     }
-    
+
     {
       dg <- dblGrid();
       newOpt( globs$env.cor.adjust, "Environment Correlation Adjust",
@@ -1304,16 +1308,16 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
               helps=c("snppedfile","The pedigree file does not contain just snps.","The pedigree file does just contain snps. This is advantageous to specify as the storage mode is much more compact, and the program will use much less memory."),
               gridframe=dg$f1 );
       newOpt( globs$extended.pedigree.snp.fix, "Extended pedigree snps fix",
-              helps=c("Set to true when you have more extended pedigrees in your dataset, as the pedigree reconstruction will be more accurate. Note this mode is only compatible with `single' mode, so be sure to set that as well.",
+              helps=c("Set to true when you have more extended pedigrees in your dataset, as the pedigree reconstruction will be more accurate. Note this mode is only compatible with 'single' mode, so be sure to set that as well.",
                 "Haplotype accelerated mode - faster and good when this isn't the case.",
                 "Slow, but good."),
               gridframe=dg$f2 );
     }
   }
 
-  
-  
-    
+
+
+
   # lastly, an OK button
   cmdOK <- function() {
     tkdestroy(form);
@@ -1341,14 +1345,22 @@ pbatGUI.pbatset <- function() {
 
 pbatGUI.pedFileChoice <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   # get the globals
   globs <- getPbatGUI( "globs" );
 
   tkdelete( globs$te.ped, 0, 999999 );
-  
+
   # See if we can get the filename; return if cancelled
   tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed Pedigree File} {.ped .pped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}}"));
+
+  ## 5/17 - make sure there is no space in the filename
+  if( spaceInFilename( tempstr ) ) {
+    tkmessageBox( title="ERROR - space in path",
+                  message=spaceInFilenameError(tempstr) );
+    return();
+  }
+
   if( !nchar(tempstr) ) return();
   globs$pedfile <- tempstr;
   pbatGUI.tkSetText( globs$te.ped, tempstr );
@@ -1379,7 +1391,7 @@ pbatGUI.pedFileChoice <- function() {
       ## File exists!  Assume this is probably what the user wants...
       globs$phefile <- phefile;
       pbatGUI.tkSetText( globs$te.phe, phefile );
-      
+
       ## Load in the phefile
       globs$phe <- read.phe( globs$phefile );
       globs$pheset <- TRUE;
@@ -1388,23 +1400,31 @@ pbatGUI.pedFileChoice <- function() {
 
   # Set the globals
   setPbatGUI( "globs", globs );
-  
+
   return();
 }
 pbatGUI.pheFileChoice <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   # get the globals
   globs <- getPbatGUI( "globs" );
 
   # See if we can get the filename, return if cancelled
   tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Phenotype File} {.phe}}"));
   if( !nchar(tempstr) ) return();
+
+  ## 5/17 - make sure there is no space in the filename
+  if( spaceInFilename( tempstr ) ) {
+    tkmessageBox( title="ERROR - space in path",
+                  message=spaceInFilenameError(tempstr) );
+    return();
+  }
+
   globs$phefile <- tempstr;
   pbatGUI.tkSetText( globs$te.phe, tempstr );
 
   # Load in the data file
-  globs$phe <- read.phe( globs$phefile );  ## phe, not phefile!!!! 
+  globs$phe <- read.phe( globs$phefile );  ## phe, not phefile!!!!
   globs$pheset <- TRUE;
 
   # Set the globals
@@ -1414,7 +1434,7 @@ pbatGUI.pheFileChoice <- function() {
 
 pbatGUI.ensureDataLoaded <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
-  
+
   # get the globals
   globs <- getPbatGUI( "globs" );
 
@@ -1455,7 +1475,7 @@ pbatGUI.predictors <- function() {
 pbatGUI.snps <- function() {
   pbatGUI.debug("snps / blocks\n" );
   if( !pbatGUI.ensureDataLoaded() ) return( FALSE );
-  
+
   pbatGUI.snpsForm();
 }
 
@@ -1510,7 +1530,7 @@ pbatGUI.compress <- function() {
   cluster <- tclvalue( globs$tclVar.cluster );
   refresh <- tclvalue( globs$tclVar.refresh );
   pbat.setmode( mode=mode, jobs=numProcesses, clusterCommand=cluster, clusterRefresh=refresh );
-  
+
   ## and then do the work
   if( is.pped(globs$ped) ){
     print( "File already is compressed." );
@@ -1524,10 +1544,10 @@ pbatGUI.compress <- function() {
 # draw the main form, wait until everything is all done
 pbatGUI.mainForm <- function() {
   loadTclTkOrDie()  ## has to be here, period.
-  
+
   ## get the globals
   globs <- getPbatGUI( "globs" );
-    
+
   ## Create the window
   globs$form <- tktoplevel();
   tkwm.deiconify( globs$form );
@@ -1549,7 +1569,7 @@ pbatGUI.mainForm <- function() {
     try( tkconfigure( globs$te.pbat, state="readonly" ) ); ## try
     tkgrid( but.pbat, globs$te.pbat );
     tkgrid.configure( but.pbat, sticky="ew" );
-    
+
     ## - pedigree file line
     but.ped <- tkbutton( frame.prelim, text="Pedigree File ...", command=pbatGUI.pedFileChoice );
     globs$tclVar.ped <- tclVar();
@@ -1582,11 +1602,11 @@ pbatGUI.mainForm <- function() {
     rb.subframe <- list();
 
     ## Create the subframe for each choice
-    for( i in 1:length(pbatchoices) ) 
+    for( i in 1:length(pbatchoices) )
       rb.subframe[[i]] <- tkframe( frame.pbatchoice, relief='groove', borderwidth=1 );
     lbl <- tklabel(frame.pbatchoice,text='PBAT:');
     tkgrid( lbl, rb.subframe[[1]], rb.subframe[[2]], rb.subframe[[3]] );
-      
+
     ## Create each choice
     for( i in 1:length(pbatchoices) ) {
       rb.pbat[[i]] <- tkradiobutton( rb.subframe[[i]] );
@@ -1603,22 +1623,22 @@ pbatGUI.mainForm <- function() {
     frame.misc <- tkframe( globs$form, relief="groove", borderwidth=2 );
     tkgrid( frame.misc );
     tkgrid.configure( frame.misc, sticky="news" );
-    
+
     ## - phenotypes
     but.phenotypes <- tkbutton( frame.misc, text="Phenotypes / Censor ... ", command=pbatGUI.phenotypes );
     tkgrid( but.phenotypes );
     tkgrid.configure( frame.misc, sticky="we" );
-    
+
     ## - predictors
     but.predictors <- tkbutton( frame.misc, text="Predictors ...", command=pbatGUI.predictors );
     tkgrid( but.predictors );
     tkgrid.configure( but.predictors, sticky="we" );
-    
+
     ## - snps / blocks
     but.snps <- tkbutton( frame.misc, text="SNPS / Blocks ...", command=pbatGUI.snps );
     tkgrid( but.snps );
     tkgrid.configure( but.snps, sticky="we" );
-    
+
     ## - group
     but.group <- tkbutton( frame.misc, text="Group ...", command=pbatGUI.group );
     globs$tclVar.group <- tclVar();
@@ -1626,7 +1646,7 @@ pbatGUI.mainForm <- function() {
     try( tkconfigure( globs$te.group, state="readonly" ) ); ## try
     tkgrid( but.group, globs$te.group );
     tkgrid.configure( but.group, sticky="we" );
-    
+
     ## - options
     ## -- old, all on one form
     #but.options <- tkbutton( frame.misc, text="Options ...", command=pbatGUI.options );
@@ -1637,7 +1657,7 @@ pbatGUI.mainForm <- function() {
     but.options1 <- tkbutton( frame.misc, text="Options (1) ...", command=pbatGUI.options1 );
     tkgrid( but.options1 );
     tkgrid.configure( but.options1, sticky="we" );
-    
+
     but.options2 <- tkbutton( frame.misc, text="Options (2) ...", command=pbatGUI.options2 );
     tkgrid( but.options2 );
     tkgrid.configure( but.options2, sticky="we" );
@@ -1658,7 +1678,7 @@ pbatGUI.mainForm <- function() {
       rb.subframe[[i]] <- tkframe( frame.mode, relief='groove', borderwidth=1 );
     lbl <- tklabel(frame.mode,text='Multiprocessor Mode: ');
     tkgrid( lbl, rb.subframe[[1]], rb.subframe[[2]], rb.subframe[[3]] );
-    
+
     ## create each choice
     for( i in 1:length(modes) ){
       rb.modes[[i]] <- tkradiobutton( rb.subframe[[i]] );
@@ -1666,9 +1686,9 @@ pbatGUI.mainForm <- function() {
       rb.lbl[[i]] <- tklabel( rb.subframe[[i]], text=modes[i] );
       tkgrid( rb.modes[[i]], rb.lbl[[i]] );
     }
-    
+
   }
-  
+
   {
     ## Frame 3.5b - number of _jobs_
     frame.np <- tkframe( globs$form, relief="groove", borderwidth=2 );
@@ -1695,7 +1715,7 @@ pbatGUI.mainForm <- function() {
       globs$tclVar.refresh <- tclVar( pbat.getmode()$refresh );
       globs$te.refresh <- tkentry( frame.np, width=ENTRYWIDTH, textvariable=globs$tclVar.refresh );
       lbl.refresh <- tklabel( frame.np, text="Cluster Refresh:" );
-    
+
       tkgrid( lbl.cluster, globs$te.cluster );
       tkgrid( lbl.refresh, globs$te.refresh );
       tkgrid.configure( lbl.cluster, sticky='ew' );
@@ -1723,7 +1743,7 @@ pbatGUI.mainForm <- function() {
     frame.process <- tkframe( globs$form, relief="groove", borderwidth=3 );
     tkgrid( frame.process );
     tkgrid.configure( frame.process, sticky="news" );
-    
+
     ;####################################################################
     ;#  onProcess(...)                                                  #
     ;#                                                                  #
@@ -1731,7 +1751,7 @@ pbatGUI.mainForm <- function() {
     onProcess <- function() {
       ## Clear the results (01/25/2006)
       pbat.last.clear();
-      
+
       ## Set the number of processes (01/08/2006):
       globs <- getPbatGUI( "globs" );
       ##if( 0 != pbat.setNumProcesses( tclvalue(globs$tclVar.pbatNP) ) ) {
@@ -1740,7 +1760,7 @@ pbatGUI.mainForm <- function() {
       ##                icon="error", type="ok" );
       ##  return(FALSE);
       ##}
-      
+
       ## -- rewrite 05/24/06 for modes
       numProcesses <- tclvalue( globs$tclVar.pbatNP );
       mode <- tclvalue( globs$rbVal.modes );
@@ -1753,18 +1773,18 @@ pbatGUI.mainForm <- function() {
       LOAD.OUTPUT <- tclvalue(globs$tclVar.loadInput)==1;
       ##print( LOAD.OUTPUT );
       ##return();  ## DEBUG ONLY
-        
+
       ##
-      
+
       # ensure the data was actually loaded in!
       if( !pbatGUI.ensureDataLoaded() ) return( FALSE );
-      
+
       globs <- getPbatGUI( "globs" );
       allPhenos <- c();
       if( class(globs$phe)=="phe" )
         allPhenos <- names( globs$phe[-c(1,2)] );
       allPhenos <- c( "AffectionStatus", allPhenos );
-      
+
       ;# First put the R command together...
       ;# We'll be calling pbat.m(...)
 
@@ -1785,7 +1805,7 @@ pbatGUI.mainForm <- function() {
         }
         formula <- pasteVector2( globs$phenos, sep=" & " );
       }
-      
+
       # next, we have a tilde '~' in it
       formula <- paste( formula, "~ " );
 
@@ -1794,7 +1814,7 @@ pbatGUI.mainForm <- function() {
         for( i in 1:length(globs$preds) ) {
           if( i>1 )
             formula <- paste( formula, " + ", sep="" );
-          
+
           ;# $allPhenosOrder, $allPhenosMI
           phenosIndex <- which(globs$preds[i]==allPhenos);
           ###order <- as.numeric(tclvalue(globs$tclVar.predsOrder[[phenosIndex]]));
@@ -1829,6 +1849,10 @@ pbatGUI.mainForm <- function() {
       # FORMULA HAS BEEN CREATED (now all the other options!)
 
       ##print( tclvalue(globs$rbVal.pbat) );
+
+      ## NEWEST! - wd set
+      cur <- pbat.work(globs$ped)
+
       #################
       # CALL PBAT!!!! #
       #################
@@ -1874,6 +1898,13 @@ pbatGUI.mainForm <- function() {
                           extended.pedigree.snp.fix=tclvalue(globs$extended.pedigree.snp.fix)
                           );
 
+      ## Newest! -- unwork
+      pbat.unwork(cur)
+      ## -- and go ahead and print the status
+      st <- pbat.status(workFirst=TRUE)
+      for( i in 1:length(st) )
+        tkinsert( globs$statusText, "end", paste(st[i],"\n",sep="") )
+
       # save any results
       setPbatGUI( "globs", globs );
 
@@ -1886,6 +1917,7 @@ pbatGUI.mainForm <- function() {
       ## And kill it if refreshing is zero
       if( mode=='cluster' && refresh==0 )
         tkdestroy( globs$form );
+
     }
 
     onPlot <- function() {
@@ -1893,7 +1925,7 @@ pbatGUI.mainForm <- function() {
       if( !is.null(res) )
         plot( res );
     }
-    
+
     onResults <- function() {
       if( !is.null(pbat.last()$results) ) {
         print( pbat.last()$results );
@@ -1916,11 +1948,30 @@ pbatGUI.mainForm <- function() {
     tkconfigure( globs$but.results, state="disabled" );
     tkconfigure( globs$but.write, state="disabled" );
   }
-    
-  ;# set the globals before pausing for all the gui operations to finish
+
+  ## New: draw a little status window
+  {
+    stFrame <- tkframe( globs$form, relief="groove", borderwidth=2 )
+    tkgrid( stFrame )
+    #globs$statusText <- tktext( stFrame, bg="black", fg="white" )
+    #tkgrid( globs$statusText )
+    #try( tkconfigure( globs$statusText, state="disabled" ) )
+
+    yscr <- tkscrollbar( stFrame, repeatinterval=5,
+                         command=function(...)tkyview(globs$statusText,...))
+    globs$statusText <- tktext( stFrame, bg="black", fg="white", height=5,
+                                yscrollcommand=function(...)tkset(yscr,...) )
+    tkgrid(globs$statusText, yscr)
+    tkgrid.configure(yscr, sticky="ns")
+
+    tkinsert( globs$statusText, "end", "Status of run (last 3 lines, enter 'pbat.status(n=0)' from the command prompt for more):\n" )
+  }
+  
+  
+  ## set the globals before pausing for all the gui operations to finish
   setPbatGUI( "globs", globs );
-  # No longer halt in case you want to do post-processing
-  # Nope - don't know how to catch closing it with the (X)
+  ## No longer halt in case you want to do post-processing
+  ## Nope - don't know how to catch closing it with the (X)
   tkwait.window( globs$form );
 
   #return(invisible());

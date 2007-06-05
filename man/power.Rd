@@ -1,133 +1,95 @@
-\name{power} 
+\name{power}
 \alias{pbat.power}
-\alias{pbat.binaryFamily}
-\alias{pbat.continuousFamily}
-\alias{pbat.caseControl}
-\alias{pbat.popQuant}
-\title{Power And Sample Size Calculations}
+\alias{pbat.powerCmd}
+\title{Power Exploration}
 \description{
-  Does power and sample size calculations.  Note that this may be
-  \emph{very highly} pbat version specific, and more finicky than other
-  methods in this package, as it requires that the
-  menuing interface does not change.
-
-  The Windows version requires a slight hack to control PBAT, which
-  appears to be stable, but may have a race condition on heavily loaded
-  systems.  Unix/Linux users should not encounter this.
-
-  'pbat.power()' starts the GUI interface (strongly recommended)
-  'pbat.binaryFamily(...)' is for family based designs with binary
-  'pbat.continuous(...)' is for family based designs with continuous
-  'pbat.caseControl(...)' is for case/control designs
-  'pbat.popQuant(...)' is for population designs with quantitative
-  
-  Currently less extensive range checking is done in these routines
-  unlike the rest of the routines in pbatR.
+  Power has been completely rewritten from scratch, and
+  is all done via monte carlo simulation internally now.  These routines
+  do not require pbat, and should run on any machine.
 }
 \usage{
-pbat.power()
+pbat.power( mode="continuous" )
 
-pbat.binaryFamily(
-           numOffspring=1, missingParents=0, numFam=0,
-           addiOffspringPheno=1, ## only when you have missing parents
-           ascertainment="unaffected",
-           model="additive", model.afreq=0.2, model.incrAfreq=0,
-           model.disLocIsMarker=TRUE,
-           
-           model.popPrev=NULL,  ## Options 1, 3, & 4
-           model.genAF=NULL,    ## Option 1
-           model.penAA=NULL, model.penAB=NULL, model.penBB=NULL, ## Option 2
-           model.OR=NULL,       ## Option 3
-           model.aOR=NULL,      ## Option 4
-           
-           stat.sigLevel=0.01,
-           stat.offset="",  ## defaults to population prevalence
-           comp="numerical",
-           log="pbatLog.txt")
-
-pbat.continuousFamily(
-           numOffspring=1, missingParents=0, numFam=0,
-           addiOffspringPheno, ## only when you have missing parents
-           ascertainment="unaffected",
-           model="additive", model.afreq=0.1, model.incrAfreq=0,
-           model.disLocIsMarker=FALSE,                      
-           model.heritability=0.1, model.afreqMarker=0,
-           model.prDiseaseGivenMarker=1,
-           stat.sigLevel=0.05, stat.offset="",
-           comp="numerical",
-           log="pbatLog.txt")
-
-pbat.caseControl(
-           model="additive", model.minafreq=0.1, model.incrAfreq=0.1,
-           model.prevalence=0.1,
-           model.ORofABvsBB=NULL, # Option 1 - default 1.5
-           model.aOR=NULL,      # Option 2 - default 1.481
-           comp.cases=500, comp.controls=500, comp.caseControlRatio=1.5,
-           comp.power=0.8, comp.sigLevel=0.05, comp.numSim=1000,
-           mode="power",
-           log="pbatLog.txt")
-
-pbat.popQuant(
-           model="additive",
-           model.minafreq=0.2, model.incrAfreq=0.1,
-           model.heritability=0.001,
-           comp.numProbands=2000,
-           comp.power=0.8, comp.sigLevel=0.05, comp.numSim=10000,
-           mode="power",
-           log="pbatLog.txt")
+pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
+               additionalOffspringPhenos=TRUE,
+               ascertainment="affected",
+               model="additive",
+               afreqMarker=NA,
+               penAA=0.8, penAB=0.5, penBB=0.3,
+               heritability=0.0, contsAscertainmentLower=0.0,
+                contsAscertainmentUpper=1.0,
+               pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
+               alpha=0.01,
+               offset="default",
+               numSim=1000 )
 }
 \arguments{
+  \item{mode}{"continuous" or "dichotomous"}
+  
   \item{numOffspring}{Family - number of offspring}
-  \item{missingParents}{Family - number of missing parents (0,1,2)}
-  \item{numFam}{Family - number of families}
-  \item{addiOffspringPheno}{Only used when you have missing parents;
+  \item{numParents}{Family - number of parents (0,1,2)}
+  \item{numFamilies}{Family - number of families}
+  \item{additionalOffspringPhenos}{Only used when you have missing parents;
     additional offspring phenotypes. 1 for yes, 0 for no.}
-  \item{ascertainment}{'unaffected', 'affected', or 'not applicable'}
-  
+  \item{ascertainment}{'unaffected', 'affected', or 'na' for anyone}
   \item{model}{'additive', 'dominant', 'recessive' or (only for binary /
-  case control) 'multi'}
-  \item{model.afreq}{allele frequency}
-  \item{model.incrAfreq}{increment allele frequency}
-  \item{model.disLocIsMarker}{TRUE/FALSE - whether the disease locus is
-    the same as the marker locus}
-  \item{model.popPrev}{population prevalence}
-  \item{model.prevalence}{population prevalence}
-  \item{model.genAF}{genetic attributable fraction of the gene}
-  \item{model.penAA}{penetrance of AA genotype}
-  \item{model.penAB}{penetrance of AB genotype}
-  \item{model.penBB}{penetrance of BB genotype}
-  \item{model.OR}{odds ratio}
-  \item{model.aOR}{allelic odds ratio}
-  \item{model.heritability}{heritibility}
-  \item{model.afreqMarker}{marker allele frequency}
-  \item{model.prDiseaseGivenMarker}{Pr(Disease|marker)}
-  \item{model.ORofABvsBB}{odds ratio of AB to BB}
-  \item{model.minafreq}{minimum allele frequency}
-  
-  \item{stat.sigLevel}{significance level}
-  \item{stat.offset}{offset; defaults to population prevalence}
+    case control) 'multi'}
+  \item{afreqMarker}{allele frequency at the marker}
+  \item{penAA}{penetrance of AA genotype}
+  \item{penAB}{penetrance of AB genotype}
+  \item{penBB}{penetrance of BB genotype}
+  \item{heritability}{heritibility - when this is zero, a binary trait
+    according to the previously defined parameters is used; when it is
+    nonzero, a continuous trait is used.}
+  \item{contsAscertainmentLower}{Lower bound for affected ascertainment
+    with a continuous trait, this is a vector for each member after the
+    proband, defaulting to `0'. It represents the quantiles, so 0.05
+    would indicate that the lower 5 percent of the phenotypes should be
+    removed.}
+  \item{contsAscertainmentUpper}{Upper bound, defaults to `1'.}
 
-  \item{comp}{'numerical':numerical integration,
-    'approximation':approximation, 'simulation':simulation}
-  \item{comp.cases}{number of cases}
-  \item{comp.controls}{number of controls}
-  \item{comp.caseControlRatio}{case control ratio}
-  \item{comp.power}{power}
-  \item{comp.sigLevel}{significance level}
-  \item{comp.numSim}{number of simulations to run}
-  \item{comp.numProbands}{number of probands}
+  \item{pDiseaseAlleleGivenMarkerAllele}
+  {Pr(Disease allele A|marker allele A)}
+  \item{afreqDSL}{allele frequency at DSL, defaults to marker
+    frequency.}
 
-  \item{mode}{'power' for power result given parameter specification,
-    'ss' for sample size result given parameter specification; note that
-    not all parameters will be used for 'power' and 'ss'.}
+  \item{alpha}{significance level}
+  \item{offset}{"default" uses the population prevalence for dichotomous
+    traits and the population mean for continuous traits. If a number is
+    specified, then that number is used as the offset.}
+  \item{numSim}{Number of monte-carlo simulations. I'd use a smaller
+    number while starting out with it, and then turn it up to a much
+    higher number of iterations later on.}
+}
+\details{
+  pbat.powerCmd(...) does not really do any range checking, primarily
+  because I don't expect most will use it directly, and instead will use
+  the friendly GUI interface for power exploration.
+
+  Be careful with the number of simulations! When you are first
+  exploring, you can keep this low, but you should turn this all the way
+  up before doing your final computation.
   
-  \item{log}{logfile to write to (results will be stored here) - this
-    will be over-written if the file exists}
+  Note that some values of `pDiseaseAlleleGivenMarkerAllele' in
+  combination with `afreqMarker' are not possible. These will return
+  negative values (these are error codes for the GUI, which will provide
+  more helpful messages).
+
+  Lastly, you might want to look into something like
+    set.seed(1)
+  e.g., if you want the results to be reproducable (set it to any
+  number, but make note of this number, see set.seed for more details).
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
+
   \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
+
+  Hoffmann, T. and Lange, C. (2006) P2BAT: a massive parallel
+  implementation of PBAT for genome-wide association studies in
+  R. Bioinformatics. Dec 15;22(24):3103-5.
+
+  Horvath, Steve, Xu, Xin, and Laird, Nan M. The family based association test method: computing means and variances for general statistics. Tech Report.
 }
 \seealso{
   \code{\link{pbat}},

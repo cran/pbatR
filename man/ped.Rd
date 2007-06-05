@@ -8,6 +8,8 @@
 \alias{is.pped}
 \alias{as.pped}
 \alias{read.pped}
+\alias{sort.ped}
+\alias{plotPed}
 \title{Pedigree Object}
 \description{
   Creates, tests, reads, or writes objects of type \code{ped} or
@@ -27,12 +29,12 @@
 }
 \usage{
 as.ped( x,
-        idped="idped", idsub="idsub", idfath="idfath",
+        pid="pid", id="id", idfath="idfath",
         idmoth="idmoth", sex="sex", affection="affection",
         clearSym=FALSE )
 
 as.pedlist( x,
-            idped="idped", idsub="idsub", idfath="idfath",
+            pid="pid", id="id", idfath="idfath",
             idmoth="idmoth", sex="sex", affection="affection",
             clearSym=FALSE )
 
@@ -49,6 +51,10 @@ is.pped( obj )
 read.pped( filename, max=100 )
 
 as.pped( ped, ppedname="" )
+
+\method{sort}{ped}(x,decreasing=FALSE,...)
+
+plotPed( ped, sink=NULL )
 }
 \arguments{
   \item{x}{
@@ -69,8 +75,8 @@ as.pped( ped, ppedname="" )
     previously, and genetic markers consist of a list object of two
     vectors for each unphased haplotype.
   }
-  \item{idped}{String corresponding to column name for pedigree id.}
-  \item{idsub}{String corresponding to column name for subject id.}
+  \item{pid}{String corresponding to column name for pedigree id.}
+  \item{id}{String corresponding to column name for subject id.}
   \item{idfath}{String corresponding to column name for father id.}
   \item{idmoth}{String corresponding to column name for mother id.}
   \item{sex}{String corresponding to column name for sex.}
@@ -112,20 +118,25 @@ as.pped( ped, ppedname="" )
   \item{ppedname}{Name of the `pped' file.  If a symbolic ped, it
     defaults to that name except with a pped extension; otherwise, it
     defaults to `pped.pped'.}
+
+  \item{decreasing}{Whether to sort in decreasing/increasing order.}
+
+  \item{sink}{For `plot.ped', this is the name of a pdf file to output
+    all of the plots to (there will be one plot per page).}
 }
 \examples{
 # A highly artificial example with not enough subjects to be run;
 #  however, it demonstrates how to put data in it.
-x <- data.frame( idped =     c(1,1,1,1,1),
-                 idsub =     c(1,2,3,4,5),
-                 idfath =    c(4,4,4,0,0),
-                 idmoth =    c(5,5,5,0,0),
-                 sex =       c(1,2,1,1,2),
+x <- data.frame( pid       = c(1,1,1,1,1),
+                 id        = c(1,2,3,4,5),
+                 idfath    = c(4,4,4,0,0),
+                 idmoth    = c(5,5,5,0,0),
+                 sex       = c(1,2,1,1,2),
                  affection = c(1,0,0,1,0),
-                 m1.a =      c(1,1,1,1,1),
-                 m1.b =      c(1,2,1,1,2),
-                 m2.a =      c(4,4,4,4,4),
-                 m2.b =      c(3,3,3,4,3) )
+                 m1.a      = c(1,1,1,1,1),
+                 m1.b      = c(1,2,1,1,2),
+                 m2.a      = c(4,4,4,4,4),
+                 m2.b      = c(3,3,3,4,3) )
 x
 myPed <- as.ped( x )          # Mark it with the class 'ped'
 myPedlist <- as.pedlist( x )  # Instead mark it with 'pedlist'
@@ -136,7 +147,7 @@ myPedlist
 names( x )[1:6] <- c( "mypedid", "subid", "fathid",
                       "mothid", "gender", "affection" );
 x
-myPed <- as.ped( x, idped="mypedid", idsub="subid", idfath="fathid",
+myPed <- as.ped( x, pid="mypedid", id="subid", idfath="fathid",
                  idmoth="mothid", sex="gender" ) # affection need not be
                                                  #  specified here
 myPed  # Note it's the same as before!
@@ -160,6 +171,12 @@ myPedlist <- as.pedlist( myPed )   #  and forth between formats.
 
   The usage of \code{as.ped} and \code{as.pedlist} should also follow
   the same missingness convention.
+
+  `plot.ped' attempts to make use of the `kinship' package to draw the
+  pedigrees. In my personal experience, this package cannot handle all
+  pedigrees. My preferred alternative would be to use Madeline, which
+  makes beautiful pictures (amongst other things):
+    http://eyegene.ophthy.med.umich.edu/
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}

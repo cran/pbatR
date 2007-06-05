@@ -3,6 +3,7 @@
 \alias{is.phe}
 \alias{read.phe}
 \alias{write.phe}
+\alias{sort.phe}
 \title{Phenotype Object}
 \description{
   Creates, tests, reads, or writes an object of class \code{phe}.
@@ -16,6 +17,8 @@ read.phe( filename, na.strings=c("-",".","NA"), lowercase=TRUE,
           sym=TRUE, ... )
 
 write.phe( file, phe )
+
+\method{sort}{phe}(x,decreasing=FALSE,...)
 }
 \arguments{
   \item{df}{Dataframe with the data}
@@ -42,6 +45,9 @@ write.phe( file, phe )
 
   \item{file}{string representing filename, or a connection for file output}
   \item{phe}{An object of class 'phe' (see \code{\link{as.phe}}).}
+
+  \item{x}{An object of class 'phe' (see \code{\link{as.phe}}).}
+  \item{decreasing}{Whether to sort in decreasing/increasing order.}
 }
 \note{
   \bold{`read.phe' mild warning}: This function \emph{might change

@@ -344,7 +344,7 @@ pbat.create.commandfile <- function(
        trans.pheno="none", trans.pred="none", trans.inter="none",
        scan.pred="all", scan.inter="all",
        scan.genetic="additive",
-       offset="default",
+       offset="gee",
        screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
@@ -616,6 +616,14 @@ pbat.create.commandfile <- function(
 
   ####print( "got past here 5" );
 
+  ## Oy-vay! pbat needs a bloody phe file!!! arghhhhhhhhhhhhhhhhhhhhhhHHHhhhhhhhhhhhh!
+  if( phefile == "" ) {
+    phefile <- "p2bat_empty.phe"
+    ped <- read.ped( pedfile, sym=FALSE )
+    write.phe( phefile, as.phe( data.frame(pid=ped$pid, id=ped$id, p2batGenerated=rep(1,nrow(ped) ) ) ) );
+  }
+
+  
   #-------------------------
   # now do the actual work -
   #-------------------------
@@ -626,6 +634,11 @@ pbat.create.commandfile <- function(
   if( logfile!="" )
     writeCommand( "logfile", logfile, outfile=outfile );
   
+  ## apparently this can only be written when specified!
+  ## EDIT: No, the filthy beast needs to be before the pedfile??? What the hell???
+  ##if( snppedfile )
+  writeCommand( "snppedfile", as.integer(snppedfile), outfile=outfile );
+
   ####print( "TESTING 1" );
   ##writeCommand( "pedfile", pedfile, outfile=outfile);     # (1)
   if( pedfile.ext=="ped" ) {  # (1)
@@ -798,10 +811,6 @@ pbat.create.commandfile <- function(
   
   ## genome-wide acceleration
   writeCommand( "gwa", as.integer(gwa), outfile=outfile );
-
-  ## apparently this can only be written when specified!
-  if( snppedfile )
-    writeCommand( "snppedfile", as.integer(snppedfile), outfile=outfile );
 
   ## hmm... this was changed a bit...
   writeCommandStrMatch( "distribution", distribution, c("default","jiang","murphy","naive","observed"), outfile=outfile );

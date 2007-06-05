@@ -50,12 +50,17 @@ print.pbat <- function( x, ... ) {
   catn( "Type '?pbat' for more details." );
 }
 
-write.pbat <- function(x, filename) {
+write.pbat <- function(x, filename, resultsOnly=FALSE) {
   if( str.file.extension(filename,extension='csv')==filename ) {
-    write.pbat.csv(x, filename);
+    write.pbat.csv(x, filename, resultsOnly);
     return(invisible());
   }
 
+  ## update 05/14/2006
+  if( resultsOnly ) {
+    write.table( x$results, filename, row.names=FALSE, quote=FALSE );
+    return(invisible());
+  }
   
   ## updates 01/20/2006
   f <- file( filename, "w" );
@@ -88,13 +93,19 @@ write.pbat <- function(x, filename) {
   return(invisible());
 }
 
-write.pbat.csv <- function(x, filename) {
+write.pbat.csv <- function(x, filename, resultsOnly=FALSE) {
   filename <- str.file.extension(filename,extension='csv');
   
   quotify <- function( strList ) {
     for( i in 1:length(strList) )
       strList[i] <- paste("\"",strList[i],"\"");
     return( strList );
+  }
+
+  ## update 05/14/2006
+  if( resultsOnly ) {
+    write.csv( x$results, filename, row.names=FALSE, quote=FALSE );
+    return( invisible() );
   }
   
   ## updates 01/20/2006
@@ -135,6 +146,15 @@ write.pbat.csv <- function(x, filename) {
 #                                                                  #
 ####################################################################
 
+## a few little extras...
+pbatFilesFixNamesExtraSub <- function( mName )
+  paste( unlist( strsplit( mName, " |\\.|\t" ) ), sep="", collapse="" )
+pbatFilesFixNamesExtra <- function( names ) {
+  res <- mapply( pbatFilesFixNamesExtraSub, names )
+  names( res ) <- NULL
+  return( res )
+}
+
 ## 05/23/06 - MASSIVE alterations in this coding!
 ############################################################################
 # \name{pbat.files}                                                        #
@@ -161,6 +181,7 @@ pbat.files <- function( pedfile, phefile,
                         commandfile="",
                         logrank.outfile="",
                         preds="", preds.order="",
+                        max.pheno=1,  ## relevant to output loading!
                         LOAD.OUTPUT=TRUE,
                         ... )
 {
@@ -181,6 +202,7 @@ pbat.files <- function( pedfile, phefile,
   logfile <- pbat.create.commandfile( pedfile=pedfile, phefile=phefile, fbat=fbat, ## 05/31/06 fix
                                       commandfile=commandfile,
                                       preds=preds, preds.order=preds.order,
+                                      max.pheno=max.pheno,
                                       ... );
   ##print( logfile ); ## DEBUG ONLY
 
@@ -303,7 +325,7 @@ pbat.files <- function( pedfile, phefile,
 
   pbatObj <- list();
   pbatObj$call <- NULL; # set by upper function
-  pbatObj$pbat.call <- res$call;
+  pbatObj$pbat.call <- res$call; ## This isn't as good anymore...
   pbatObj$results <- res$data;
   pbatObj$rcode <- logrank.outfile;
   pbatObj$results.logfile <- logfile;
@@ -320,6 +342,13 @@ pbat.files <- function( pedfile, phefile,
     pbatObj$filenameSH <- filenameSH;
   }
 
+  ## New 06/10/2006 - addendum
+  ## res$call isn't very good, so load in the `logfile' instead?
+  cfile <- file( commandfile )
+  pbatObj$pbat.call <- readLines( cfile )
+  close( cfile ) ## wow, causes huge problems if we forget to close...
+  ## End of new 06/10/2006
+
   ## New 09/11/2006 - another PBAT hack to try; this time we try to header
   ##  the data that comes out of PBAT
   ###if( !is.null( pbatObj$results ) &&
@@ -333,7 +362,8 @@ pbat.files <- function( pedfile, phefile,
   ###}
 
   ## further modified 01/19/2006
-  if( !is.null( pbatObj$results ) && names(pbatObj$results)[1]=="C0" ){
+  if( !is.na( pbatObj$results ) &&
+      !is.null( pbatObj$results ) && names(pbatObj$results)[1]=="C0" ){
     if( fbat=="logrank" && ncol(pbatObj$results)==14 ){
       names(pbatObj$results) <-
         c( "Group", "snps", "haplotype",  "hap.freq", "model",
@@ -342,7 +372,10 @@ pbat.files <- function( pedfile, phefile,
     }else if( fbat=="gee" || fbat=="pc" ){
       ## The typical name guessing
       pre.names <- c("group","snps","haplotype","hap.freq","model","X..info.fam","FBAT","FBAT.GxE","power.FBAT","power.FBAT.GxE", "WALD.main", "WALD.GxE");
-      post.names <- c("heritability");
+      ##post.names <- c("heritability")  ## Alteration 7/7/7
+      post.names <- paste( "heritability", 1:max.pheno, sep="" )
+      if( fbat=="pc" ) post.names <- c( post.names, paste( "fbatpcWeight", 1:max.pheno, sep="" ) )
+      
       phe <- NULL; mid.names <- c("AffectionStatus");
       if( phefile!="" ) {
         phe <- read.phe( phefile );
@@ -403,18 +436,28 @@ pbat.files <- function( pedfile, phefile,
                                       rep("NA", ncol(pbatObj$results)-length(guessed.names)) );
         }
       }
+
+      ## New addition 05/07/2007
+      if( all(names(pbatObj$results)[(ncol(pbatObj$results)-2):ncol(pbatObj$results)] == "NA" ) ) {
+        print( "Newest input fix." );
+        newNames <- names(pbatObj$results);
+        newNames <- c( newNames[1:4], "HW","freqParent","HWParents", newNames[5:(length(newNames)-3)] );
+        names(pbatObj$results) <- newNames;
+      }
     }
     warning( "Miscommunication with PBAT - column headers guessed." );
   }
   
   ## weN 09/11/2006
 
-  if( is.null(pbatObj$results)
+  if( is.na(pbatObj$results)
+     || is.null(pbatObj$results)
      || nrow(pbatObj$results)==0 ){
     cat( "There are no results.  If you see anything to the effect of 'pbat: command not found', use pbat.set() and set the location of pbat if you have X or windows, otherwise use pbat.set('<full path to pbat>').  Note that the pbat you have will probably have a version number on it.\n" );
+  }else{
+    ## 5/17
+    try( names( pbatObj$results ) <- pbatFilesFixNamesExtra( names( pbatObj$results ) ) )
   }
-  
-
   
   return( pbatObj );
 }
@@ -465,6 +508,23 @@ pbat.concatenate <- function( pbatObj=NULL, filename="myResults.txt", clean=FALS
 #                                                                  #
 ####################################################################
 
+
+#################################
+## Kludge for affection status ##
+affectionPhe <- function( ped, trait="affected", offset=0.0 ) {
+  ## load the dataset into memory potentially
+  if( is.sym(ped) )
+    ped <- as.ped( ped, clearSym=TRUE )
+  ped$AffectionStatus[ped$AffectionStatus==0] <- NA
+
+  ## create a phe file with the affectionStatus
+  phe <- as.phe( data.frame( pid=ped$pid, id=ped$id, affected=as.integer(ped$AffectionStatus==2) ) )
+  names(phe)[3] <- trait
+  phe[[3]] <- phe[[3]] - offset
+
+  return( phe )
+}
+
 ## Ordering on phe and ped here is opposite to that of
 ##  pbat.files! Not so good! But we potentially break
 ##  others coding if we change it now.
@@ -480,7 +540,7 @@ pbat.concatenate <- function( pbatObj=NULL, filename="myResults.txt", clean=FALS
 # (PARAM) ...  pbat options, as referenced to in the function      #
 #                pbat.files().                                     #
 ####################################################################
-pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
+pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... ) {
   #write.phe( paste( file.prefix, ".phe", sep="" ), phe );
   #write.ped( paste( file.prefix, ".ped", sep="" ), ped );
   #return( pbat.files( file.prefix, ... ) );
@@ -503,6 +563,36 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
     pedname <- get.sym( ped );
   }
 
+  ## new, nasty little kludge begin
+  if( is.element("AffectionStatus",phenos) ){
+    ## we'll let the user specify an offset if they like
+    newOffset = 0.0
+    if( is.numeric( offset ) ) {
+      newOffset = offset ## we do it manually
+      offset="none"  ## and then tell pbat not to do it
+    }
+
+    if( is.null(phe) ) {
+      ## sweet, then we can just do it
+      phe <- affectionPhe( ped, offset=newOffset )
+    }else{
+      ## ugh... we're going to have to merge...
+      if( is.element("affected",names(phe)) )
+        stop( "You cannot use 'AffectionStatus' when the phenotype file has an element called 'affected'. Try renaming it." )
+
+      ## make sure the phe is in memory
+      if( is.sym(phe) )
+        phe <- read.phe( get.sym(phe), sym=FALSE )
+
+      phe2 <- affectionPhe( ped, offset=newOffset )
+      phe <- as.phe( merge( phe, phe2, by.x=c("pid","id"), by.y=c("pid","id"), all.y=TRUE ) )
+    }
+
+    ## and replace it in the call
+    phenos[phenos=="AffectionStatus"] <- "affected"
+  }
+  ## new, nasty little kludge end
+
   phename <- "";  ## don't always need a phefile
   if( !is.null(phe) && class(phe)=="phe" ) {
     if( !is.sym(phe) ) {
@@ -514,7 +604,7 @@ pbat.obj <- function( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... ) {
   }
   
   ## run the command
-  res <- pbat.files( pedname, phename, LOAD.OUTPUT=LOAD.OUTPUT, ... );
+  res <- pbat.files( pedname, phename, phenos=phenos, offset=offset, LOAD.OUTPUT=LOAD.OUTPUT, ... );
 
   ## take note of what was symbollic (for the clean routine)
   ##  Nevermind - the clean routine doesn't need this!

@@ -62,7 +62,7 @@ pbat.m( formula, phe, ped, fbat="",
         trans.pheno="none", trans.pred="none", trans.inter="none",
         scan.pred="all", scan.inter="all",
         scan.genetic="additive",
-        offset="default",
+        offset="gee",
         screening="conditional power", distribution="default",
         logfile="",
         max.gee=1,
@@ -82,13 +82,14 @@ pbat.m( formula, phe, ped, fbat="",
         gwa=FALSE,
         snppedfile=FALSE,
         extended.pedigree.snp.fix=FALSE )
-
-pbat.obj( phe, ped, file.prefix, LOAD.OUTPUT=TRUE, ... )
+ 
+pbat.obj( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... )
 
 pbat.files( pedfile, phefile, fbat="gee",
             commandfile="",
             logrank.outfile="",
             preds="", preds.order="",
+            max.pheno=1,
             LOAD.OUTPUT=TRUE,
             ... )
 
@@ -105,7 +106,7 @@ pbat.create.commandfile( pedfile, phefile="",
        trans.pheno="none", trans.pred="none", trans.inter="none",
        scan.pred="all", scan.inter="all",
        scan.genetic="additive",
-       offset="default",
+       offset="gee",
        screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
@@ -141,7 +142,9 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{phefile}{Name of the phenotype file (.phe) in PBAT-format.
     The default assumes the same prefix as that in 'pedfile'. Leave
     empty or set to the empty string "" if you do not have a phenotype
-    file (i.e. you are only using AffecitonStatus).}
+    file (i.e. you are only using AffecitonStatus). In the case of no
+    phenotype file, one must be created; it will be in \code{empty_phe.phe},
+    and requires loading in the pedigree file into R.}
 
   \item{...}{Options in higher level functions to be passed to
     'pbat.create.commandfile'.}
@@ -247,7 +250,8 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{offset}{Specification of the covariate/predictor variables
     adjustment:
     
-    \code{"none"} = No adjustments for covariates/predictor variables
+    \code{"none"} = No adjustments for covariates/predictor
+    variables. You need to select this for dichotomous traits.
     
     \code{"max power"} = Offset (=FBAT adjustment for covariates and interaction
     variables) that maximizes the power of the FBAT-statistic
@@ -262,9 +266,11 @@ pbat.create.commandfile( pedfile, phefile="",
     \code{"gee"} = Offset (=FBAT adjustment for covariates and interaction
     variables) based on standard phenotypic residuals obtained by
     GEE-estimation including all covariates and interaction variables.
-    
-    \code{"default"} = The default choice is \code{"gee"} (\code{"none"}
-    for dichotomous traits).
+    (default - most of the time, with the exception of selecting from
+    the gui interface (not the command line) AffectionStatus)
+
+    \code{(numeric value)} = This only works for AffectionStatus; set a numeric
+    value (i.e. `0.13' without the `' marks) to this.
   }
   
   \item{screening}{
@@ -450,6 +456,8 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{extended.pedigree.snp.fix}{Set to TRUE when you are using a
     dataset with large extended pedigrees. This will not work with any
     mode but `single' mode currently [see pbat.set(...)].
+    This is also sometimes necessary for multi-allelic markers (i.e. not
+    binary markers).
   }
 }
 \value{
@@ -500,8 +508,18 @@ pbat.create.commandfile( pedfile, phefile="",
 ##########################
 
 \dontrun{
-# Note that none of these can be run as they are verbatim.
-# They are just meant to be examples.
+
+## Note, when you run the example (or anything else) you will generally
+##  get a warning message that the column headers were guessed.
+## This means they were guessed, and while I've tried to catch most
+##  cases, the warning stands for ones I might have missed.
+
+## These cannot be run verbatim, and are just meant to be examples.
+
+##############################
+## Further formula examples ##
+##############################
+
 
 # load in the data
 # Here we assume that:
@@ -556,18 +574,20 @@ res <- pbat.m( time & censor ~ preds1^3 + preds2 | snp1 | snp2 |
 plot( res )
 
 # haplotype analysis, stratified by group
-pbat.m( time & censor ~ preds1^2 + preds2^3 | block1snp1
-        + block1snp2 | block2snp1 + block2snp2 / group, temp )
+res <- pbat.m( time & censor ~ preds1^2 + preds2^3 | block1snp1
+               + block1snp2 | block2snp1 + block2snp2 / group, temp )
 
 # set any of the various options
-pbat.m( phenos ~ preds, phe, ped, fbat="pc",
-        null="linkage, no association", alpha=0.1 )
+res <- pbat.m( phenos ~ preds, phe, ped, fbat="pc",
+               null="linkage, no association", alpha=0.1 )
 
 ## New multimarker test (as described above)
 # mmaxphenos and mmaxsnps are set to the minimum if not specified
-pbat.m( phenos1 + phenos2 + phenos3 ~ preds | m1 | m2 | m3 | m4, phe,
-        ped, fbat="pc", mminphenos=2, mminsnps=2 )
-        
+res <- pbat.m( phenos1 + phenos2 + phenos3 ~ preds | m1 | m2 | m3 | m4,
+               phe, ped, fbat="pc", mminphenos=2, mminsnps=2 )
+
+## And the top markers by conditional power
+top( res )
 }
 
 
@@ -660,6 +680,8 @@ res
   \code{\link{read.ped}}
 
   \code{\link{as.phe}},
-  \code{\link{read.phe}}
+  \code{\link{read.phe}},
+
+  \code{\link{top}}
 }
 \keyword{interface}

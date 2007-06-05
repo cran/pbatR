@@ -28,7 +28,7 @@ bool getPartialLine( ifstream &infile, char *str, int length )
       return(false); // not a partial line
     }
   }
-  
+
   str[i] = '\0'; // null terminate it
   if( infile.eof() ) {
     str[i-1] = '\0'; // otherwise it turns up a really wierd character at the end!!!
@@ -51,7 +51,7 @@ int numChars( const char *str, char c='&' )
 bool containsChar( const char *str, char c='&' )
 {
   int strLen = strlen( str );
-  
+
   for( int i=0; i<strLen; i++ )
     if( str[i] == c )
       return( true );
@@ -78,14 +78,14 @@ bool firstIsGroup( const char *str )
       && str[++start]=='u'
       && str[++start]=='p' )
     return( true );
-  
+
   return( false );
 }
 
 void replaceChar( char *str, char find='&', char rep=',' )
 {
   int strLen = strlen( str );
-  
+
   for( int i=0; i<strLen; i++ )
     if( str[i]==find )
       str[i] = rep;
@@ -117,9 +117,12 @@ void terminateStr( char *str )
     str[last] = '\0';
 }
 
-void convertPbatlog( const char* pbatlogfile, const char* callfile, 
+// returns if touched (sometimes empty if you cut it up too damned much)
+bool convertPbatlog( const char* pbatlogfile, const char* callfile,
 		     const char* resultfile, int append=0 )
 {
+  bool touched=false;
+
   // open up the files
   ifstream infile( pbatlogfile );
 
@@ -170,11 +173,13 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
 	  // first was group!
 	  if( append == 0 ) { // then need the header
 	    //outfileResult << line << endl;
-	    
+
 	    // we need to reformat the header
 	    outfileResult << headerFix( line ) << endl;
 	  }
 	}else{
+          touched = true;
+
 	  //first wasn't a group
 	  if( append == 0 ) {
 	    // then we need to create and put a header on it!
@@ -205,6 +210,9 @@ void convertPbatlog( const char* pbatlogfile, const char* callfile,
   infile.close();
   outfileCall.close();
   outfileResult.close();
+
+  // and return if touched! (if there was actually any output in this file...)
+  return( touched );
 }
 
 #ifdef _DATA_CPP_DEBUG_
@@ -238,7 +246,7 @@ int main( int argc, const char* argv[] )
   cout << "append=" << append << endl;
 
   // so far so good
-  
+
   // start debugging the functions
   cout << "should be 5: " << numChars( "& & & 5 ands & &" ) << endl;
   cout << "should be 1: " << containsChar( "  foo&foo" ) << endl;
@@ -282,15 +290,27 @@ extern "C" {
       return;
     }
 
-    // load in the first one without appending
     char currentlog[LINE_SIZE];
+
+    /*
+    // load in the first one without appending
     sprintf( currentlog, "%s_1_%i", *pbatlogfile, *pieces );
     convertPbatlog( currentlog, *callfile, *resultfile, 0 );
-    
+
     // now load in the rest _with_ appending
     for( int i=2; i<=*pieces; i++ ){
       sprintf( currentlog, "%s_%i_%i", *pbatlogfile, i, *pieces );
       convertPbatlog( currentlog, *callfile, *resultfile, 1 );
+    }*/
+
+    // update 7/13/07
+    // load in appending based on if it has been touched
+    // - some of the output files can be empty...
+    bool touched = false;
+    for( int i=1; i<=*pieces; i++ ) {
+      sprintf( currentlog, "%s_%i_%i", *pbatlogfile, i, *pieces );
+      // make it so once touched, it _stays_ touched...
+      touched = touched | convertPbatlog( currentlog, *callfile, *resultfile, (int)touched );
     }
   }
 }

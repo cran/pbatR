@@ -4,10 +4,14 @@ export(
        read.ped, read.phe, write.ped, write.phe,
 
        is.pped, as.pped, read.pped,
-       
+
+       affectionPhe,
+
+       plotPed,
+
        pbat.create.commandfile,
        pbat.files, pbat.obj, pbat.m,
-       
+
        pbat.get, pbat.set, pbat.setVersionCheck,
 
        pbat.getmode, pbat.setmode, pbat.setmode.defaults,
@@ -18,9 +22,7 @@ export(
 
        is.finished, pbat.load, pbat.concatenate,
 
-       pbat.generateData,
-
-       pbat.power, pbat.binaryFamily, pbat.continuousFamily, pbat.caseControl, pbat.popQuant,
+       pbat.power, pbat.powerCmd,
 
        pbat.help,
        pbat.firsttime,
@@ -29,7 +31,11 @@ export(
 
        c2bat,
 
-       obfuscate
+       obfuscate,
+
+       pbat.work, pbat.unwork,
+
+       top, pbat.status
        )
 
 import( tcltk )
@@ -41,5 +47,8 @@ S3method( plot, pbat )
 S3method( print, phe )
 S3method( print, ped )
 S3method( print, pedlist )
+
+S3method( sort, ped )
+S3method( sort, phe )
 
 useDynLib(pbatR)

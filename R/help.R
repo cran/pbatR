@@ -1,7 +1,7 @@
 catt <- function( line, endl=FALSE ) {
   ## chops a line into pieces so it displays a little nicer for the user
   CHOP.IT.OFF <- 60;
-  
+
   while( nchar(line) > CHOP.IT.OFF ) {
     ## try to break it at a space if possible
     cur.chop <- CHOP.IT.OFF;
@@ -81,7 +81,7 @@ dir.by.date <- function( ..., PRINT=FALSE ){
 
   if( PRINT )
     print( data.frame( files=files, dates=dates ) ); ## Debug only
-  
+
   return( files );
 }
 ##dir.by.date.debug <- function(){
@@ -130,7 +130,7 @@ extended.pbat.debug <- function( FULL=FALSE ) {
     }
   } );
   cat( "\n\n" );
-  
+
   cat( "#########################\n" );
   cat( "## pbat csvfile         #\n" );
   cat( "#########################\n" );
@@ -140,7 +140,7 @@ extended.pbat.debug <- function( FULL=FALSE ) {
     print( readLines( file ) );
     close( file );
   } )
-  
+
   cat( "#########################\n" );
   cat( "## directory listing    #\n" );
   cat( "#########################\n" );
@@ -159,7 +159,7 @@ extended.pbat.debug <- function( FULL=FALSE ) {
       print( readLines( file ) );
       close( file );
     } );
-    
+
     ## and try printing it just one more time in case...
     cat( "#########################\n" );
     cat( "## pbat logfile (second)#\n" );
@@ -179,43 +179,42 @@ extended.pbat.debug <- function( FULL=FALSE ) {
 pbat.firsttime <- function() {
   ## Runs on the first time this library is loaded...
   ## well, that's the idea -- we might just have to point people to this?
-  cat( "\n" );
-  catty( "****************** first time help - begin *****************" );
-  catty( "Hello new user! Let me be the first to welcome you to P2BAT!" );
-  catty( "This is a one-time startup message intended to help you setup pbatR on your machine.  To see this again, just enter the command 'pbat.firsttime()' anytime." );
-  cat( "\n" );
-  catty( "First ensure that you have been to" )
+  cat( "\n" )
+  catty( "****************** first time help - begin *****************" )
+  catty( "Hello new user! Let me be the first to welcome you to P2BAT!" )
+  catty( "This is a one-time startup message intended to help you setup pbatR on your machine.  To see this again, just enter the command 'pbat.firsttime()' anytime." )
+  cat( "\n" )
+  catty( "For analysis purposes, first ensure that you have been to" )
   catty( "  http://www.biostat.harvard.edu/~clange/default.htm" )
-  catty( "and have accepted PBAT's license, downloaded PBAT to your computer, and extracted PBAT somewhere. Make a note of this location, you will need to set this in this location in this software." );
-  catty( "[LINUX SPECIAL NOTE: if you downloaded the linux version, you also need the pbatdata.txt which doesn't seem to be supplied with this - go ahead and get the windows version as well and take this file from there and put it in this location. Also, the current version posted is a 64bit version only for linux, and will not run on 32bit linux.]" );
-  cat( "\n" );
+  catty( "and have accepted the PBAT license, downloaded PBAT to your computer, and extracted PBAT somewhere. Make a note of this location, you will need to set this in this location in this software." )
+  catty( "[LINUX SPECIAL NOTE: if you downloaded the linux version, you also need the pbatdata.txt which does not seem to be supplied with this - go ahead and get the windows version as well and take this file from there and put it in this location. Also, the current version posted is a 64bit version only for linux, and will not run on 32bit linux.]" )
+  cat( "\n" )
   catty( "Now, either start up the GUI with the R command:" )
-  catty( "  pbat()" );
-  catty( "AND" );
-  catty( "make sure you set the executable to the pbat file you downloaded (it's the first option in the GUI)." );
-  cat( "\n" );
-  catty( "OR" );
-  cat( "\n" );
-  catty( "If you are on you are on your local machine, run:" );
-  catty( " library( tcltk )" );
-  catty( " pbat.set()" );  
-  cat( "\n" );
-  catty( "OR" );
-  cat( "\n" );
-  catty( "Run " );
-  catty( " pbat.set( \"path.to.your.pbat\" )." );
-  catty( "Note that with this method in windows, use '\\\\' to separate directories rather than a single '\\', i.e. 'C:\\\\apps\\\\pbat', or just use the forward slash, i.e. 'C:/apps/pbat'." );
-  cat( "\n" );
-  catty( "Please also try the R command" );
-  catty( " pbat.help()" );
-  catty( "if you are having any problems." );
-  cat( "\n" );
-  catty( "You may wish to also check the P2BAT page at" );
-  catty( " http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html" );
-  cat( "\n" );
-  catty( "Note that the current setup is to version check on package load." );
-  cat( "\n" );
-  catty( "Lastly, your most relevant help page (besides the pdf manual to this package) can be reached by issuing the R command:" );
-  catty( "?pbat" );
-  catty( "****************** first time help - end *******************" );
+  catty( "  pbat()" )
+  catty( "AND" )
+  catty( "make sure you set the executable to the pbat file you downloaded (it is the first option in the GUI)." )
+  cat( "\n" )
+  catty( "OR" )
+  cat( "\n" )
+  catty( "If you are on you are on your local machine, run:" )
+  catty( " library( tcltk )" )
+  catty( " pbat.set()" )
+  cat( "\n" )
+  catty( "OR" )
+  cat( "\n" )
+  catty( "Run " )
+  catty( " pbat.set( \"path.to.your.pbat\" )." )
+  catty( "Note that with this method in windows, use '\\\\' to separate directories rather than a single '\\', i.e. 'C:\\\\apps\\\\pbat', or just use the forward slash, i.e. 'C:/apps/pbat'." )
+  cat( "\n" )
+  catty( "Please also try the R command" )
+  catty( " pbat.help()" )
+  catty( "if you are having any problems." )
+  cat( "\n" )
+  catty( "You may wish to also check the P2BAT page at" )
+  catty( " http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html" )
+  cat( "\n" )
+  catty( "Lastly, to start the power GUI, enter for continuous/binary" )
+  catty( " pbat.power()" )
+  catty( " pbat.power(\"dichotomous\")" )
+  catty( "****************** first time help - end *******************" )
 }

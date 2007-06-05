@@ -198,7 +198,7 @@ HANDLE launchRedirectedPBAT( HANDLE out, HANDLE in, HANDLE err, string executabl
   strcpy( executableChar, executable.c_str() );
   PROCESS_INFORMATION pi; // process information filled in if launched
   if( !CreateProcess( NULL, executableChar, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi ) ) {
-    cout << "Couldn't create the pbat process..." << endl;
+cout << "Couldn't create the pbat process..." << endl;
     return( NULL );
   }
   

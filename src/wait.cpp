@@ -48,8 +48,11 @@ extern "C" {
 
       char curCmd[1000];
       strcpy( curCmd, cmds[i].c_str() );
+      //if( !CreateProcess( NULL, curCmd,
+      //		  NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) ) {
       if( !CreateProcess( NULL, curCmd,
-			  NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) ) {
+			  NULL, NULL, FALSE, CREATE_NO_WINDOW, 
+			  NULL, NULL, &si, &pi ) ) {
 	std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
       }else{
 	piVec.push_back(pi);

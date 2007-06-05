@@ -100,17 +100,25 @@ loadPbatlog <- function( log ){
   pbatCall <- NULL;  pbatData <- NULL;
   try(  pbatCall <- readLines( callfile )  );
 
+  ## Addition pointed out to me by Dave!
+  ## - If there are no results... empty file
+  if( file.info(resultfile)$size == 0 ) {
+    ## No results!
+    warning( "Empty output. Generally this indicates the number of informative families in the markers specified is below your current 'min.info' threshhold (or pbat crashed)." );
+    return( list( call=pbatCall, data=NA ) );
+  }## end addi
+  
   read <- FALSE;
-  try(  { pbatData <- read.csv( resultfile );
+  try(  { pbatData <- read.csv( resultfile, strip.white=TRUE );
           read <- TRUE; } );
   if( !read ) {
     kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
     kludgeConvert( resultfile, kludgeLog );
-    try(  { pbatData <- read.csv( kludgeLog );
+    try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
             read <- TRUE }  );
     if( !read ) {
       kludgeConvertAwful( resultfile, kludgeLog );
-      try(  { pbatData <- read.csv( kludgeLog );
+      try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
               read <- TRUE }  );
 
     }
@@ -386,17 +394,25 @@ loadPbatlogExtended <- function( log ) {
   pbatCall <- NULL; pbatData <- NULL;
   try( pbatCall <- readLines( callfile ) );
 
+  ## Addition pointed out to me by Dave!
+  ## - If there are no results... empty file
+  if( file.info(resultfile)$size == 0 ) {
+    ## No results!
+    warning( "Empty output. Generally this indicates the number of informative families in the markers specified is below your current 'min.info' threshhold (or pbat crashed)." );
+    return( list( call=pbatCall, data=NA ) );
+  }## end
+
   read <- FALSE;
-  try(  { pbatData <- read.csv( resultfile );
+  try(  { pbatData <- read.csv( resultfile, strip.white=TRUE );
           read <- TRUE; } );
   if( !read ) {
     kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
     kludgeConvert( resultfile, kludgeLog );
-    try(  { pbatData <- read.csv( kludgeLog );
+    try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
             read <- TRUE }  );
     if( !read ) {
       kludgeConvertAwful( resultfile, kludgeLog );
-      try(  { pbatData <- read.csv( kludgeLog );
+      try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
               read <- TRUE }  );
 
     }

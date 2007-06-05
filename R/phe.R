@@ -33,6 +33,11 @@ print.phe <- function( x, ... ) {
     print.data.frame(x);
   }
 }
+sort.phe <- function( x, decreasing=FALSE, ... ) {
+  if( !is.sym(x) )
+    return( phe[ order(x$pid, x$id, decreasing=decreasing), ] )
+  stop( "Not symbolic, i.e. data not read into R. Try loading in with read.phe(...,sym=FALSE)) if you really want to do this." )
+}
 
  
 ####################################################################
@@ -61,6 +66,8 @@ read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, sym=
   
   # according to other documentation, na.strings can be '-' or '.'
   filename <- str.file.extension( filename, ".phe" );
+  if( spaceInFilename(filename) )
+    stop( spaceInFilenameError(filename) ) ## added 5/17
   phe <- read.badheader( filename, na.strings=na.strings, lowercase=lowercase, onlyHeader=sym, max=-1, ... );
 
   if( sym ){
@@ -122,5 +129,5 @@ write.phe <- function( file, phe ) {
   }
 
   ##write.badheader( file, phe, names(phe)[-c(1,2)] );
-  write.badheader( file, phe, names(phe)[-c(1,2)], na="." ); ## 01/19/2006 bugfix
+  write.badheader( file, phe, names(phe)[-c(1,2)], na="-" ); ## 01/19/2006 bugfix, 06/14/07 update so fbat friendly!
 }

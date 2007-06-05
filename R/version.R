@@ -21,14 +21,18 @@ pbat.current <- function( libname="" ){
     fixes <- lines[2];
     notes <- lines[3];
     close( file );
-    if( curVersion == getVersion(libname) ) {
-      cat( "version is current.\n" );
+
+    usersVersion <- getVersion(libname)
+    if( curVersion == usersVersion ) {
+      cat( "version is current.\n" )
+    }else if( curVersion < usersVersion ) {
+      cat( "You appear to be running a pre-released version (potentially unstable). Upgrade from CRAN when you no longer see this message, even if it says current.\n" )
     }else{
       cat( "version is NOT CURRENT. Consider updating (see http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html for details).\n" );
       if( nchar( fixes ) > 0 ) {
-        cat( "The new version fixes:\n ", fixes, "\n", sep="" );
+        cat( "The new version fixes:\n ", fixes, "\n", sep="" )
       }else{
-        cat( "No version fixes specified.\n" );
+        cat( "No version fixes specified.\n" )
       }
 
       ## this function has a few issues when user-installed -- NO - PATCHED!

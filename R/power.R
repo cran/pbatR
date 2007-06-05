@@ -1,257 +1,157 @@
-##############################################################
-## Thomas Hoffmann                                           #
-## Created 7/14/2006                                         #
-##                                                           #
-## DESCRIPTION:                                              #
-##  Wraps in the power calculations using sh.exe             #
-##############################################################
-
-## if you have incessant looping, it's worthwhile to note that
-##  it is extremely important for the program to terminate normally.
-
-matchLoc <- function( command, choices, vals=(1:length(choices))-1 ){
-  ## first make sure it's within bounds
-  if( sum(command==choices) != 1 )
-    stop( paste( "You must select from ", csPasteVector(choices),
-                "; you supplied ", command, ".", sep="" ) );
-  
-  ## Then return the proper value
-  return( vals[which(command==choices)] );
+################################################
+## Routines for calculating continuous offset ##
+#fy_g <- function( y, x, aa ) {
+#  dnorm( y-aa*x );
+#}
+Xg <- function( gCode, model ) {
+  if( model=="additive" )
+    return(gCode);
+  if( model=="dominant" )
+    return( as.integer(gCode==1 || gCode==2) )
+  if( model=="recessive" )
+    return( as.integer(gCode==2) )
+  stop( "Xg, gCode not recognized." )
 }
+#fy <- function( y, p, aa, model ) {
+#  return( y * ( fy_g(y,Xg(0,model),aa) * (1-p) * (1-p)
+#                + fy_g(y,Xg(1,model),aa) * 2 * (1-p) * p
+#                + fy_g(y,Xg(2,model),aa) * p * p ) )
+#}
 
-pbat.start <- function(choice,log){
-  return( c("","",choice,log) );
-}
-
-pbat.family <- function(numOffspring, missingParents, numFam,
-                        addiOffspringPheno, ascertainment){
-  cmds <- c("1","1",  ## design, change family design
-            numOffspring, missingParents, numFam);
-  if( missingParents != 0 )
-    cmds <- c( cmds, addiOffspringPheno );
-  cmds <- c(cmds, 
-            matchLoc(ascertainment,c("unaffected","affected","not applicable")),
-            "" ## Return back to the menu
-            );
-
-  return( cmds );
-}
-
-pbat.runpowerss <- function( cmds, log ) {
-  ## The infamous pbatdata.txt file... this is needed everywhere!
-  checkAndGetPbatdata();
-  
-  ## Now run the stuff
-  cmds <- c(cmds,"","","","",-1); ## protective
-  if( file.exists(log) ) file.remove(log); ## otherwise we print a whole string of them
-  ##print( csPasteVector( cmds ) );
-  pbatControl( cmds, intern=TRUE  );  ## intern=FALSE is debug only
-  ##                                      so we can see what goes down
-  printFile( log );
-  return(invisible());
-}
-
-pbat.binaryFamily <-
-  function(numOffspring=1, missingParents=0, numFam=0,
-           addiOffspringPheno=1, ## only when you have missing parents
-           ascertainment="unaffected",
-           model="additive", model.afreq=0.2, model.incrAfreq=0,
-           model.disLocIsMarker=TRUE,
-           
-           model.popPrev=NULL,  ## Options 1, 3, & 4
-           model.genAF=NULL,    ## Option 1
-           model.penAA=NULL, model.penAB=NULL, model.penBB=NULL, ## Option 2
-           model.OR=NULL,       ## Option 3
-           model.aOR=NULL,      ## Option 4
-           
-           stat.sigLevel=0.01,
-           stat.offset="",  ## defaults to population prevalence
-           comp="numerical",
-           log="pbatLog.txt")
-{
-  ## Initial family-based stuff
-  cmds <- c(pbat.start(1,log),
-            pbat.family(numOffspring,missingParents,numFam,
-                        addiOffspringPheno,ascertainment));
-  
-  
-  ## 2) Genetic model
-  model.extraParms <- c();
-  model.modelNum <- 1;
-  ## switch the type, fill in the extraParms (dependent on type, but used later)
-  if( !is.null(model.popPrev) && !is.null(model.genAF) ) {
-    model.modelNum <- 1;
-    model.extraParms <- c( model.popPrev, model.genAF );
-  }else if( !is.null(model.penAA) && !is.null(model.penAB) && !is.null(model.penBB) ){
-    model.modelNum <- 2;
-    model.extraParms <- c( model.penAA, model.penAB, model.penBB );
-  }else if( !is.null(model.popPrev) && !is.null(model.OR) ){
-    model.modelNum <- 3;
-    model.extraParms <- c( model.popPrev, model.OR );
-  }else if( !is.null(model.popPrev) && !is.null(model.aOR) ){
-    model.modelNum <- 4;
-    model.extraParms <- c( model.popPrev, model.aOR );
-  }else{
-    stop( "Please see the help on how to specify the model." );
-  }
-  
-  ## finally add to the command
-  cmds <- c(cmds,
-            2, ## Select genetic model from the menu
-            model.modelNum,
-            matchLoc( model, c("additive", "multi", "recessive", "dominant" ) ),
-            model.afreq, model.incrAfreq,
-            model.extraParms );
-  if( model.modelNum == 2 ) cmds <- cmds[-(length(cmds)-2-length(model.extraParms))]; ## bugfix 01/29/07
-  if( as.numeric(model.incrAfreq)==0 )
-    cmds <- c( cmds, as.numeric(model.disLocIsMarker) );
-  
-  ## and return to the menu
-  cmds <- c( cmds, "" );
-
-  ## 3) Statistical parameters
-  cmds <- c( cmds, "3", stat.sigLevel, stat.offset, "", "" )  ## _double_ return... horrible
-  
-  ## 4) and finally the power calculation!!!
-  cmds <- c( cmds, 4, 
-            matchLoc( comp, c("numerical", "approximation", "simulation"), 1:3 )
-            );
-  
-  ## Lastly just kill it (nicely)
-  cmds <- c( cmds, "", "-1", "", "", "-1" ); ## twice just in case
-
-  ## -- Now, do the real processing on the list!
-  pbat.runpowerss( cmds, log );
-}
-
-
-pbat.continuousFamily <-
-  function(numOffspring=1, missingParents=0, numFam=0,
-           addiOffspringPheno, ## only when you have missing parents
-           ascertainment="unaffected",
-           model="additive", model.afreq=0.1, model.incrAfreq=0,
-           model.disLocIsMarker=FALSE,                      
-           model.heritability=0.1, model.afreqMarker=0,
-           model.prDiseaseGivenMarker=1,
-           stat.sigLevel=0.05, stat.offset="",
-           comp="numerical",
-           log="pbatLog.txt")
-{
-  cmds <- c(pbat.start(2,log),
-            pbat.family(numOffspring,missingParents,numFam,
-                        addiOffspringPheno,ascertainment));
-
-  ## The genetic model
-  cmds <- c(cmds, 2,
-            matchLoc( model, c("additive", "recessive", "dominant" ) ),
-            model.afreq, model.incrAfreq,
-            model.heritability,
-            as.numeric(model.disLocIsMarker),
-            model.afreqMarker, model.prDiseaseGivenMarker
-            );
-  ## THE ABOVE IS GETTING REALLY SCREWY!!!
-  ## and return to the menu
-  cmds <- c( cmds, "", "" );
-  
-  ## 3) Statistical parameters
-  cmds <- c( cmds, "3", stat.offset, stat.sigLevel, "", "" ) ## backwards
-
-  ## 4) and finally the power calculation!!!
-  cmds <- c( cmds, 4,
-            matchLoc( comp, c("numerical", "approximation", "simulation"), 1:3 ) );
-  
-  ## Lastly just kill it (nicely)
-  cmds <- c( cmds, "", "", "-1", "", "", "-1" );  ## do it twice in case
-
-  ## -- Now, do the real processing on the list!
-  pbat.runpowerss( cmds, log );
-}
-
-pbat.caseControl <-
-  function(model="additive", model.minafreq=0.1, model.incrAfreq=0.1,
-           model.prevalence=0.1,
-           model.ORofABvsBB=NULL, # Option 1 - default 1.5
-           model.aOR=NULL,      # Option 2 - default 1.481
-           comp.cases=500, comp.controls=500, comp.caseControlRatio=1.5,
-           comp.power=0.8, comp.sigLevel=0.05, comp.numSim=1000,
-           mode="power",
-           log="pbatLog.txt")
-{
-  cmds <- pbat.start(3,log);
-
-  ## The genetic model
-  model.loc <- matchLoc( model, c("additive", "multi", "recessive", "dominant" ) );
-
-  if( !(
-        ( is.null(model.ORofABvsBB) && !is.null(model.aOR))
-      || ( !is.null(model.ORofABvsBB) && is.null(model.aOR)) ) ){
-    ## exclusive or
-    stop( "Either model.ORofABvsBB or model.aOR must be non-null, but not both. See ?pbat.caseControl for more details." );
-  }
-  if( !is.null(model.ORofABvsBB) ){
-    cmds <- c(cmds, 1, ## specifies the first option
-              model.loc,
-              model.minafreq, model.incrAfreq,
-              model.prevalence,
-              model.ORofABvsBB );
-  }else{
-    cmds <- c(cmds, 2, ## specifies the second option
-              model.loc,
-              model.minafreq, model.incrAfreq,
-              model.prevalence,
-              model.aOR );
-  }
-  ## and return to the menu
-  ##cmds <- c( cmds, "" ); ## AUTOMATICALLY RETURNS!!! Arghh!
-  
-  ## computational parameters
-  cmds <- c(cmds, 3, ## specifies the comp parameters menu
-            comp.cases, comp.controls, comp.caseControlRatio,
-            comp.power, comp.sigLevel, comp.numSim,
-            ##""  ## and return to the main menu - NO AUTO RETURNS AGAIN
-            );
-
-  ## now process the data
-  if( mode=="power" ){
-    cmds <- c(cmds,4,"","",-1,"","","-1");
-  }else if(mode=="ss" ){
-    cmds <- c(cmds,5,"","",-1,"","","-1");
+## this is taken directly from powerSim.cpp, if we ever find any errors.
+calc_a <- function( model, p, heritability ) {
+  h <- sqrt(heritability)
+  SIGMA <- 1;
+  varXi <- 0;
+  if( model=="additive" ) {
+    varXi <- 2*p*(1-p)
+  }else if(model=="dominant" ){
+    varXi <- 2*p - 5*p*p + 4*p*p*p - p*p*p*p
+  }else if(model=="recessive" ){
+    varXi <- p*p - p*p*p*p
   }
 
-  ## -- Now, do the real processing on the list!
-  pbat.runpowerss( cmds, log );
+  aa <- SIGMA * h / sqrt( varXi * ( 1 - h*h ) )
+  #cat( "a", aa, "\n" )
+
+  ## newest code x=0,2 for dom/rec so comparable to additive?
+  #if( model!="additive" )
+  #  aa <- aa / 2
+
+  ##print( aa ) ## debug only
+
+  return( aa )
 }
 
-pbat.popQuant <-
-  function(model="additive",
-           model.minafreq=0.2, model.incrAfreq=0.1,
-           model.heritability=0.001,
-           comp.numProbands=2000,
-           comp.power=0.8, comp.sigLevel=0.05, comp.numSim=10000,
-           mode="power",
-           log="pbatLog.txt")
-{
-  cmds <- pbat.start(4,log);
+contsOffset <- function( model, p, heritability ) {
+  aa <- calc_a( model, p, heritability )
+  #return( integrate( fy, -Inf, Inf, p=p, aa=aa, model=model )$value )
+  ex <- Xg(0,model)*(1-p)^2 + Xg(1,model)*2*p*(1-p) + Xg(2,model)*p^2;
+  return( ex * aa )
+}
 
-  cmds <- c(cmds, 1, ## model
-            matchLoc( model, c("additive", "recessive", "dominant" ) ),
-            model.minafreq, model.incrAfreq,
-            model.heritability,
-            ##0, ## return to the main menu ## auto-returns
-            2, ## specify computational parameters
-            comp.numProbands,
-            comp.power, comp.sigLevel, comp.numSim,
-            ##"" ## return to the main menu -- auto-returns
-            );
+##########################################################
+## new power function, always Monte-Carlo, native style ##
+pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
+                           additionalOffspringPhenos=TRUE,  ## don't remember messing w/ this in the c++ code
+                           ascertainment="affected",
+                           model="additive",
+                           afreqMarker=NA,
+                           penAA=0.8, penAB=0.5, penBB=0.3,
+                           heritability=0.0, contsAscertainmentLower=0.0, contsAscertainmentUpper=1.0,
+                           pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
+                           alpha=0.01,
+                           offset="default",
+                           numSim=1000 ) {
+  stop("Coming soon!")
 
-  ## now process the data
-  if( mode=="power" ){
-    cmds <- c(cmds,3,"","",-1);
-  }else if(mode=="ss" ){
-    cmds <- c(cmds,4,"","",-1);
+  ## Make sure afreqs are set OK
+  if( is.na(afreqMarker) || pDiseaseAlleleGivenMarkerAllele==1.0 ) {
+    pDiseaseAlleleGivenMarkerAllele <- 1.0;
+    afreqMarker <- as.numeric(afreqDSL);
   }
+  ##print( afreqMarker )
 
-  ## -- Now, do the real processing on the list!
-  pbat.runpowerss( cmds, log );
+  ## calculate an offset?
+  if( is.character(offset) && offset=="default" ) {
+    if( heritability==0.0 ) {
+      ## dichotomous trait - popn prevalence
+      penAA <- as.numeric(penAA)
+      penAB <- as.numeric(penAB)
+      penBB <- as.numeric(penBB)
+      afreqDSL <- as.numeric(afreqDSL)
+      offset <- penAA*afreqDSL*afreqDSL + penAB*2*afreqDSL*(1-afreqDSL) + penBB*(1-afreqDSL)*(1-afreqDSL)
+    }else{
+      ## it's continuous
+      afreqDSL <- as.numeric(afreqDSL)
+      heritability <- as.numeric(heritability)
+      offset <- contsOffset( model, afreqDSL, heritability )
+    }
+  }
+  ##cat( "offset calculated (R)", offset, "\n" )  ## debug only
+
+  ascertainment <- match(ascertainment,c("affected","unaffected","na")) - 1
+  model <- match(model,c("additive","dominant","recessive")) - 1
+  additionalOffspringPhenos <- additionalOffspringPhenos==TRUE
+
+  cat( "*** P2BAT power simulation ***", "\n" )
+  cat( "# offspring", numOffspring, " # parents", numParents, " # fams", numFamilies, "\n" )
+  cat( "Phenotype addi offspring ", additionalOffspringPhenos, "\n" )
+  cat( "Ascertainment", ascertainment, "\n" )
+  cat( "Model", model, "\n" )
+  cat( "Marker allele frequency", afreqMarker, "\n" )
+  cat( "Penetrances (AA,AB,BB)", penAA, penAB, penBB, "\n" )
+  cat( "Heritability", heritability, "\n" )
+  cat( " lower ascertainment", contsAscertainmentLower, "\n" )
+  cat( " upper ascertainment", contsAscertainmentUpper, "\n" )
+  cat( "P(Disease A|Marker A)", pDiseaseAlleleGivenMarkerAllele, " Disease allele frequency", afreqDSL, "\n" )
+  cat( "alpha", alpha, "\n" )
+  cat( "offset", offset, "\n" )
+  cat( "numSim", numSim, "\n" )
+
+  ## actually, we need to translate the contsAscertainments into 0-1, as they are _quantiles_
+  if( any( contsAscertainmentLower>=contsAscertainmentUpper ) ) {
+    print( "Continuous ascertainment conditions - the upper must have some spread between them." )
+    return( 0 )
+  }
+  contsAscertainmentLower <- qnorm( as.numeric( contsAscertainmentLower ) )
+  contsAscertainmentUpper <- qnorm( as.numeric( contsAscertainmentUpper ) )
+  ## but R won't pass infinities very nice (is my guess)
+  if( any( contsAscertainmentLower==-Inf ) )
+    contsAscertainmentLower[contsAscertainmentLower==-Inf] <- -.Machine$double.xmax
+  if( any( contsAscertainmentUpper==Inf ) )
+    contsAscertainmentUpper[contsAscertainmentUpper==Inf] <- .Machine$double.xmax
+
+  ##print( contsAscertainmentLower )
+  ##print( contsAscertainmentUpper )
+
+  result <- as.double(0.0)
+  .C("powerR",
+     as.integer(numOffspring), as.integer(numParents), as.integer(numFamilies),
+     as.integer(additionalOffspringPhenos),
+     as.integer(ascertainment),
+     as.integer(model),
+     as.double(afreqMarker),
+     as.double(penAA), as.double(penAB), as.double(penBB),
+     as.double(heritability), as.double(contsAscertainmentLower), as.double(contsAscertainmentUpper),
+     as.double(pDiseaseAlleleGivenMarkerAllele), as.double(afreqDSL),
+     as.double(qnorm(1-alpha/2)),
+     as.double(offset),
+     as.integer(numSim),
+     result,
+     DUP=FALSE)
+  if( result==-1 ) {
+    #warning( "Invalid parameters, power is zeroed out." );
+    print( "ERROR: Invalid parameters, power is zeroed out." );
+    ##result <- 0;
+  }else if( result==-2 ) {
+    print( "ERROR: Too many iterations. Probability calculation is not converging." );
+    ##result <- 0;
+  }
+  cat( "power", result, "\n\n" )
+  return( result ) ## the power!
 }
-           
+
+## for debug only
+#pbat.powerCmd(numFamilies=500,numSim=1000, penAA=0.2, penAB=0.4, penBB=0.6);
+#pbat.powerCmd(numFamilies=500,numSim=1000, penAA=0.6, penAB=0.4, penBB=0.2);
