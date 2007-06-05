@@ -35,6 +35,7 @@ pbatGUI.isRunning <- function() {
 ####################################################################
 LISTHEIGHT <- 15; # 5 for debugging, 20 in practice?
 LISTWIDTH <- 15;
+TEXTWIDTH <- 65;
 
 ####################################################################
 #                                                                  #
@@ -61,6 +62,8 @@ pbatGUI.setglobs <- function() {
 
   globs$tclVar.pbat <- 0;
   globs$te.pbat <- 0;
+  globs$tclVar.pbatwine <- 0;
+  globs$te.pbatwine <- 0;
 
   globs$tclVar.ped <- 0;
   globs$te.ped <- 0;
@@ -167,6 +170,8 @@ pbatGUI.setglobs <- function() {
   globs$tclVar.refresh <- NULL;
 
   globs$tclVar.loadInput <- NULL;
+
+  globs$env.cor.adjust <- tclVar("FALSE");
 
   setPbatGUI( "globs", globs );
 }
@@ -1343,6 +1348,13 @@ pbatGUI.pbatset <- function() {
   pbatGUI.tkSetText( globs$te.pbat, pbat.get() );
 }
 
+pbatGUI.pbatwineset <- function() {
+  loadTclTkOrDie()
+  globs <- getPbatGUI( "globs" );
+  pbat.setwine();  # pop's up the GUI selection tool
+  pbatGUI.tkSetText( globs$te.pbatwine, pbat.getwine() );
+}
+
 pbatGUI.pedFileChoice <- function() {
   loadTclTkOrDie()  ## has to be here to pass the check
 
@@ -1352,7 +1364,7 @@ pbatGUI.pedFileChoice <- function() {
   tkdelete( globs$te.ped, 0, 999999 );
 
   # See if we can get the filename; return if cancelled
-  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed Pedigree File} {.ped .pped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}}"));
+  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed Pedigree File} {.ped .pped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}}",title="Pedigree file - NO SPACES in path"));
 
   ## 5/17 - make sure there is no space in the filename
   if( spaceInFilename( tempstr ) ) {
@@ -1410,7 +1422,7 @@ pbatGUI.pheFileChoice <- function() {
   globs <- getPbatGUI( "globs" );
 
   # See if we can get the filename, return if cancelled
-  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Phenotype File} {.phe}}"));
+  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Phenotype File} {.phe}}",title="Phenotype file - NO SPACES in path"));
   if( !nchar(tempstr) ) return();
 
   ## 5/17 - make sure there is no space in the filename
@@ -1569,6 +1581,15 @@ pbatGUI.mainForm <- function() {
     try( tkconfigure( globs$te.pbat, state="readonly" ) ); ## try
     tkgrid( but.pbat, globs$te.pbat );
     tkgrid.configure( but.pbat, sticky="ew" );
+
+    if( !isWindows() ) {
+      but.pbatwine <- tkbutton( frame.prelim, text="Wine exe...", command=pbatGUI.pbatwineset );
+      globs$tclVar.pbatwine <- tclVar( pbat.getwine() );
+      globs$te.pbatwine <- tkentry( frame.prelim, width=ENTRYWIDTH, textvariable=globs$tclVar.pbatwine );
+      try( tkconfigure( globs$te.pbatwine, state="readonly" ) ); ## try
+      tkgrid( but.pbatwine, globs$te.pbatwine );
+      tkgrid.configure( but.pbatwine, sticky="ew" );
+    }
 
     ## - pedigree file line
     but.ped <- tkbutton( frame.prelim, text="Pedigree File ...", command=pbatGUI.pedFileChoice );
@@ -1857,9 +1878,19 @@ pbatGUI.mainForm <- function() {
       # CALL PBAT!!!! #
       #################
       zero.to.null <- function( x ){ if(x<=0) return(NULL); return(x); };
+      globsphe <- NULL; ## fix for AffectionStatus in GUI
+      try( {
+        globsphe <- globs$phe;
+        if( is.na(globsphe) || is.numeric(globsphe) || nchar(globsphe)==0 )
+          globsphe <- NULL;
+      } )
+
+      ## OK, NEW tryCatch - this would be awesome, awesome, so awesome...
+      PBATMERRORED <- FALSE;
+      tryCatch( {
       globs$res <- pbat.m(
                           formula,
-                          globs$phe, globs$ped,
+                          globsphe, globs$ped,
                           fbat=tclvalue(globs$rbVal.pbat),
                           max.pheno=tclvalue(globs$max.pheno),
                           min.pheno=tclvalue(globs$min.pheno),
@@ -1897,27 +1928,33 @@ pbatGUI.mainForm <- function() {
                           snppedfile=tclvalue(globs$snppedfile),
                           extended.pedigree.snp.fix=tclvalue(globs$extended.pedigree.snp.fix)
                           );
+      }, error=function(e){tkinsert( globs$statusText, "end", paste("GUI ERROR:",e$message,"\n",sep="") ); PBATMERRORED<-TRUE } ); #,
+      #warning=function(e2){print( paste("GUI Warning:",e2$message,"\n",sep="")) } );
+      #warning=function(e){tkinsert( globs$statusText, "end", paste("GUI Warning:",e$message,"\n",sep="") ) } );
+      ## Warning above overrides the error! Terrible! Left alone...
 
       ## Newest! -- unwork
       pbat.unwork(cur)
-      ## -- and go ahead and print the status
-      st <- pbat.status(workFirst=TRUE)
-      for( i in 1:length(st) )
-        tkinsert( globs$statusText, "end", paste(st[i],"\n",sep="") )
 
-      # save any results
-      setPbatGUI( "globs", globs );
+      if( !PBATMERRORED ) {
+        ## -- and go ahead and print the status
+        st <- pbat.status(workFirst=TRUE)
+        for( i in 1:length(st) )
+          tkinsert( globs$statusText, "end", paste(st[i],"\n",sep="") )
 
-      # enable the other routines
-      tkconfigure( globs$but.results, state="normal" );
-      tkconfigure( globs$but.write, state="normal" );
-      if(  tclvalue( getPbatGUI("globs")$rbVal.pbat )  ==  "logrank"   )
-        tkconfigure( globs$but.plot, state="normal" );
+        # save any results
+        setPbatGUI( "globs", globs );
 
-      ## And kill it if refreshing is zero
-      if( mode=='cluster' && refresh==0 )
-        tkdestroy( globs$form );
+        # enable the other routines
+        tkconfigure( globs$but.results, state="normal" );
+        tkconfigure( globs$but.write, state="normal" );
+        if(  tclvalue( getPbatGUI("globs")$rbVal.pbat )  ==  "logrank"   )
+          tkconfigure( globs$but.plot, state="normal" );
 
+        ## And kill it if refreshing is zero
+        if( mode=='cluster' && refresh==0 )
+          tkdestroy( globs$form );
+      }
     }
 
     onPlot <- function() {
@@ -1959,15 +1996,16 @@ pbatGUI.mainForm <- function() {
 
     yscr <- tkscrollbar( stFrame, repeatinterval=5,
                          command=function(...)tkyview(globs$statusText,...))
-    globs$statusText <- tktext( stFrame, bg="black", fg="white", height=5,
+    globs$statusText <- tktext( stFrame, bg="black", fg="white", height=5, width=TEXTWIDTH,
                                 yscrollcommand=function(...)tkset(yscr,...) )
     tkgrid(globs$statusText, yscr)
-    tkgrid.configure(yscr, sticky="ns")
+    tkgrid.configure(yscr, sticky="nse")
+    tkgrid.configure(globs$statusText, sticky="nse" )
 
-    tkinsert( globs$statusText, "end", "Status of run (last 3 lines, enter 'pbat.status(n=0)' from the command prompt for more):\n" )
+    tkinsert( globs$statusText, "end", "Status of run (last line, enter 'pbat.status(n=0)' from the command prompt for more):\n" )
   }
-  
-  
+
+
   ## set the globals before pausing for all the gui operations to finish
   setPbatGUI( "globs", globs );
   ## No longer halt in case you want to do post-processing

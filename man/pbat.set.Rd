@@ -5,12 +5,14 @@
 \alias{pbat.setmode.defaults}
 \alias{pbat.getmode}
 \alias{pbat.setVersionCheck}
+\alias{pbat.setwine}
+\alias{pbat.getwine}
 \title{Set Pbat Parameters}
 \description{
   All of these values are retained, even after closing and restarting R.
-  
+
   \code{pbat.set} sets the name of the pbat executable.
-  
+
   \code{pbat.get} gets the current stored name of the pbat executable.
 
   \code{pbat.setmode} sets the mode (single, multiple, or cluster), with
@@ -19,6 +21,9 @@
   \code{pbat.getmode} returns the current mode specifications.
 
   \code{pbat.setVersionCheck} sets whether to check the version on startup.
+
+  \code{pbat.setwine} sets pbat up for use with wine. Intended for mac OS (darwine), or linux 32-bit version (temporarily with wine). Download the windows version of pbat, and use pbat.set to point it to pbat*.exe. See details below.
+  \code{pbat.getwine} returns the value, leave empty for windows
 }
 \usage{
 pbat.set( executableStr="", CLEAR=FALSE )
@@ -30,6 +35,9 @@ pbat.setmode( mode=NULL, jobs=NULL, clusterCommand=NULL,
 pbat.getmode()
 
 pbat.setVersionCheck( check=TRUE )
+
+pbat.setwine( wineStr="", CLEAR=FALSE )
+pbat.getwine()
 }
 \arguments{
   \item{executableStr}{String of the pbat executable name,
@@ -39,7 +47,7 @@ pbat.setVersionCheck( check=TRUE )
     regardless of the string passed in the other option.}
 
   \item{save}{Used internally.}
-  
+
   \item{mode}{'single', 'multiple', or 'cluster'. See details.}
   \item{jobs}{The number of jobs to partition into for 'multiple' or
     'cluster'.}
@@ -50,6 +58,8 @@ pbat.setVersionCheck( check=TRUE )
 
   \item{check}{Whether to perform the version check on startup
     (recommended).}
+
+  \item{wineStr}{Executable binary for wine. For linux 32-bit (64-bit is natively compiled), "wine" should suffice, assuming it is installed. For Mac, assuming you have installed Darwine (as detailed in the package), you should set it to be "/Applications/Darwine/Wine.bundle/Contents/bin/wine", NOT the wineHelper.}
 }
 \value{
   \code{pbat.get} returns a string of the currently stored name of the
@@ -63,7 +73,7 @@ pbat.setVersionCheck( check=TRUE )
   version).
 
   ---------------------------------------------------------------------
-  
+
   The 'single' mode is meant for
   only one processor on a users personal computer (see also
   cluster for some special features of that mode). However, with
@@ -84,7 +94,7 @@ pbat.setVersionCheck( check=TRUE )
   'multiple' mode will work in all operating systems.
 
   ---------------------------------------------------------------------
-  
+
   In 'cluster' mode, you must specify the command and any additional
   flags (to keep it generic for all platforms)
   to submit a job that is represented in a file (i.e
@@ -108,7 +118,7 @@ pbat.setVersionCheck( check=TRUE )
   Cluster mode may work in windows, but I am unfamiliar with any
   batching command system available in windows.  Would there actually be
   any interest in this?  Please e-mail me if this might be useful.
-  
+
   ---------------------------------------------------------------------
 
   System administrators could copy the '.pbat.Rmeta' file to the users
@@ -116,7 +126,7 @@ pbat.setVersionCheck( check=TRUE )
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
+
   \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \seealso{

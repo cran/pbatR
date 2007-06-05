@@ -17,8 +17,10 @@
 ####################################################################
 
 ## New 05/17/07
-spaceInFilename <- function( str )
+spaceInFilename <- function( str ) {
+  if( is.null(str) || is.na(str) ) return( FALSE );
   return( length( unlist( strsplit( str, " " ) ) ) > 1 )
+}
 spaceInFilenameError <- function( str )
   return( paste( "The filename specified, '", str, "', contains spaces (i.e. the file itself contains spaces or the pathname contains spaces). This is not supported in P2BAT. Please rename the file or move it to a path that does not contain spaces. This is regretably unfixable.", sep="" ) )
 
@@ -48,7 +50,7 @@ read.badheader <- function( file, sep="", lowercase=TRUE, onlyHeader=FALSE, max=
 
   # If it's not a symbolic (onlyHeader=T), then max shouldn't apply
   if( onlyHeader==FALSE ) max <- -1;
-  
+
   # Read in the header line.
   header <- scan(file, what="", sep=sep,
                  nlines=1, quiet=TRUE, skip=0, strip.white=TRUE,
@@ -87,13 +89,13 @@ write.badheader <- function( file, dataframe, header,
                              col.names=FALSE, row.names=FALSE,
                              sep=" ", ... ) {
   # like read.badheader - piggy-back on write.table :)
-  
+
   # Open the file (unless it's already a file)
   if (is.character(file)) {
     file <- file(file, "w")
     on.exit(close(file))
   }
-  
+
   # write the header
   cat( header, file=file, sep=sep );
   cat( "\n", file=file );

@@ -108,7 +108,7 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
   #    to the order of the marker names in the first line of the file.-
   #                                                                   -
   # * In the pedigree file, missing alleles, unknown affection status -
-  #   and unknown sex are coded as 0?                                 - 
+  #   and unknown sex are coded as 0?                                 -
   # * If an individual's mother or father is referred to in the       -
   #   pedigree file, but does not have its own entity in the pedigree -
   #   file, PBAT assumes that her/his marker alleles are missing.     -
@@ -144,7 +144,7 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
     # Then we tack on extensions to each of the markers, so, for example,
     #  suppose we had marker m7, then the dataframe would have m7.a, m7.b;
     #  note, however, that these are unphased.
-    
+
     tack.extension <- function( strvec, extension ) {
       for( i in 1:length(strvec) ){
         strvec[i] <- paste( strvec[i], extension, sep="" );
@@ -166,14 +166,14 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
     return( ped$table );
   }
   #else{
-  
+
   # keep each of the markers the same, but each marker will be a
   #  list of 'a' and 'b' for the two.
   pedlist <- list();
   for( i in 1:length(firstNames) )
     pedlist[[i]] <- ped$table[[i]];
   names( pedlist ) <- firstNames;
-  
+
   ENTRYPOINT <- length(firstNames)+1;
   for( i in 1:length(ped$header) ) {
     idx1=ENTRYPOINT+(i-1)*2;
@@ -196,10 +196,10 @@ as.ped <- function( x,
       return( read.ped( get.sym(x), sym=FALSE ) );
     return( x );
   }
-  
+
   if( is.ped(x) )
     return(x);
-  
+
   if( is.pedlist(x) ) {
     # convert it
     tmpdf = x;
@@ -219,10 +219,10 @@ as.ped <- function( x,
     class(df) <- c("ped", "data.frame");
     return( df )
   }
-  
+
   if( is.data.frame(x) ) {
     # The we just need to ensure the proper ordering...
-    
+
     # ensure proper ordering
     idpedCol <- x[pid];
     idsubCol <- x[id];
@@ -246,7 +246,7 @@ rem.dot.a <- function( strVec ){
     if( substring( strVec[i], dotloc, dotloc )!="." ) #@$%!!!
       stop( "write.ped: malformed header" );
     strVec[i] <- substring( strVec[i], 1, strlen(strVec[i])-2 ); #@$%!!!
-    
+
     #if( substring( strVec[i], dotloc, dotloc )=="." ) #@$%!!!
     #  strVec[i] <- substring( strVec[i], 1, strlen(strVec[i])-2 ); #@$%!!!
   }
@@ -262,20 +262,20 @@ write.ped <- function( file, ped ) {
   # assuming its in a dataframe format...
   # also assuming that "marker.a" and "marker.b" are next to each
   #  other in the data frame...
-  
+
   if( is.character(file) ){
     file <- str.file.extension(file,".ped");
   }
 
   if( is.pedlist(ped) )
     ped <- as.ped(ped); # convert to 'ped' instead of 'pedlist'
-  
+
   if( !is.ped(ped) )
     stop( "Can only write objects of class 'ped'.  See as.ped(...)" );
-  
+
   #markerNames <- unique( rem.dot.a( names()[7:length(
   header <- unique( rem.dot.a( names(ped)[7:length(ped)] ) );
-  
+
   # and dump it to file!
   write.badheader( file, ped, header );
 }
@@ -289,7 +289,7 @@ as.pedlist <- function( x,
       return( read.ped( get.sym(x), sym=FALSE, format="pedlist" ) );
     return( x );
   }
-  
+
   if( is.pedlist(x) )
     return(x);
 
@@ -308,7 +308,7 @@ as.pedlist <- function( x,
   for( i in 1:length(firstNames) )
     pedlist[[i]] <- x[[i]];
   names( pedlist ) <- firstNames;
-  
+
   ENTRYPOINT <- length(firstNames)+1;
   for( i in 1:length(header) ) {
     idx1=ENTRYPOINT+(i-1)*2;
@@ -319,9 +319,9 @@ as.pedlist <- function( x,
   }
   class(pedlist) <- c("pedlist","list");
   return(pedlist);
-  
+
 }
-                       
+
 ## pped stuff
 is.pped <- function( obj ){
   if( is.sym(obj) & file.extension(get.sym(obj))=="pped" )
@@ -378,11 +378,11 @@ as.pped <- function( ped, ppedname="" ){
   ## make sure the file doesn't exist
   if( file.exists(ppedname) )
     stop( paste( "The file '", ppedname, "' already exists.", sep="" ) );
-  
+
   ## do we need to write a temporary pedigree file?
   if( kill )
     write.ped( pedname, ped );
-  
+
   ## create the batchfile to convert
   pbatfile <- file( "killme.txt", open="w" );
   cat( "pedfile ", pedname, "\n", sep="", file=pbatfile );
@@ -390,12 +390,16 @@ as.pped <- function( ped, ppedname="" ){
   close( pbatfile );
   #print( paste( pbat.get(), "killme.txt" ) ); ## debug only
 
-  if( isWindows() ) {
-    system( paste( "\"", pbat.get(), "\" killme.txt", sep="") ); ## assuming don't need pbatdata.txt?
-  }else{
-    system( paste( pbat.get(), "killme.txt" ) );
-  }
-  
+  ##if( isWindows() ) {
+  ##  system( paste( "\"", pbat.get(), "\" killme.txt", sep="") ); ## assuming don't need pbatdata.txt?
+  ##}else{
+  ##  system( paste( pbat.get(), "killme.txt" ) );
+  ##}
+  ## 09/25/2007 update
+  wineStr <- pbat.getwine();
+  if( wineStr != "" ) wineStr <- paste( wineStr, " ", sep="" );
+  system( paste( wineStr, pbat.get(), " ", "killme.txt", sep="" ) );
+
   ## and kill the temp files
   file.remove( "killme.txt" );
   ## important to be very safe with this
@@ -404,18 +408,18 @@ as.pped <- function( ped, ppedname="" ){
 
   print( pedname );
   print( ppedname );
-  
+
   return( read.pped( ppedname ) );
 }
 
 ## NEW! Plotting routines
 plotPed <- function( ped, sink=NULL ) {
   library( kinship )
-  
+
   ## is it symbolic? it can't be for these routines...
   if( is.sym(ped) )
     ped <- as.ped( clearSym=TRUE )
-  
+
   ## move it to their format
   if( any( ped$sex==0 ) )
     ped$sex[ped$sex==0] <- 3;
@@ -423,7 +427,7 @@ plotPed <- function( ped, sink=NULL ) {
   ## Huh? the documentation on this package doesn't make much sense...
   ped$affection <- 0
   ped$affection[ped$AffectionStatus==2] <- 1
-  
+
   ## If sink = filename, sink each plot to a file!
   ## See if we should sink it to file
   if( !is.null(sink) ) {

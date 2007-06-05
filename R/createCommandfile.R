@@ -18,7 +18,7 @@ PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
 #####################################################################
 getPbatdata <- function() {
   return(); ## sigh... this file was removed!!!
-  
+
   ## Give the user a chance to say yes or no:
   msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
                   PBATDATAURL,
@@ -89,7 +89,7 @@ checkAndGetPbatdata <- function() {
     }
 
     ## Old coding below (changed order to look)
-    
+
     ## Now, see if we can find it in the pbat directory location, and go from there...
     ##getPbatdata();
     ##if( file.exists( pbatdatafile ) )
@@ -120,7 +120,7 @@ getTimeStamp <- function() {
       return( paste( rep("0",pad-nchar(n)), n, sep="" ) );
     return(n);
   }
-  
+
   d <- as.POSIXlt( Sys.time() );
   return( paste( 1900+d$year, zpad(d$mon), zpad(d$mday), zpad(d$hour), zpad(d$min), zpad(floor(d$sec)), sep="" ) );  ## R2.3 change... seconds decide to have bloody decimal points... why can't we just be consistent between releases???? WHY??????
 }
@@ -128,7 +128,7 @@ getTimeStamp <- function() {
 ## Returns if all characters in a string are numbers (decimals not allowed since we're checking for time-stamps ultimately)
 isStringAllNumeric <- function( str ){
   if( nchar(str)==0 ) return(TRUE); ## I guess so
-  
+
   for( i in 1:nchar(str) ) {
     ch <- substring(str,i,i);
     #if( !(  ( '0'<=ch & ch<='9') | ch=='.'  ) )
@@ -183,11 +183,11 @@ isVecContained <- function( subcol, col ) {
 #################################################################
 pasteVector <- function( vector, SQUOTE=FALSE, COMMASEP=FALSE ) {
   if( length(vector) < 1 ) return("");
-  
+
   squote <- function(str) {return(str)};
   if( SQUOTE==TRUE )
     squote <- function(str){return(paste("'",str,"'",sep=""));};
-  
+
   if( length(vector) == 1 ) return( squote(vector[1]) );
   strRet = squote(vector[1]);
   for( i in 2:length(vector) ) {
@@ -236,7 +236,7 @@ writeCommand <- function( commandStr, vals, end=FALSE, outfile=NULL ) {
 errorVecNotContained <- function( command, subcol, col,
                                  AT.MOST.SINGLETON=FALSE ){
   if( length(subcol)==1 && subcol=="" ) return(); # empty set is contained!
-  
+
   if( !isVecContained(subcol,col) ) {
     stop( paste( "For the option '", command,
                 "', the values that you specified {",
@@ -265,10 +265,10 @@ errorVecNotContained <- function( command, subcol, col,
 errorIfAnyMatch <- function( col1, col2, nameCol1, nameCol2 ) {
   if( length(col1)==1 && col1=="" ) return(); # collection is empty
   if( length(col2)==1 && col2=="" ) return();
-  
+
   for( i in 1:length(col1) )
     if( sum(col1[i]==col2)>0 )
-      stop( paste("There should not be any overlap in the following two option's collections: ",
+      stop( paste("There should not be any overlap in the following two options collections: ",
                   nameCol1, "{", csPasteVector(col1), "}, ",
                   nameCol2, "{", csPasteVector(col2), "}.",
                   sep="" ) );
@@ -290,7 +290,7 @@ writeCommandStrMatch <- function( commandStr, str, strVec, vals=c(0:(length(strV
                 ".  You passed the invalid value '", str, "'.",
                 sep="" ) );
   }
-  
+
   writeCommand( commandStr, vals[which(str==strVec)], outfile=outfile );
   return( TRUE ); # success!
 }
@@ -313,7 +313,7 @@ errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE
                 minStr, ",", maxStr, "]. The value you supplied was ", value, ".",
                 sep="") );
   }
-  
+
   ##if( IS.INTEGER && value!=floor(value) )
   if( IS.INTEGER && as.numeric(value)!=floor(as.numeric(value)) )
     stop( paste("For the option '", commandStr,
@@ -369,7 +369,7 @@ pbat.create.commandfile <- function(
   ## Fix up a couple of variables passed in
   gwa <- (gwa==TRUE); ## in case it was a string
   snppedfile <- (snppedfile==TRUE);
-  
+
   ##-----------------------------
   ## fix up extensions / naming -
   ##-----------------------------
@@ -383,6 +383,8 @@ pbat.create.commandfile <- function(
     pedfile <- paste( pedfile, ".ped", sep="" );
     pedfile.ext <- "ped";
   }
+
+
   #print( "pedfile" );
   #print( pedfile );
 
@@ -419,7 +421,7 @@ pbat.create.commandfile <- function(
       logfile <- potlogfile;
   }
 
-  
+
   if( commandfile=="" )
     commandfile <- paste( substring(logfile,1,strlen(logfile)-3), "txt", sep="" );
   #print( "COMMANDFILE" );
@@ -449,7 +451,7 @@ pbat.create.commandfile <- function(
   #        because they are operating on variables in this
   #        function.  Slightly confusing, but I think it makes
   #        the most sense this way.
-  
+
 
   #-----------------
   # Some debugging -
@@ -459,7 +461,7 @@ pbat.create.commandfile <- function(
 
   ## The infamous pbatdata.txt file...
   checkAndGetPbatdata();
-  
+
   if( !file.exists(pedfile) )
     stop( paste("The pedigree file '",
                 pedfile, "' does not exist.  Current working directory is '",
@@ -489,7 +491,7 @@ pbat.create.commandfile <- function(
       warning( msg );
     }
   }
-  
+
   # much more advanced debugging!
 
   # pedigree file information
@@ -512,7 +514,7 @@ pbat.create.commandfile <- function(
   # check containment of various options...
   if( !is.null(posSnps) )
     errorVecNotContained( "snps", snps, posSnps );
-  
+
   errorVecNotContained( "phenos", phenos, posPhenos );
   errorVecNotContained( "time", time, posPhenos, AT.MOST.SINGLETON=TRUE );
   ##errorVecNotContained( "inters", inters, phenos );
@@ -524,7 +526,7 @@ pbat.create.commandfile <- function(
   errorVecNotContained( "preds", preds, posPhenos ) ########################################################################################################
   errorVecNotContained( "censor", censor, posPhenos )
   errorVecNotContained( "groups", groups.var, posPhenos );
-  
+
   errorIfAnyMatch( groups.var, phenos, "groups", "phenos" );
   errorIfAnyMatch( groups.var, time, "groups", "time");
   errorIfAnyMatch( groups.var, censor, "groups", "censor" );
@@ -596,7 +598,7 @@ pbat.create.commandfile <- function(
       }
     }
   }
-      
+
   # Some simple range checking...
   errorRangeCheck( "max.pheno", max.pheno, min=min.pheno );
   errorRangeCheck( "min.pheno", min.pheno, max=max.pheno );
@@ -623,7 +625,7 @@ pbat.create.commandfile <- function(
     write.phe( phefile, as.phe( data.frame(pid=ped$pid, id=ped$id, p2batGenerated=rep(1,nrow(ped) ) ) ) );
   }
 
-  
+
   #-------------------------
   # now do the actual work -
   #-------------------------
@@ -633,7 +635,7 @@ pbat.create.commandfile <- function(
 
   if( logfile!="" )
     writeCommand( "logfile", logfile, outfile=outfile );
-  
+
   ## apparently this can only be written when specified!
   ## EDIT: No, the filthy beast needs to be before the pedfile??? What the hell???
   ##if( snppedfile )
@@ -654,7 +656,7 @@ pbat.create.commandfile <- function(
 
   #if( snps!="" )
   writeCommand( "snps", c(snps), outfile=outfile, end=TRUE ); # (2)
-  
+
   writeCommand( "censor", c(censor), outfile=outfile, end=TRUE ); # (4)
   if( time=="" && fbat=="logrank" ) { # (5)
     stop( "time-to-onset variable is required for pbat-logrank." );
@@ -680,28 +682,28 @@ pbat.create.commandfile <- function(
 
   ## 01/18/2006 bugfix - didn't have end
   writeCommand( "inters", inters, outfile=outfile, end=TRUE );      # (7)
-  
+
   if( groups.var!="" ){                    # (8)
     if( is.null(groups) || groups[1]=="" ) {
       ## Then we have to extract the groups values from the file!
       junk.phe <- read.phe( phefile, sym=FALSE ); ## WOW - difficult bug to find after adding the sym option
       groups <- unique( junk.phe[[groups.var]] );
     }
-    
+
     writeCommand( "groups", c(groups.var, "end", groups, "end"), outfile=outfile );
   }
 
   writeCommandStrMatch1( "fbat", fbat, c("gee","pc","logrank"), outfile=outfile );
 
   if( censor=="" && fbat=="logrank" ) stop( "Need a censoring variable." );
-  
+
   # (10-11)
   if( fbat!="logrank" ) {
     ## 01/25/2005 - amazing - this bug only shows up in multiprocessing mode
     writeCommand( "max", max.pheno, outfile=outfile );
     writeCommand( "min", min.pheno, outfile=outfile );
   }
-  
+
   writeCommandStrMatch( "null", null, c("no linkage, no association", "linkage, no association"),
                         outfile=outfile, vals=c(1,2) );  ## 01/25/2006
   writeCommand( "alpha", alpha, outfile=outfile );        # (13)
@@ -714,7 +716,7 @@ pbat.create.commandfile <- function(
     writeCommandStrMatch( "scanpred", scan.pred, c("all","subsets"), outfile=outfile );
     writeCommandStrMatch( "scaninter", scan.inter, c("all","subsets"), outfile=outfile );
   }
-  
+
   writeCommandStrMatch( "scangenetic", scan.genetic,
                         c("additive","dominant","recessive",
                           "heterozygous advantage","all"), outfile=outfile );
@@ -729,11 +731,11 @@ pbat.create.commandfile <- function(
 
   #warning( "I commented out logfile." );
   #writeCommand( "logfile", logfile );  # (23)
-  
+
   # (24) NA
   if( fbat=="gee" )
     writeCommand( "maxgee", max.gee, outfile=outfile );
-  
+
   writeCommand( "maxped", max.ped, outfile=outfile );  # (25)
   writeCommand( "mininfo", min.info, outfile=outfile );  # (26)
 
@@ -762,17 +764,17 @@ pbat.create.commandfile <- function(
     writeCommand( "lengthhaplos", length.haplos, outfile=outfile );  # (31)
     writeCommandStrMatch( "adjsnps", adj.snps, c(FALSE,TRUE), outfile=outfile );
   }
-  
+
   writeCommandStrMatch( "overallhaplo", overall.haplo, c(FALSE,TRUE), outfile=outfile );
   #writeCommandStrMatch( "cutoffhaplo", cutoff.haplo, c(FALSE,TRUE), outfile=outfile );
   writeCommand( "cutoffhaplo", as.numeric(cutoff.haplo), outfile=outfile ); # 12/29/06
-  
+
   # (35-36)
   if( output=="short" )
     writeCommand( "shortoutput", "1", outfile=outfile );
   if( output=="detailed" )
     writeCommand( "detailedoutput", "1", outfile=outfile );
-  
+
   writeCommand( "maxmatingtypes", max.mating.types, outfile=outfile );  # (37)
 
   if( fbat=="logrank" )
@@ -808,12 +810,12 @@ pbat.create.commandfile <- function(
 
   ## environmental correlation adjust (GFBAT)
   writeCommand( "GFBAT", as.integer(env.cor.adjust), outfile=outfile );
-  
+
   ## genome-wide acceleration
   writeCommand( "gwa", as.integer(gwa), outfile=outfile );
 
   ## hmm... this was changed a bit...
   writeCommandStrMatch( "distribution", distribution, c("default","jiang","murphy","naive","observed"), outfile=outfile );
-  
+
   return( logfile );  # for future processing!
 }

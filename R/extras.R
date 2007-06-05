@@ -5,7 +5,7 @@ catwd <- function() {
 
 pbat.work <- function(pedOrPhe=NULL) {
   prevwd <- getwd()
-  
+
   if( is.null(pedOrPhe) || !is.sym(pedOrPhe) ) {
     if( !is.null(pedOrPhe) ) warning( "pedOrPhe not symbolic, ignored." )
     wd <- getwd()
@@ -13,7 +13,8 @@ pbat.work <- function(pedOrPhe=NULL) {
     wd <- str.getpath( get.sym(pedOrPhe) )
   }
   setwd( wd )
-  dir.create( "./pbatRwork" )
+  if( !file.exists("./pbatRwork") )
+    dir.create( "./pbatRwork" )
   wd <- paste( wd, "/pbatRwork", sep="" )
   cat( wd, "\n" )
 
@@ -39,17 +40,17 @@ pbat.status <- function(n=1,workFirst=FALSE) {
   if( !file.exists(ofile) ) {
     ofile <- "pbatRwork/pbatstatus.txt"
     if( workFirst ) ofile <- "pbatstatus.txt"
-                         
+
     if( !file.exists(ofile) )
       return("'pbatstatus.txt' does not exist, no status information available.")
   }
-  
+
   f <- file( ofile )
   lines <- readLines(f)
   close(f)
 
   if( n==0 ) return(lines)  ## return everything
-  
+
   return( tail(lines,n=n) )
 }
 

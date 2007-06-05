@@ -16,6 +16,8 @@ export(
 
        pbat.getmode, pbat.setmode, pbat.setmode.defaults,
 
+       pbat.getwine, pbat.setwine,
+
        pbat, pbat.last, pbat.last.rawResults,
 
        pbat.clean,

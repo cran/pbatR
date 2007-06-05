@@ -18,7 +18,7 @@ pbat <- function( x, ... )
 
 summary.pbat <- function( object, ... ) {
   x <- object; ## need for R CMD check
-  
+
   # print out the pretty call
   if( !is.null(x$call) ) {
     print( "Call:" );
@@ -61,7 +61,7 @@ write.pbat <- function(x, filename, resultsOnly=FALSE) {
     write.table( x$results, filename, row.names=FALSE, quote=FALSE );
     return(invisible());
   }
-  
+
   ## updates 01/20/2006
   f <- file( filename, "w" );
   #cat( paste("PBAT ",as.character(x$fbat),"\n",sep=""), file=f );
@@ -95,7 +95,7 @@ write.pbat <- function(x, filename, resultsOnly=FALSE) {
 
 write.pbat.csv <- function(x, filename, resultsOnly=FALSE) {
   filename <- str.file.extension(filename,extension='csv');
-  
+
   quotify <- function( strList ) {
     for( i in 1:length(strList) )
       strList[i] <- paste("\"",strList[i],"\"");
@@ -107,13 +107,13 @@ write.pbat.csv <- function(x, filename, resultsOnly=FALSE) {
     write.csv( x$results, filename, row.names=FALSE, quote=FALSE );
     return( invisible() );
   }
-  
+
   ## updates 01/20/2006
   f <- file( filename, "w" );
   #cat( paste("PBAT ",as.character(x$fbat),"\n",sep=""), file=f );
   if( !is.null(x$call) ) {
     cat( "** FORMULA **\n", file=f );
-    write( x$call, file=f ); 
+    write( x$call, file=f );
     cat( "\n\n", file=f ); ## all fine
   }
   if( !is.null(x$pbat.call) ) {
@@ -135,7 +135,7 @@ write.pbat.csv <- function(x, filename, resultsOnly=FALSE) {
   }else{
     close(f);
   }
-  
+
   return(invisible());
 }
 
@@ -153,6 +153,12 @@ pbatFilesFixNamesExtra <- function( names ) {
   res <- mapply( pbatFilesFixNamesExtraSub, names )
   names( res ) <- NULL
   return( res )
+}
+
+writePbatstatus <- function( str ) {
+  f <- file("pbatstatus.txt", mode="a")
+  cat(str,"\n",sep="",file=f)
+  close(f)
 }
 
 ## 05/23/06 - MASSIVE alterations in this coding!
@@ -197,7 +203,7 @@ pbat.files <- function( pedfile, phefile,
 
   if( commandfile=="" )
     commandfile <- paste("pbat",curTimeStamp,"cmd.txt",sep="");
-  
+
   # Create the command file
   logfile <- pbat.create.commandfile( pedfile=pedfile, phefile=phefile, fbat=fbat, ## 05/31/06 fix
                                       commandfile=commandfile,
@@ -213,52 +219,67 @@ pbat.files <- function( pedfile, phefile,
   # Kill the 'spluscode.txt' file
   if( file.exists( "spluscode.txt" ) )
     file.remove( "spluscode.txt" );
-  
+
   # call the system 'pbat' command
   #TMPOUT <- paste( "pbat", curTimeStamp, "output.txt", sep="" );
   ## 01/09/2006 rewrite for multiple processes
   ## 01/18/2006 fix to allow spaces in windows
   ## 01/24/2006 Windows version of system spin-locks!! removing completely
   ## 05/23/2006 Altering for potential new clustering method...
+  ## 09/20/2007 Altering for wine with Macs, deleting all possibility of spaces in filename
   mode <- pbat.getmode()
   numProcesses <- mode$jobs;
   CLUSTER.TIME <- mode$refresh;
+
+  ## 09/20/2007 addition
+  if( spaceInFilename(mode$wine) || spaceInFilename(mode$executable) || spaceInFilename(pedfile) || spaceInFilename(phefile) ) {
+    msg <- paste("There can be no spaces (i.e. ' ') in the filename for 1) the pbat executable [",mode$executable,"] 2) the pedigree filename [",pedfile,"] 3) the phenotype filename [",phefile,"] or (4) the wine executable (mac/32-bit linux only) [",mode$wine,"]", sep="" )
+    writePbatstatus(msg) ## neat! we can fool the GUI!!!
+    stop(msg)
+  }
+
+  wineStr <- pbat.getwine();
+  if( wineStr!="" ) wineStr <- paste( wineStr, " ", sep="" );
 
   ## now go through the modes
   if( mode$mode == "single" ){
     ## The original
     clearCommands()
-    if( isWindows() ) {
-      addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) );
-    }else{
-      ##print( "SINGLE Command" );
-      ##print( paste( pbat.get(), commandfile ) );
-      addCommand( paste( pbat.get(), commandfile ) );
-    }
+    #if( isWindows() ) {
+    #  addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) #);
+    #}else{
+    #  ##print( "SINGLE Command" );
+    #  ##print( paste( pbat.get(), commandfile ) );
+    #  addCommand( paste( pbat.get(), commandfile ) );
+    #}
+
+    addCommand( paste( wineStr, pbat.get(), " ", commandfile, sep="" ) );
     runCommands();
   }else if( mode$mode != "cluster" ){
     ## The original multiple spawning method
     clearCommands();
     for( i in 1:numProcesses ) {
-      if( isWindows() ) {
-        addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
-                          " ", i, " ", numProcesses, sep="" ) );
-      }else{
-        ##print( "MULTIPLE Command" );
-        ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
-        addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
-      }
+      #if( isWindows() ) {
+      #  addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
+      #                    " ", i, " ", numProcesses, sep="" ) );
+      #}else{
+      #  ##print( "MULTIPLE Command" );
+      #  ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
+      #  addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
+      #}
+
+      addCommand( paste( wineStr, pbat.get(), " ", commandfile, " ", i, " ", numProcesses,  sep="" ) );
     }
     runCommands();
   }else{
     ## The bsub method for clusters... rather inefficient, but it's for clusters that don't support the above.
-    
+
     clearCommands(); ## remember otherwise it spin-locks
-    
+
     filenameSH <- rep( "", numProcesses );
     filenameTouch <- rep( "", numProcesses );
     finished <- 0;
-    
+
     for( i in 1:numProcesses ) {
       ## set the filenames
       filenameSH[i] <- paste( 'pbatCluster', curTimeStamp, '.', i, '.sh', sep="" );
@@ -268,12 +289,13 @@ pbat.files <- function( pedfile, phefile,
       file <- file( filenameSH[i], 'w' );
       ##print( "CLUSTER Command" );
       ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
-      catn( pbat.get(), commandfile, i, numProcesses, file=file );
+      #catn( pbat.get(), commandfile, i, numProcesses, file=file );
+      catn( pbat.getwine(), pbat.get(), commandfile, i, numProcesses, file=file );
       catn( 'touch', filenameTouch[i], file=file );  ## add an is.finished() command for some people?
       close(file);
 
       ## run the shell file (well, add it to the queue)
-      addCommand( paste( mode$cluster, filenameSH[i] ) );
+      addCommand( paste( mode$cluster, " ", wineStr, filenameSH[i], sep="" ) );
     }
 
     ## now run all of the shell files
@@ -375,7 +397,7 @@ pbat.files <- function( pedfile, phefile,
       ##post.names <- c("heritability")  ## Alteration 7/7/7
       post.names <- paste( "heritability", 1:max.pheno, sep="" )
       if( fbat=="pc" ) post.names <- c( post.names, paste( "fbatpcWeight", 1:max.pheno, sep="" ) )
-      
+
       phe <- NULL; mid.names <- c("AffectionStatus");
       if( phefile!="" ) {
         phe <- read.phe( phefile );
@@ -410,7 +432,7 @@ pbat.files <- function( pedfile, phefile,
       }else{
         ## indicates the guessed names fall short of the number
         ##  of columns that are actually there
-        
+
         ## Generally this means that there is something here with
         ##  the mi(...), but I don't yet understand then how this
         ##  is titled...
@@ -430,7 +452,7 @@ pbat.files <- function( pedfile, phefile,
           names(pbatObj$results) <- c(guessed.names,
                                       rep("NA", ncol(pbatObj$results)-length(guessed.names)-length(mi.names)),
                                       mi.names);
-          
+
         }else{
           names(pbatObj$results) <- c(guessed.names,
                                       rep("NA", ncol(pbatObj$results)-length(guessed.names)) );
@@ -447,7 +469,7 @@ pbat.files <- function( pedfile, phefile,
     }
     warning( "Miscommunication with PBAT - column headers guessed." );
   }
-  
+
   ## weN 09/11/2006
 
   if( is.na(pbatObj$results)
@@ -458,9 +480,10 @@ pbat.files <- function( pedfile, phefile,
     ## 5/17
     try( names( pbatObj$results ) <- pbatFilesFixNamesExtra( names( pbatObj$results ) ) )
   }
-  
+
   return( pbatObj );
 }
+
 
 ## CLUSTER mode alteration 1
 ## Check to see if the cluster mode has finished
@@ -554,7 +577,7 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
     stop( "'ped' must be a pedigree object. A common mistake is to switch the order of the phenotype and pedigree object when passing them to the function." );
   if( !is.phe(phe) )
     warning( "'phe' object is either of a wrong class, or unspecified (when you are just using AffectionStatus safe to ignore)." );
-  
+
   ## Write out files to disk if necessary
   if( !is.sym(ped) ) {
     write.ped( paste( file.prefix, ".ped", sep="" ), ped );
@@ -565,6 +588,9 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
 
   ## new, nasty little kludge begin
   if( is.element("AffectionStatus",phenos) ){
+    if( is.pped(ped) )
+      stop( "AffectionStatus does not currently work with compressed pedigree files (pped files)." )
+
     ## we'll let the user specify an offset if they like
     newOffset = 0.0
     if( is.numeric( offset ) ) {
@@ -602,7 +628,7 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
       phename <- get.sym( phe );
     }
   }
-  
+
   ## run the command
   res <- pbat.files( pedname, phename, phenos=phenos, offset=offset, LOAD.OUTPUT=LOAD.OUTPUT, ... );
 
@@ -615,7 +641,7 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
 
   #if( CLEAN & LOAD.OUTPUT )
   #  pbat.clean( res ); ## doesn't delete the logrank stuff
-  
+
   ## and return the result
   return( res );
 }
@@ -631,7 +657,7 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
 pbat.logrank.replot <- function( save="", load="" ) {
   if( save!="" && load!="" )
     stop( "You can only save or load at a time!" );
-  
+
   if( save!="" ) {
     file.copy( "spluscode.txt", str.file.extension(save,extension=".R") );
   }else if(load!="" ) {

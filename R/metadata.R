@@ -42,6 +42,7 @@ pbat.setmode.defaults <- function( save=TRUE ){
   pbatenv.set( "cluster", "batch -f" );  ## default used to be bsub, but I still don't have access to the goddamned server...
   pbatenv.set( "refresh", CLUSTER.TIME.DEFAULT );
   pbatenv.set( "version.check", 1 ); ## yes, do it!
+  pbatenv.set( "wine", "" );
   pbatenv.set( "firsttime", 1 );  ## yes, it's our first...
 }
 
@@ -51,7 +52,7 @@ pbat.loadMetadata <- function(){
 
   if( !file.exists(filename) )
     return(); ## keep the defaults
- 
+
   file <- file( filename, "r" );
   tmp <- readLines(file);
   close(file);
@@ -63,14 +64,16 @@ pbat.loadMetadata <- function(){
 
   ##if( length(tmp)==6 )
   pbatenv.set( "firsttime", 0 ); ## it's been done before if we got this far
-  
+
   pbatenv.set( "executable", tmp[1] );
   pbatenv.set( "mode", tmp[2] );
   pbatenv.set( "processors", tmp[3] );
   pbatenv.set( "cluster", tmp[4] );
   pbatenv.set( "refresh", tmp[5] );
-  if( length(tmp)==6 )
+  if( length(tmp)>5 )
     pbatenv.set( "version.check", tmp[6] );  ## don't lose settings from prev version
+  if( length(tmp)>6 )
+    pbatenv.set( "wine", tmp[7] );
 }
 
 ## Writing the metadata
@@ -84,6 +87,7 @@ pbat.writeMetadata <- function(){
   catn( pbatenv.get("cluster"), file=file );
   catn( pbatenv.get("refresh"), file=file );
   catn( pbatenv.get("version.check"), file=file );
+  catn( pbatenv.get("wine"), file=file );
   close(file);
 }
 
@@ -127,6 +131,7 @@ pbat.setmode <- function( mode=NULL, jobs=NULL, clusterCommand=NULL, clusterRefr
 ## Getting the current mode
 pbat.getmode <- function(){
   list <- list( executable=pbatenv.get("executable"),
+                wine=pbatenv.get("wine"),
                 mode=pbatenv.get("mode"),
                 jobs=as.numeric(pbatenv.get("processors")),
                 cluster=pbatenv.get("cluster"),
@@ -135,8 +140,13 @@ pbat.getmode <- function(){
 }
 
 ## OS functionality
+#isWindows <- function()
+#  return( Sys.info()["sysname"]=="Windows" );
+## A more robust version of the above - I'm really not sure what to expect from vista
 isWindows <- function()
-  return( Sys.info()["sysname"]=="Windows" );
+  return( strfindf(tolower(Sys.info()["sysname"]),"windows")!=-1
+          || strfindf(tolower(R.Version()$os),"windows")!=-1
+          || strfindf(tolower(R.Version()$platform),"mingw32")!=-1 )
 
 ####################################################################
 #                                                                  #
@@ -172,12 +182,17 @@ pbat.set <- function( executableStr="", CLEAR=FALSE ) {
       if( isWindows() ) {
         executableStr <- tclvalue(tkgetOpenFile(filetypes="{{Pbat Executable} {.exe}}"));
       } else{
-        executableStr <- tclvalue(tkgetOpenFile()); # Unix exe's have no extension!  You've been in windows too long!
+        executableStr <- tclvalue(tkgetOpenFile(title="PBAT binary - NO SPACES in path")); # Unix exe's have no extension!  You've been in windows too long!
       }
       if( !nchar(executableStr) ) {
         tkdestroy(form);
         warning( "Pbat not set." );
         return(invisible());
+      }
+      if( spaceInFilename(executableStr) ) {
+        ## Special case - tcl/tk has been loaded, so do a warning message
+        pbatGUI.errorMessage( paste( "There can be no spaces in the pbat executable [", executableStr, "], please rename and remove them, and try again.", sep="" ) );
+        #CLEAR <- TRUE; ## done later...
       }
       tkdestroy(form);
     }else{
@@ -190,19 +205,71 @@ pbat.set <- function( executableStr="", CLEAR=FALSE ) {
       return();
     }
   }
-  
-  if( executableStr!="" & file.exists(executableStr)==FALSE )
+
+  if( spaceInFilename(executableStr) ) {
+    warning( paste( "There can be no spaces in the pbat executable [", executableStr, "], please rename and remove them, and try again.", sep="" ) )
+    CLEAR <- TRUE  ## and clear it out
+  }
+
+  if( executableStr!="" & file.exists(executableStr)==FALSE & CLEAR==FALSE )
     warning( paste("File may not exist.  If '",
                    executableStr,
                    "' is in your path, this is safe to ignore.  Make sure you are using '\\\\' or '/'.",
                    sep="") );
 
   if( CLEAR==TRUE )
-    executableStr = "";
+    executableStr <- "";
 
   ## alteration for new metadata format
   pbatenv.set("executable",executableStr);
   pbat.writeMetadata();
+}
+
+pbat.getwine <- function() {
+  return( pbat.getmode()$wine );
+}
+
+pbat.setwine <- function( wineStr="", CLEAR=FALSE ) {
+  if( wineStr=="" && CLEAR==FALSE ) {
+    if( isPackageLoaded("tcltk") ){
+      form <- tktoplevel()
+      tkwm.title( form, "P2BAT - pbat.setwine()" )
+      if( isWindows() ) warning( "You are using windows. You should not be using wine. Rerun this function with CLEAR=TRUE." )
+      wineStr = tclvalue(tkgetOpenFile(title="MAC/32-bit linux ONLY, NO SPACES"))
+      if( !nchar(wineStr) ) {
+        tkdestroy(form)
+        warning( "pbat - wine not set." );
+        return(invisible())
+      }
+      if( spaceInFilename(wineStr) ) {
+        ## Special case - tcl/tk has been loaded, so do a warning message
+        pbatGUI.errorMessage( paste( "There can be no spaces in the wine executable [", wineStr, "], please rename and remove them, and try again.", sep="" ) );
+        #CLEAR <- TRUE; ## done later...
+      }
+       tkdestroy(form)
+    }else{
+      ## tcltk hasn't been loaded
+      cat( "Either:\n" );
+      cat( "1) Supply the full filename for wine, not wineHelper.\n" )
+      cat( "2) load the tcl/tk library with the command:\n" )
+      cat( "    library(tcltk)\n" )
+      cat( "   and rerun this command for a graphical file choice (recommonded unless connecting via ssh without x support.\n" );
+      return();
+    }
+  }
+
+  if( spaceInFilename(wineStr) ) {
+    warning( paste( "There can be no spaces in the wine executable [", wineStr, "], please rename and remove them, and try again.", sep="" ) )
+    CLEAR <- TRUE  ## and clear it out
+  }
+
+   if( wineStr!="" & file.exists(wineStr)==FALSE & CLEAR==FALSE )
+    warning( paste("Cannot find a file to where wine is set (",wineStr,").",sep="") )
+
+  if( CLEAR==TRUE ) wineStr <- "";
+
+  pbatenv.set("wine",wineStr)
+  pbat.writeMetadata()
 }
 
 ## New, setting version checking information
@@ -232,6 +299,11 @@ pbat.getNumProcesses <- function()
   cat( "##############################\n" );
   cat( "# The current pbatR mode is:\n" )
   cat( "#  PBAT executable:", m$executable, "\n" );
+  if( is.null(m$wine) || m$wine=="" ) {
+    cat( "#  (wine is not being used)\n" );
+  }else{
+    cat( "#  wine location:", m$wine, "\n" );
+  }
   cat( "#  mode:", m$mode, "\n" );
   cat( "#  jobs:", m$jobs, "\n" );
   cat( "#  cluster command:", m$cluster, "\n" );
