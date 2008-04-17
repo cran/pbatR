@@ -125,7 +125,7 @@ pbatGUI.setglobs <- function() {
   globs$distribution <- tclVar("continuous");
   globs$max.gee <- tclVar("1");
   globs$max.ped <- tclVar("14");
-  globs$min.info <- tclVar("20");
+  globs$min.info <- tclVar("0");
   globs$incl.ambhaplos <- tclVar("TRUE");
   globs$infer.mis.snp <- tclVar("FALSE");
   globs$sub.haplos <- tclVar("FALSE");
@@ -150,6 +150,8 @@ pbatGUI.setglobs <- function() {
   globs$extended.pedigree.snp.fix <- tclVar("FALSE");
   ## 03/22/2006
   globs$distribution <- tclVar("default");
+  ## 04/17/2008
+  globs$new.ped.algo <- tclVar("TRUE");
 
   globs$res <- NULL;
 
@@ -172,6 +174,10 @@ pbatGUI.setglobs <- function() {
   globs$tclVar.loadInput <- NULL;
 
   globs$env.cor.adjust <- tclVar("FALSE");
+
+  ## 04/28/2008
+  globs$cnv.intensity <- tclVar(2)
+  globs$cnv.intensity.num <- tclVar(3)
 
   setPbatGUI( "globs", globs );
 }
@@ -803,8 +809,10 @@ pbatGUI.snpsForm <- function() {
     setPbatGUI( "globs", globs );
   }
   but.addBlock <- tkbutton( form, text= "  Add Block -->  ", command=cmdAddBlock );
-  but.addSnp <- tkbutton( form, text  = "  Add SNPS  -->  ", command=cmdAddSnp );
+  but.addSnp <- tkbutton( form, text  = "  Add SNPs / CNVs -->  ", command=cmdAddSnp );
   but.remove <- tkbutton( form, text  = "  <-- Delete entry  ", command=cmdRemove );
+
+  if( is.cped(globs$ped) ) tkconfigure( but.addBlock, state="disabled" ); ## who knows what this does...
 
   # and put everything on the grid
   tkgrid( lst.snp, scr.snp, lst.block, scr.block );
@@ -1302,7 +1310,7 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
               gridframe=dg$f1 );
       newOpt( globs$gwa, "Genome-Wide Accelerated mode",
               helps=c("Whether to use (g)enome (w)ide (a)cceleration mode.  This is faster for genome-wide association tests, and has slightly less output.",
-                "Don't use",
+                "Don''t use",
                 "Use"),
               gridframe=dg$f2 );
     }
@@ -1313,10 +1321,16 @@ pbatGUI.optionsForm <- function( whichForm=0 ) {
               helps=c("snppedfile","The pedigree file does not contain just snps.","The pedigree file does just contain snps. This is advantageous to specify as the storage mode is much more compact, and the program will use much less memory."),
               gridframe=dg$f1 );
       newOpt( globs$extended.pedigree.snp.fix, "Extended pedigree snps fix",
-              helps=c("Set to true when you have more extended pedigrees in your dataset, as the pedigree reconstruction will be more accurate. Note this mode is only compatible with 'single' mode, so be sure to set that as well.",
-                "Haplotype accelerated mode - faster and good when this isn't the case.",
+              helps=c("Set to TRUE when you have more extended pedigrees in your dataset, as the pedigree reconstruction will be more accurate. Note this mode is only compatible with 'single' mode, so be sure to set that as well.",
+                "Haplotype accelerated mode - faster and good when this is not the case.",
                 "Slow, but good."),
               gridframe=dg$f2 );
+    }
+    {
+      newOpt( globs$new.ped.algo, "New pedigree algorithm",
+              helps=c("Set to TRUE to use the new 10-100 times faster, more memory efficient algorithm for extended pedigrees.",
+                "Do not use the new method.",
+                "Use the new method!") );
     }
   }
 
@@ -1364,7 +1378,7 @@ pbatGUI.pedFileChoice <- function() {
   tkdelete( globs$te.ped, 0, 999999 );
 
   # See if we can get the filename; return if cancelled
-  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed Pedigree File} {.ped .pped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}}",title="Pedigree file - NO SPACES in path"));
+  tempstr <- tclvalue(tkgetOpenFile(filetypes="{{Un/compressed cped/ped File} {.ped .pped .cped}} {{Pedigree File} {.ped}} {{Compressed Pedigree File} {.pped}} {{Copy Number Variant Pedigree File} {.cped}}",title="Pedigree file - NO SPACES in path"));
 
   ## 5/17 - make sure there is no space in the filename
   if( spaceInFilename( tempstr ) ) {
@@ -1378,10 +1392,14 @@ pbatGUI.pedFileChoice <- function() {
   pbatGUI.tkSetText( globs$te.ped, tempstr );
 
   # Load in the data file
-  if( file.extension(tempstr)=="ped" ) {
+  tempstrExtension <- file.extension(tempstr)
+  if( tempstrExtension=="ped" ) {
     globs$ped <- read.ped( globs$pedfile );
-  }else{
+  }else if( tempstrExtension=="pped" ){
     globs$ped <- read.pped( globs$pedfile );
+  }else{
+    ## cped! argh!
+    globs$ped <- read.cped( globs$pedfile );
   }
   globs$pedset <- TRUE;
 
@@ -1534,6 +1552,11 @@ pbatGUI.write <- function() {
 pbatGUI.compress <- function() {
   globs <- getPbatGUI( "globs" );
 
+  if( is.cped(globs$ped) ) {
+    print( "CNV files cannot be compressed." )
+    return();
+  }
+
   ## copy from onProcess() 02/02/2007 -- rewrite 05/24/06 for modes
   numProcesses <- tclvalue( globs$tclVar.pbatNP );
   mode <- tclvalue( globs$rbVal.modes );
@@ -1612,6 +1635,18 @@ pbatGUI.mainForm <- function() {
   }
 
   {
+    # Frame 1.5 -- cnv.intensity and cnv.intensity.num choices...
+    frame.cnv <- tkframe( globs$form, relief="groove", borderwidth=2 );
+    tkgrid( frame.cnv )
+    tkgrid.configure( frame.cnv, sticky="nws" )
+    lbl1 <- tklabel(frame.cnv,text=" CNV only options: intensity number to analyze" )
+    lbl2 <- tklabel(frame.cnv,text="# intensities" )
+    te.intensity <- tkentry( frame.cnv, width=3, textvariable=globs$cnv.intensity )
+    te.intensity.num <- tkentry( frame.cnv, width=5, textvariable=globs$cnv.intensity.num )
+    tkgrid( lbl1, te.intensity, lbl2, te.intensity.num )
+  }
+
+  {
     # Frame 2 - pbat choice
     ;# - pbat choice
     frame.pbatchoice <- tkframe( globs$form, relief="groove", borderwidth=2 );
@@ -1656,7 +1691,7 @@ pbatGUI.mainForm <- function() {
     tkgrid.configure( but.predictors, sticky="we" );
 
     ## - snps / blocks
-    but.snps <- tkbutton( frame.misc, text="SNPS / Blocks ...", command=pbatGUI.snps );
+    but.snps <- tkbutton( frame.misc, text="SNPs / Blocks / CNVs ...", command=pbatGUI.snps );
     tkgrid( but.snps );
     tkgrid.configure( but.snps, sticky="we" );
 
@@ -1926,9 +1961,13 @@ pbatGUI.mainForm <- function() {
                           env.cor.adjust=tclvalue(globs$env.cor.adjust),
                           gwa=tclvalue(globs$gwa),
                           snppedfile=tclvalue(globs$snppedfile),
-                          extended.pedigree.snp.fix=tclvalue(globs$extended.pedigree.snp.fix)
+                          extended.pedigree.snp.fix=tclvalue(globs$extended.pedigree.snp.fix),
+                          new.ped.algo=tclvalue(globs$new.ped.algo),
+                          cnv.intensity=tclvalue(globs$cnv.intensity),
+                          cnv.intensity.num=tclvalue(globs$cnv.intensity.num)
                           );
-      }, error=function(e){tkinsert( globs$statusText, "end", paste("GUI ERROR:",e$message,"\n",sep="") ); PBATMERRORED<-TRUE } ); #,
+      }, error=function(e){tkinsert( globs$statusText, "end", paste("GUI ERROR:",e$message,"\n",sep="") ); PBATMERRORED<-TRUE; if(PBATMERRORED){} } ); #,
+      ##}, error=function(e){tkinsert( globs$statusText, "end", paste("GUI ERROR:",e$message,"\n",sep="") ); PBATMERRORED<-TRUE } ); #,
       #warning=function(e2){print( paste("GUI Warning:",e2$message,"\n",sep="")) } );
       #warning=function(e){tkinsert( globs$statusText, "end", paste("GUI Warning:",e$message,"\n",sep="") ) } );
       ## Warning above overrides the error! Terrible! Left alone...

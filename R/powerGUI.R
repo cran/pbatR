@@ -58,7 +58,7 @@ newSlider <- function( text, default, min, max, step=(max-min)/100, grid, update
 {
   sliderVal <- tclVar( default )
   ##sliderValLabel <- tklabel( grid, text=as.character(tclvalue(sliderVal)) );
-  sliderValLabel <- tkentry( grid, width=5, textvariable=sliderVal )
+  sliderValLabel <- tkentry( grid, width=10, textvariable=sliderVal )
   slider <- tkscale( grid, from=min, to=max, resolution=step,
                      showvalue=FALSE, variable=sliderVal, orient="horizontal",
                      length=SLIDER_LENGTH )
@@ -100,7 +100,9 @@ choicesEntry <- function( main, label, choices, defaultChoice=1 ){
     rb.subframe[[i]] <- tkframe( frame, relief='groove', borderwidth=1 );
 
   ## grid the subframes
-  if( length(choices)==2 ){
+  if( length(choices)==1 ){ ## Not really a 'choice' then, but necessary
+    tkgrid( lbl, rb.subframe[[1]] );
+  }else if( length(choices)==2 ){
     tkgrid( lbl, rb.subframe[[1]], rb.subframe[[2]] );
   }else if( length(choices)==3 ){
     tkgrid( lbl, rb.subframe[[1]], rb.subframe[[2]], rb.subframe[[3]] );
@@ -205,39 +207,52 @@ createPowerGUI <- function( mode="continuous" )
     #tkgrid( tklabel( f, text="Dichotomous trait options" ) )
     f2 <- newframe( f, relief="sunken", borderwidth=5 )
     tkgrid( tklabel( f2, text="Option 1: Genotype penetrances" ) )
-    setPower( "gPenAA", newSlider( "AA Penetrance", 0.8, 0, 1, 0.01, f2, fireUpdatePen ) )
-    setPower( "gPenAB", newSlider( "AB Penetrance", 0.5, 0, 1, 0.01, f2, fireUpdatePen ) )
-    setPower( "gPenBB", newSlider( "BB Penetrance", 0.3, 0, 1, 0.01, f2, fireUpdatePen ) )
+    setPower( "gPenAA", newSlider( "AA Penetrance", 0.8, 0, 1, 0.001, f2, fireUpdatePen ) )
+    setPower( "gPenAB", newSlider( "AB Penetrance", 0.5, 0, 1, 0.001, f2, fireUpdatePen ) )
+    setPower( "gPenBB", newSlider( "BB Penetrance", 0.3, 0, 1, 0.001, f2, fireUpdatePen ) )
 
     f3 <- newframe( f, relief="sunken", borderwidth=5 )
     tkgrid( tklabel( f3, text="Option 2: MOI, one of AF/OR_het/AOR, and population prevalence (must select AF/OR_het/AOR first)" ) )
-    setPower( "gModel", choicesEntry( f3, "Genetic Model (NOTE: Also used to test)", c("additive","dominant","recessive") ) )
+    if( !powerDisabled() ) {
+      setPower( "gModelGen", choicesEntry( f3, "Genetic Model for Data Generation", c("additive","dominant","recessive") ) )
+      setPower( "gModelTest", choicesEntry( f3, "Genetic Model for Testing", c("additive","dominant","recessive") ) )
+    }else{
+      setPower( "gModelGen", choicesEntry( f3, "Genetic Model for Data Generation", c("additive") ) )
+      setPower( "gModelTest", choicesEntry( f3, "Genetic Model for Testing", c("additive") ) )
+    }
 
     f4 <- newframe( f3 )
-    setPower( "gAF", newSlider( "Allelic Genetic Attributable Fraction", 0.2, 0, 1, 0.0001, f4, fireUpdateAF ) )
-    setPower( "gOR1", newSlider( "Heterozygous odds ratio", 0.2, 0, 20, 0.01, f4, fireUpdateOR ) )
-    setPower( "gOR2", newSlider( "Homozygous odds raito", 0.2, 0, 20, 0.01, f4, state="disbaled" ) ) ## Want this _disabled_
-    setPower( "gAOR", newSlider( "Allelic odds ratio", 0.2, 0, 20, 0.01, f4, fireUpdateAOR ) )
+    #setPower( "gAF", newSlider( "Allelic Genetic Attributable Fraction", 0.2, 0, 1, 0.0001, f4, fireUpdateAF ) )
+    setPower( "gAF", tclVar(0.2) )
+    setPower( "gOR1", newSlider( "Heterozygous odds ratio", 0.2, 0, 50, 0.01, f4, fireUpdateOR ) )
+    setPower( "gOR2", newSlider( "Homozygous odds raito", 0.2, 0, 50, 0.01, f4, state="disbaled" ) ) ## Want this _disabled_
+    setPower( "gAOR", newSlider( "Allelic odds ratio", 0.2, 0, 50, 0.01, f4, fireUpdateAOR ) )
 
     f5 <- newframe( f3 )
-    setPower( "gPopPrev", newSlider( "Population prevalence", 0, 0, 1, 0.01, f5 ) )
+    setPower( "gPopPrev", newSlider( "Population prevalence", 0, 0, 1, 0.001, f5 ) )
   }else{
     #f2 <- newframe( f, borderwidth=0 )
     #f3 <- dblGrid( f2 )
     #tkgrid( tklabel( f3$f1, text="Continuous trait options" ) )
     #tkgrid( tkbutton( f3$f2, text="Additional offspring ascertainment", command=createContsAscertainmentGUI ) )
     tkgrid( tkbutton( f, text="Additional offspring ascertainment criterion", command=createContsAscertainmentGUI ) )
-    setPower( "gHeritability", newSlider( "heritability (h^2)", 0.1, 0, 1, 0.01, f ) )
-    setPower( "gContsAscertainmentLower", newSlider( "Lower ascertainment criterion", 0, 0, 1, 0.1, f ) )
-    setPower( "gContsAscertainmentUpper", newSlider( "Upper ascertainment criterion", 1, 0, 1, 0.1, f ) )
+    setPower( "gHeritability", newSlider( "heritability (h^2)", 0.1, 0, 1, 0.001, f ) )
+    setPower( "gContsAscertainmentLower", newSlider( "Lower ascertainment criterion", 0, 0, 1, 0.01, f ) )
+    setPower( "gContsAscertainmentUpper", newSlider( "Upper ascertainment criterion", 1, 0, 1, 0.01, f ) )
 
     f <- newframe( main )
-    setPower( "gModel", choicesEntry( f, "Genetic Model (NOTE: Also used to test)", c("additive","dominant","recessive") ) )
+    if( !powerDisabled() ) {
+      setPower( "gModelGen", choicesEntry( f, "Genetic Model for Data Generation", c("additive","dominant","recessive") ) )
+      setPower( "gModelTest", choicesEntry( f, "Genetic Model for Testing", c("additive","dominant","recessive") ) )
+    }else{
+      setPower( "gModelGen", choicesEntry( f, "Genetic Model for Data Generation", c("additive") ) )
+      setPower( "gModelTest", choicesEntry( f, "Genetic Model for Testing", c("additive") ) )
+    }
   }
 
   f <- newframe( main )
   setPower( "gUseOffset", choicesEntry( f, "Offset", c("default (population prevalence)","manual") ) )
-  setPower( "gOffset", newSlider( "Offset", 0, 0, 1, 0.01, f ) )
+  setPower( "gOffset", newSlider( "Offset", 0, 0, 1, 0.001, f ) )
 
   f <- newframe( main )
   setPower( "gAfreqDSL", newSlider( "DSL Allele Frequency", 0.1, 0, 1, 0.001, f ) )
@@ -252,6 +267,10 @@ createPowerGUI <- function( mode="continuous" )
   f <- newframe( main )
   #setPower( "gPower", newSlider( "Power (Monte-Carlo simulation)", 0, 0, 1, 0.0001, f) ) ## would be _really_ neat if could alter the sample size
   setPower( "gPower", newSlider( "Power (Monte-Carlo simulation)", 0, 0, 1, 0.0001, f, fireUpdatePower) )
+
+  ## NEW - ITERATIONS before giving up completely
+  f <- newframe( main )
+  setPower( "gITERATION_KILLER", newSlider( "Max Gen Draw Iter before halt (0 disables)", 500, 0, 10000, 1, f ) )
 
   ## new - how about a status window?
   f <- newframe( main )
@@ -323,7 +342,8 @@ fireUpdate <- function()
       ascertainment[i] <- getPowerVSafe( paste("gAscertainment",i,sep=""), default="na" )
     }
   }
-  model <- getPowerV( "gModel" )
+  modelGen <- getPowerV( "gModelGen" )
+  modelTest <- getPowerV( "gModelTest" )
   trait <- getPowerV( "gTrait" )
 
   penAA <- getPowerVSafe( "gPenAA", default=0.0 )
@@ -354,6 +374,8 @@ fireUpdate <- function()
   alpha <- getPowerN( "gAlpha" )
   numSim <- getPowerV( "gNumSim" )
 
+  ITERATION_KILLER <- getPowerV( "gITERATION_KILLER" )
+
   ## fix up some things
   if( isDSL==TRUE )
     afreqMarker <- NA;
@@ -368,7 +390,7 @@ fireUpdate <- function()
   newPower <- pbat.powerCmd( numOffspring, numParents, numFamilies,
                              additionalOffspringPhenos,
                              ascertainment,
-                             model,
+                             modelGen, modelTest,
                              afreqMarker,
                              penAA, penAB, penBB,
                              heritability, contsAscertainmentLower, contsAscertainmentUpper,
@@ -376,7 +398,8 @@ fireUpdate <- function()
                              afreqDSL,
                              alpha,
                              offset,
-                             numSim )
+                             numSim,
+                             ITERATION_KILLER )
   tkconfigure(getPower("main"),cursor="arrow")
 
   gStatus = getPower("gStatus")
@@ -440,7 +463,7 @@ fireUpdatePen_recalc <- function(do_AOR=TRUE, do_OR=TRUE, do_AF=TRUE, do_pop=TRU
 }
 
 getMOI <- function() {
-  model <- getPowerVSafe( "gModel" )
+  model <- getPowerVSafe( "gModel", default="additive" )
   if( model=="dominant" )
     return( MOI_DOMINANT )
   if( model=="recessive" )
@@ -553,7 +576,8 @@ fireUpdatePower <- function()
 ###########################
 pbat.power <- function(mode="continuous")
 {
-  stop( "Coming soon!" )
+  ## 04/17/2008 -- bringing in the additive routine
+  ##if( powerDisabled() ) stop( "Coming soon!" )
 
   if( mode!="continuous" && mode!="dichotomous" ) {
     tkmessageBox( title="continuous/binary", message="mode must be 'continuous' or 'binary'", icon="info", type="ok" )

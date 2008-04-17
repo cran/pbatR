@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stdlib.h>
 
 static std::vector<std::string> cmds;
 
@@ -20,7 +21,7 @@ extern "C" {
   void addCommand( char **str ) {
     cmds.push_back(*str);
   }
-  
+
   void clearCommands() {
     cmds.clear();
   }
@@ -35,7 +36,7 @@ extern "C" {
 #ifdef WAIT_WINDOWS_DEFINE
   int runCommands() {
     std::vector<PROCESS_INFORMATION> piVec;
-    
+
     // start up the processes
     int i=0;
     for( i=0; i<(int)cmds.size(); i++ ) {
@@ -51,7 +52,7 @@ extern "C" {
       //if( !CreateProcess( NULL, curCmd,
       //		  NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) ) {
       if( !CreateProcess( NULL, curCmd,
-			  NULL, NULL, FALSE, CREATE_NO_WINDOW, 
+			  NULL, NULL, FALSE, CREATE_NO_WINDOW,
 			  NULL, NULL, &si, &pi ) ) {
 	std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
       }else{
@@ -72,12 +73,13 @@ extern "C" {
   int runCommands() {
     // fork doesn't always seem to return 0 for child/parent
     int parentPid = getpid();
-    
+
     // loop and fork
     int i=0;
     for( i=0; i<(int)cmds.size(); i++ ) {
-      int pid = fork();
-      
+      int pid = -999;
+      pid = fork();
+
       if( getpid() != parentPid ){
 	///sleep(i+1); // DEBUG ONLY
 	//std::cout << cmds[i] << std::endl;
@@ -85,16 +87,16 @@ extern "C" {
 	exit(0);
       }
     }
-    
+
     if( getpid() == parentPid ){
       // should always be true!
       //std::cout << "waiting..." << std::endl; // DEBUG
-      
+
       for( i=0; i<(int)cmds.size(); i++ ) {
 	int status=0;
 	waitpid( -1, &status, 0 );
       }
-      
+
       //std::cout << "Finished" << std::endl; // DEBUG
     }
 

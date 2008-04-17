@@ -2,6 +2,7 @@
 \alias{as.phe}
 \alias{is.phe}
 \alias{read.phe}
+\alias{fread.phe}
 \alias{write.phe}
 \alias{sort.phe}
 \title{Phenotype Object}
@@ -15,6 +16,7 @@ is.phe( obj )
 
 read.phe( filename, na.strings=c("-",".","NA"), lowercase=TRUE,
           sym=TRUE, ... )
+fread.phe( filename, ... )
 
 write.phe( file, phe )
 
@@ -52,21 +54,21 @@ write.phe( file, phe )
 \note{
   \bold{`read.phe' mild warning}: This function \emph{might change
     the names of headers}, so they may not correspond to what pbat is
-  looking for if you call any of 
+  looking for if you call any of
   the pbat*files() commands (\emph{even} if lowercase=FALSE, as some
   symbols might be modified by R naming
   conventions).  In general this should not happen.
 }
 \details{
   When reading in a file on disk using \code{read.ped}, a `.phe' file
-  should have the following format (taken from the PBAT web-page). 
-  The first line contains 
+  should have the following format (taken from the PBAT web-page).
+  The first line contains
   the names of the covariates and phenotypes and the subsequent lines
   contain the pedigree id, the id of the subject, followed by the values
   of the covariates and phenotypes for that subject.  Here missing
   values must be indicate with a `.' or `-', unlike the pedigree file.
   Examples of this type of file can be found on the PBAT webpage.
-  
+
   Once the dataset is read in, missing values are converted into the
   usual R format of NA (see NA in the help files).
 
@@ -84,7 +86,7 @@ write.phe( file, phe )
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
+
   \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \examples{
@@ -105,7 +107,7 @@ myPhe <- as.phe( x, pid="thepid", id="theid" )
 myPhe  # same as before!
 }
 \seealso{
-  \code{\link{read.ped}}, 
+  \code{\link{read.ped}},
   \code{\link{write.ped}},
   \code{\link{as.ped}},
   \code{\link{as.pedlist}}

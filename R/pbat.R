@@ -156,7 +156,7 @@ pbatFilesFixNamesExtra <- function( names ) {
 }
 
 writePbatstatus <- function( str ) {
-  f <- file("pbatstatus.txt", mode="a")
+  f <- file("pbatstatus.txt", open="a")
   cat(str,"\n",sep="",file=f)
   close(f)
 }
@@ -191,6 +191,8 @@ pbat.files <- function( pedfile, phefile,
                         LOAD.OUTPUT=TRUE,
                         ... )
 {
+  ##cat( "pbat.files pedfile", pedfile, "\n" );
+
   curTimeStamp = getTimeStamp();
   if( isTimeStamped(pedfile) ) {
     curTimeStamp = extractTimeStamp( pedfile );
@@ -476,6 +478,7 @@ pbat.files <- function( pedfile, phefile,
      || is.null(pbatObj$results)
      || nrow(pbatObj$results)==0 ){
     cat( "There are no results.  If you see anything to the effect of 'pbat: command not found', use pbat.set() and set the location of pbat if you have X or windows, otherwise use pbat.set('<full path to pbat>').  Note that the pbat you have will probably have a version number on it.\n" );
+    cat( "Additionally try setting min.info=0, although note that these may be numerically unstable.\n" );
   }else{
     ## 5/17
     try( names( pbatObj$results ) <- pbatFilesFixNamesExtra( names( pbatObj$results ) ) )
@@ -536,8 +539,13 @@ pbat.concatenate <- function( pbatObj=NULL, filename="myResults.txt", clean=FALS
 ## Kludge for affection status ##
 affectionPhe <- function( ped, trait="affected", offset=0.0 ) {
   ## load the dataset into memory potentially
-  if( is.sym(ped) )
-    ped <- as.ped( ped, clearSym=TRUE )
+  if( is.sym(ped) ) {
+    if( !is.cped(ped) ) {
+      ped <- as.ped( ped, clearSym=TRUE )
+    }else{
+      ped <- as.cped( ped, clearSym=TRUE )
+    }
+  }
   ped$AffectionStatus[ped$AffectionStatus==0] <- NA
 
   ## create a phe file with the affectionStatus
@@ -573,18 +581,25 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
   ##  stop( "`phe' must be a phenotype object, and `ped' must be a pedigree object.  A common mistake is to pass the pedigree as the phenotype and vice versa." );
   ##}
   ## Update 02/25/2007 - phe can be empty
-  if( !( is.ped(ped) || is.pedlist(ped) ) )
-    stop( "'ped' must be a pedigree object. A common mistake is to switch the order of the phenotype and pedigree object when passing them to the function." );
+  if( !( is.ped(ped) || is.pedlist(ped) || is.cped(ped) ) )
+    stop( "'ped' must be a pedigree object or cnv pedigree object. A common mistake is to switch the order of the phenotype and pedigree object when passing them to the function." );
   if( !is.phe(phe) )
     warning( "'phe' object is either of a wrong class, or unspecified (when you are just using AffectionStatus safe to ignore)." );
 
   ## Write out files to disk if necessary
   if( !is.sym(ped) ) {
-    write.ped( paste( file.prefix, ".ped", sep="" ), ped );
-    pedname <- file.prefix;
+    if( !is.cped(ped) ) {
+      write.ped( paste( file.prefix, ".ped", sep="" ), ped );
+      pedname <- file.prefix;
+    }else{
+      ## ??? WHAT ???
+      write.cped( paste( file.prefix, ".cped", sep="" ), ped );
+      pedname <- paste( file.prefix, ".cped", sep="" )
+    }
   }else{
     pedname <- get.sym( ped );
   }
+  ##cat( "pbatObj pedname", pedname, "\n" );
 
   ## new, nasty little kludge begin
   if( is.element("AffectionStatus",phenos) ){
@@ -629,6 +644,7 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
     }
   }
 
+  ##cat( "pbatObj (about to go pbat.files) pedname", pedname, "\n" );
   ## run the command
   res <- pbat.files( pedname, phename, phenos=phenos, offset=offset, LOAD.OUTPUT=LOAD.OUTPUT, ... );
 

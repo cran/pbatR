@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <cstring>
 using namespace std;
 
 const int LINE_SIZE = 10000;
@@ -39,7 +41,7 @@ void kludge_fill_fields( char *line, int* fieldStart, int* fieldLength )
       curfield++;
       fieldLength[curfield] = 0;
       fieldStart[curfield] = index+1;
-    }else if( fieldLength[curfield]==0 && 
+    }else if( fieldLength[curfield]==0 &&
 	      (line[index]==' ' || line[index]=='\t') ) {
       // eliminate leading white spaces
       fieldStart[curfield] = index+1;
@@ -197,7 +199,7 @@ extern "C" {
      * New plan -- only three sets of the bloody 'stars' in a row,
      *  followed by killing the wretched duplicates afterward
      */
-    
+
     char line[LINE_SIZE];
 
     // get the header line
@@ -287,11 +289,11 @@ extern "C" {
       //cout << "alterednumfields " << alterednumfields << " numfields " << numfields << endl;
       for( int i=0; i<curnumfields; i++ ) {
 	printToken[i] = true;
-	
+
 	// stop if we're done
 	if( alterednumfields<=numfields && (!isp[i]||found_a_damned_p))
 	  continue;
-	
+
 	// try to remove stars
 	if( isstar[i] ) {
 	  //cout << "we found a star" << endl;
@@ -304,7 +306,7 @@ extern "C" {
 	    numStars++;
 	  }
 	}
-	
+
 	if( numStars==3 && isnum[i] ) {
 	  // try to remove double digits
 	  // it's always past these stars
@@ -346,7 +348,7 @@ extern "C" {
 	  }
 	}
       }
-      
+
       // through with the line, are we okay now?
       if( alterednumfields > numfields ) {
 	//cout << "alterednumfields size " << alterednumfields << endl;
@@ -367,7 +369,7 @@ extern "C" {
     }
 
     outfile << endl;  // R warning 'incomplete final line...'
-  
+
     *status = (int)true;
   }
 

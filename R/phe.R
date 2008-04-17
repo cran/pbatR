@@ -15,6 +15,12 @@
 ##  just 'pointing' to that file if you will. Otherwise the file is
 ##  redundantly written back to disk.
 
+## Provide a wrapper to load in full dataset
+fread.phe <- function( filename, ... )
+  return( read.phe( filename, sym=FALSE, ... ) )
+
+## On to the usual code:
+
 phe <- function( x, ... )
   UseMethod( "phe" );
 
@@ -35,11 +41,11 @@ print.phe <- function( x, ... ) {
 }
 sort.phe <- function( x, decreasing=FALSE, ... ) {
   if( !is.sym(x) )
-    return( phe[ order(x$pid, x$id, decreasing=decreasing), ] )
+    return( x[ order(x$pid, x$id, decreasing=decreasing), ] )
   stop( "Not symbolic, i.e. data not read into R. Try loading in with read.phe(...,sym=FALSE)) if you really want to do this." )
 }
 
- 
+
 ####################################################################
 # read.phe(...)   <EXTERNAL>                                       #
 # DESCRIPTION: Reads in the .phe phenotype file, as described in   #
@@ -63,11 +69,11 @@ read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, sym=
   #    Trait_i refers to the i-th trait value of the individual.   -
   #  Note:  Missing values are coded as '-' or '.' in fbat         -
   #-----------------------------------------------------------------
-  
+
   # according to other documentation, na.strings can be '-' or '.'
   filename <- str.file.extension( filename, ".phe" );
-  if( spaceInFilename(filename) )
-    stop( spaceInFilenameError(filename) ) ## added 5/17
+  if( spaceInFilename(filename) & sym==TRUE )  ## sym==TRUE added 01/14/2008
+    stop( spaceInFilenameError(filename) ) ## added 05/17/2007
   phe <- read.badheader( filename, na.strings=na.strings, lowercase=lowercase, onlyHeader=sym, max=-1, ... );
 
   if( sym ){
@@ -76,7 +82,7 @@ read.phe <- function( filename, na.strings=c("-",".","NA"), lowercase=TRUE, sym=
     class( phe2 ) <- 'phe';
     return( set.sym( phe2, filename ) );
   }
-  
+
   names( phe$table ) <- make.names(  c( "pid","id", phe$header )  );
 
   if( lowercase )

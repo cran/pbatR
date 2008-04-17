@@ -1,3 +1,8 @@
+## Disabling recessive and dominant, for the moment
+powerDisabled <- function()
+  return( TRUE )
+
+
 ################################################
 ## Routines for calculating continuous offset ##
 #fy_g <- function( y, x, aa ) {
@@ -55,15 +60,19 @@ contsOffset <- function( model, p, heritability ) {
 pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
                            additionalOffspringPhenos=TRUE,  ## don't remember messing w/ this in the c++ code
                            ascertainment="affected",
-                           model="additive",
+                           modelGen="additive", modelTest=modelGen,
                            afreqMarker=NA,
                            penAA=0.8, penAB=0.5, penBB=0.3,
                            heritability=0.0, contsAscertainmentLower=0.0, contsAscertainmentUpper=1.0,
                            pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
                            alpha=0.01,
                            offset="default",
-                           numSim=1000 ) {
-  stop("Coming soon!")
+                           numSim=1000,
+                           ITERATION_KILLER=200 ) {
+  ##if( powerDisabled() ) stop("Coming soon!")
+
+  if( powerDisabled() && (modelGen!="additive" || modelTest!="additive" ) )
+    stop( "Currently recessive and dominant are disabled." );
 
   ## Make sure afreqs are set OK
   if( is.na(afreqMarker) || pDiseaseAlleleGivenMarkerAllele==1.0 ) {
@@ -85,29 +94,41 @@ pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
       ## it's continuous
       afreqDSL <- as.numeric(afreqDSL)
       heritability <- as.numeric(heritability)
-      offset <- contsOffset( model, afreqDSL, heritability )
+      offset <- contsOffset( modelGen, afreqDSL, heritability )
     }
   }
   ##cat( "offset calculated (R)", offset, "\n" )  ## debug only
 
   ascertainment <- match(ascertainment,c("affected","unaffected","na")) - 1
-  model <- match(model,c("additive","dominant","recessive")) - 1
+  modelGen <- match(modelGen,c("additive","dominant","recessive")) - 1
+  modelTest <- match(modelTest,c("additive","dominant","recessive")) - 1
   additionalOffspringPhenos <- additionalOffspringPhenos==TRUE
 
-  cat( "*** P2BAT power simulation ***", "\n" )
-  cat( "# offspring", numOffspring, " # parents", numParents, " # fams", numFamilies, "\n" )
-  cat( "Phenotype addi offspring ", additionalOffspringPhenos, "\n" )
-  cat( "Ascertainment", ascertainment, "\n" )
-  cat( "Model", model, "\n" )
+  MODELS <- c("Additive", "Dominant", "Recessive")
+  ASCERTAINMENT <- c("Affected", "Unaffected", "NA")
+
+  if( heritability==0.0 ) {
+    cat( "*** P2BAT power simulation (dichotomous trait) ***", "\n" )
+  }else{
+    cat( "*** P2BAT power simulation (continuous trait) ***", "\n" )
+  }
+  cat( "# offspring", numOffspring, ", # parents", numParents, ", # fams", numFamilies, "\n" )
+  cat( "Phenotype additional offspring ", additionalOffspringPhenos, "\n" )
+  cat( "Ascertainment", ASCERTAINMENT[ascertainment+1], "\n" )
+  cat( "Model generation", MODELS[modelGen+1], "\n" )
+  cat( "Model test", MODELS[modelTest+1], "\n" )
   cat( "Marker allele frequency", afreqMarker, "\n" )
-  cat( "Penetrances (AA,AB,BB)", penAA, penAB, penBB, "\n" )
-  cat( "Heritability", heritability, "\n" )
-  cat( " lower ascertainment", contsAscertainmentLower, "\n" )
-  cat( " upper ascertainment", contsAscertainmentUpper, "\n" )
+  if( heritability==0.0 ) {
+    cat( "Penetrances (AA,AB,BB)", penAA, penAB, penBB, "\n" )
+  }else{
+    cat( "Heritability", heritability, "\n" )
+    cat( " Lower ascertainment", contsAscertainmentLower, "\n" )
+    cat( " Upper ascertainment", contsAscertainmentUpper, "\n" )
+  }
   cat( "P(Disease A|Marker A)", pDiseaseAlleleGivenMarkerAllele, " Disease allele frequency", afreqDSL, "\n" )
-  cat( "alpha", alpha, "\n" )
-  cat( "offset", offset, "\n" )
-  cat( "numSim", numSim, "\n" )
+  cat( "Alpha", alpha, "\n" )
+  cat( "Offset", offset, "\n" )
+  cat( "Number of simulation iterations", numSim, "\n" )
 
   ## actually, we need to translate the contsAscertainments into 0-1, as they are _quantiles_
   if( any( contsAscertainmentLower>=contsAscertainmentUpper ) ) {
@@ -130,7 +151,7 @@ pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
      as.integer(numOffspring), as.integer(numParents), as.integer(numFamilies),
      as.integer(additionalOffspringPhenos),
      as.integer(ascertainment),
-     as.integer(model),
+     as.integer(modelGen), as.integer(modelTest),
      as.double(afreqMarker),
      as.double(penAA), as.double(penAB), as.double(penBB),
      as.double(heritability), as.double(contsAscertainmentLower), as.double(contsAscertainmentUpper),
@@ -138,6 +159,7 @@ pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
      as.double(qnorm(1-alpha/2)),
      as.double(offset),
      as.integer(numSim),
+     as.integer(ITERATION_KILLER),
      result,
      DUP=FALSE)
   if( result==-1 ) {

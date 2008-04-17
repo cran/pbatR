@@ -10,13 +10,13 @@
 ## New c kludge routines
 kludgeConvertAwful <- function( csv.infilename, csv.outfilename ) {
   warning( "Kludge pbat input level 2 reached (output is unfixable, padded)." );
-  
+
   .C( "kludgeConvertAwful", as.character(csv.infilename), as.character(csv.outfilename) );
 }
 
 kludgeConvert <- function( csv.infilename, csv.outfilename ) {
   warning( "Kludge pbat input level 1 reached (tries to fix output, should be okay?)." );
-  
+
   status = as.integer(0);
   status <- .C( "kludgeConvert", as.character(csv.infilename), as.character(csv.outfilename), status )[[3]];
   print( status )
@@ -48,7 +48,7 @@ vectorSubtraction <- function( a, b ) {
   if( length(remList) > 0 )
     a <- a[-remList];
   return(a);
-}  
+}
 
 # gets the current pbat log file
 getPbatlogs <- function() {
@@ -107,7 +107,7 @@ loadPbatlog <- function( log ){
     warning( "Empty output. Generally this indicates the number of informative families in the markers specified is below your current 'min.info' threshhold (or pbat crashed)." );
     return( list( call=pbatCall, data=NA ) );
   }## end addi
-  
+
   read <- FALSE;
   try(  { pbatData <- read.csv( resultfile, strip.white=TRUE );
           read <- TRUE; } );
@@ -155,7 +155,7 @@ loadPbatlog.slow.but.good <- function( log ){
     print( "Empty pbat output file; safe to ignore if running a smaller analysis with multiple processes. Ensure that the output is proper length." );
     return( NULL );
   }
-  
+
   ##find the first '&' symbol
   ## The following code is more robust than it need be, but from previous
   ##  experience, this output format changes lots b/n versions
@@ -234,7 +234,7 @@ loadPbatlog.slow.but.good <- function( log ){
       names(pbatData) <- dataNames;
     }else{
       print( dataNames );
-      warning( "Data Names don't match the data!" );
+      warning( "Data Names do not match the data!" );
     }
   }
 
@@ -268,7 +268,7 @@ loadPbatlog.bad <- function( log ) {
     print(length(pbatData)) # They don't match - What???
     print(length(header))
     #names(pbatData) <- names(header);
-    warning( "header and data don't match!!!" );
+    warning( "header and data do not match!!!" );
 
     # Now load in the call
     logfile <- file( paste(log,".dat",sep=""), open="r", blocking=FALSE );
@@ -281,24 +281,24 @@ loadPbatlog.bad <- function( log ) {
     # First get the number of lines to prevent an infinite loop.
     #  Yes, this is unnecessarily slow, but not enough to warrant concern,
     #  and R is being difficult this morning.
-    
+
     logfile <- file(log, open="r", blocking=FALSE);
     tmp <- readLines(logfile);
     NUMLINES <- length(tmp);
     close(logfile);
 
-    
+
     header <- TRUE; ## 01/25/2006
     addiLine <- NULL;
     if( NUMLINES>0 ) {
-    
+
       ## Now, start reading in the input
-      
+
       logfile <- file(log, open="r", blocking=FALSE);
       on.exit(close(logfile));
-      
+
       MARKERSTR <- "Group&";
-      
+
       ;# read the lines in from the log file, checking for the header...
       line <- readLines( logfile, n=1 );
       namesVector <- NULL;
@@ -311,7 +311,7 @@ loadPbatlog.bad <- function( log ) {
         }else if( strfindf(line,"&")!=-1 ){
           ## all added 01/25/2006 for erroneous multiple processes output (i.e. the second one doesn't work at all!)
           ##print(line); stop(i); ## DEBUG ONLY
-          
+
           addiLine <- unlist(strsplit(line,"&",fixed=TRUE));
           namesVector <- "BAD"; ## less alteration of code
           header <- FALSE;
@@ -333,14 +333,14 @@ loadPbatlog.bad <- function( log ) {
       ##    line <- readLines( logfile, n=1 );
       ##    print( line );
       ##stop( "what the hell" );
-      
+
       if( !is.null(namesVector) && lastLine<NUMLINES ) {
         ##print( "hi" );
         pbatData <- read.table( logfile, header=FALSE, sep="&" );
         ##print( "bye" );
         ##if( length(namesVector)!=length(pbatData) ) {
         if( length(namesVector)!=length(pbatData) && header==TRUE ) {
-          warning( "Names vector is of improper length! I don't know what to do!" );
+          warning( "Names vector is of improper length! I do not know what to do!" );
           ##print( "Names:" );
           ##print( namesVector );
         }else{
@@ -349,7 +349,7 @@ loadPbatlog.bad <- function( log ) {
           if( header ) {
             names(pbatData) <- namesVector;
           }else{
-            warning( paste("Couldn't load in header for '",log,"' (bug workaround for multiple processes; safe to ignore).") );
+            warning( paste("Could not load in header for '",log,"' (bug workaround for multiple processes; safe to ignore).") );
             pbatData <- rbind( addiLine, pbatData );
             ## strange peculiarity
             if( pbatData[2,1]==999 )
@@ -368,7 +368,7 @@ loadPbatlog.bad <- function( log ) {
       pbatData="";
     }
   }
-  
+
   return( list( call=pbatCall, data=pbatData ) );
 }
 
@@ -419,16 +419,16 @@ loadPbatlogExtended <- function( log ) {
     if( !read )
       warning( "Data could not be read in, despite kludges." );
   }
-  
+
   return( list( call=pbatCall, data=pbatData ) );
-}  
+}
 
 ## Added 01/09/2006 - works with multiple processes
 loadPbatlogExtended.slower <- function( log ) {
   numProcesses <- pbat.getNumProcesses();
   if( numProcesses == 1 )
     return( loadPbatlog(log) );
-  
+
   res <- loadPbatlog(paste(log,"_1_",numProcesses,sep=""));
   ##print( res$call );
   for( i in 2:numProcesses ){

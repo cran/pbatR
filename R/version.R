@@ -4,7 +4,7 @@ getVersion <- function( libname="" ) {
   ##print( libname );
 
   if( libname=="" ) libname <- NULL;
-  
+
   return(  installed.packages(lib.loc=libname)["pbatR","Version"]  );
 
   ## if the above doesn't work, this is the previous
@@ -13,14 +13,16 @@ getVersion <- function( libname="" ) {
 
 pbat.current <- function( libname="" ){
   cat( "Checking version of pbatR... " );
+  fle <- NULL
   try( {
     filename <- "http://www.people.fas.harvard.edu/~tjhoffm/pbatRversion.txt";
-    file <- file( filename );
-    lines <- readLines( file, n=3 );
+    fle <- file( filename );
+    lines <- readLines( fle, n=3 );
     curVersion <- lines[1];
     fixes <- lines[2];
     notes <- lines[3];
-    close( file );
+    close( fle );
+    fle <- NULL
 
     usersVersion <- getVersion(libname)
     if( curVersion == usersVersion ) {
@@ -41,10 +43,11 @@ pbat.current <- function( libname="" ){
 
     if( nchar( notes ) > 0 )
       cat( "Notes:\n ", notes, "\n", sep="" );
-    
+
     return( invisible() );
   }, silent=TRUE );
+  if( !is.null(fle) ) try( close(fle) );
   cat( "version check FAILED.\n" );
   return( invisible() );
 }
- 
+

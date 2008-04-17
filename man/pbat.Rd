@@ -13,7 +13,7 @@
   suggested usage.  Most users of the command line will only want to use
   \code{pbat.m}.
 
-  
+
   \code{pbat} runs a GUI (Graphical User Interface) for pbat.
 
   \code{pbat.last} returns an object of class \code{pbat} of the last
@@ -28,22 +28,22 @@
   correctly). This should work even with the new option of not loading
   the output in.
 
-  
+
   \code{pbat.m} runs pbat according to an expression, from \code{phe} class
   (phenotype information), \code{ped} class (pedigree information), and
   various options.
-  
+
   \code{pbat.obj} runs pbat with a \code{ped} class object (pedigree
   information), a `phe' class object (phenotype information), and
   various other options.
-  
+
   \code{pbat.files} runs pbat according to a set of filenames and
   commands.
 
   \code{pbat.create.commandfile} creates a command file for Christoph
   Lange's pbat software with respect to two files on disk (.phe, .ped).
 
-  
+
   Some options are only available for the respective pbat-gee (G),
   pbat-pc (P), pbat-logrank (L).
   If a parameter is `R'equired for a specific version, it will be denoted,
@@ -66,7 +66,7 @@ pbat.m( formula, phe, ped, fbat="",
         screening="conditional power", distribution="default",
         logfile="",
         max.gee=1,
-        max.ped=14, min.info=20,
+        max.ped=14, min.info=0,
         incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
         sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
         overall.haplo=FALSE, cutoff.haplo=FALSE,
@@ -81,8 +81,10 @@ pbat.m( formula, phe, ped, fbat="",
         env.cor.adjust=FALSE,
         gwa=FALSE,
         snppedfile=FALSE,
-        extended.pedigree.snp.fix=FALSE )
- 
+        extended.pedigree.snp.fix=FALSE,
+        new.ped.algo=TRUE,
+        cnv.intensity=2, cnv.intensity.num=3 )
+
 pbat.obj( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... )
 
 pbat.files( pedfile, phefile, fbat="gee",
@@ -110,7 +112,7 @@ pbat.create.commandfile( pedfile, phefile="",
        screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
-       max.ped=7, min.info=20,
+       max.ped=7, min.info=0,
        haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
@@ -125,7 +127,9 @@ pbat.create.commandfile( pedfile, phefile="",
        env.cor.adjust=FALSE,
        gwa=FALSE,
        snppedfile=FALSE,
-       extended.pedigree.snp.fix=FALSE )
+       extended.pedigree.snp.fix=FALSE,
+       new.ped.algo=TRUE,
+       cnv.intensity=2, cnv.intensity.num=3 )
 }
 \arguments{
   \item{formula}{Symbolic expression describing what should be
@@ -137,7 +141,7 @@ pbat.create.commandfile( pedfile, phefile="",
 
   \item{file.prefix}{Prefix of the output datafile (phe & ped must match)}
 
-  \item{pedfile}{Name of the pedigree file (.ped) in PBAT-format
+  \item{pedfile}{Name of the pedigree file (.ped/.pped/.cped) in PBAT-format
     (extension `.ped' is optional).}
   \item{phefile}{Name of the phenotype file (.phe) in PBAT-format.
     The default assumes the same prefix as that in 'pedfile'. Leave
@@ -148,17 +152,17 @@ pbat.create.commandfile( pedfile, phefile="",
 
   \item{...}{Options in higher level functions to be passed to
     'pbat.create.commandfile'.}
-  
+
   \item{fbat}{Selects the fbat statistic used the data analysis.
-    
+
     \code{"gee"} = The FBAT-GEE statistic simplifies to the standard
     univariate FBAT-statistic. If several phenotypes are selected, all
     phenotypes are tested simultaneously, using FBAT-GEE. The FBAT-GEE
     statistic can handle any type of multivariate data.
-    
+
     \code{"pc"} = FBAT extension for longitudinal phenotypes and repeated
     measurements.
-    
+
     \code{"logrank"} = FBAT-extensions of the classical LOGRANK and WILCOXON
     tests for time-on-onset data. Kaplan-Meier plots for the
     analyzed data set will be generated and plotted.
@@ -168,48 +172,48 @@ pbat.create.commandfile( pedfile, phefile="",
     analyzed in the FBAT-statistic.}
   \item{min.pheno}{(G,P) The minimum number of phenotypes that will be
     analyzed in the FBAT-statistic.}
-  
+
   \item{null}{Specification of the null-hypothesis.
-    
+
     \code{"no linkage, no association"} = Null-hypothesis of no linkage and no
     association.
-    
+
     \code{"linkage, no association"} = Null-hypothesis of linkage, but no
     association.
   }
   \item{alpha}{Specification of the significance level.}
 
   \item{trans.pheno}{Transformation of the selected phenotypes.
-    
+
     \code{"none"} = no transformation
-    
+
     \code{"ranks"} = transformation to ranks
-    
+
     \code{"normal score"} = transformation to normal score
-    
+
     The default choice is \code{"none"}, although it recommended to use
     transformation to normal scores for quantitative phenotypes.
   }
   \item{trans.pred}{Transformation of the selected predictor
     variables/covariates:
-    
+
     \code{"none"} = no transformation
-    
+
     \code{"ranks"} = transformation to ranks
-    
+
     \code{"normal score"} = transformation to normal score
-    
+
     The default choice is \code{"none"}, although it recommended to use
     transformation to normal scores for quantitative covariates.
   }
   \item{trans.inter}{Transformation of the selected interaction variables
-    
+
     \code{"none"} = no transformation
-    
+
     \code{"ranks"} = transformation to ranks
-    
+
     \code{"normal score"} = transformation to normal score
-    
+
     The default choice is \code{"none"}, although it recommended to use
     transformation to normal scores for quantitative interaction
     variables.
@@ -235,34 +239,34 @@ pbat.create.commandfile( pedfile, phefile="",
   }
 
   \item{scan.genetic}{Specification of the mode of inheritance:
-    
+
     \code{"additive"} = Additive model
-    
+
     \code{"dominant"} = Dominant model
-    
+
     \code{"recessive"} = Recessive model
-    
+
     \code{"heterozygous advantage"} = Heterozygous advantage model
-    
+
     \code{"all"} = The FBAT-statistics are computed for all 4 genetic models
   }
-  
+
   \item{offset}{Specification of the covariate/predictor variables
     adjustment:
-    
+
     \code{"none"} = No adjustments for covariates/predictor
     variables. You need to select this for dichotomous traits.
-    
+
     \code{"max power"} = Offset (=FBAT adjustment for covariates and interaction
     variables) that maximizes the power of the FBAT-statistic
     (computationally slow, efficiency dependent on the correct choice of
     the mode of inheritance)
-    
+
     \code{"gee + marker score"} = Offset (=FBAT adjustment for covariates and interaction
     variables) based on standard phenotypic residuals obtained by
     GEE-estimation including the expected marker score (E(X|H0)), all
     covariates and interaction variables.
-    
+
     \code{"gee"} = Offset (=FBAT adjustment for covariates and interaction
     variables) based on standard phenotypic residuals obtained by
     GEE-estimation including all covariates and interaction variables.
@@ -272,50 +276,50 @@ pbat.create.commandfile( pedfile, phefile="",
     \code{(numeric value)} = This only works for AffectionStatus; set a numeric
     value (i.e. `0.13' without the `' marks) to this.
   }
-  
+
   \item{screening}{
     Specification of the screening methods to handle the multiple
     comparison problem for multiple SNPs/haplotypes and a set of
     phenotypes.
-    
+
     \code{"conditional power"} = Screening based on conditional power
     (parametric approach)
-    
+
     \code{"wald"} = Screening based on Wald-tests (non-parametric approach)
   }
   \item{distribution}{
     Screening specification of the empirical phenotypic distribution
-    
+
     \code{"default"}
-    
+
     \code{"jiang"} = Approach by Jiang et al (2006)
-    
+
     \code{"murphy"} = Approach by Murphy et al (2006)
-    
+
     \code{"naive"} = Naive allele freq estimator
-    
+
     \code{"observed"} = Observed allele frequencies
   }
-  
+
   \item{logfile}{Specification of the log-file. By default, PBAT
     selects an unique file-name for the log-file, i.e. "pbatlog...".}
 
   \item{max.gee}{(G) Specification of the maximal number of iterations
     in the GEE-estimation procedure.}
-  
+
   \item{max.ped}{Specification of the maximal number of proband in one
     extended pedigrees.
   }
   \item{min.info}{Specification of the minimum number of informative
     families required for the computation of the FBAT-statistics.}
-  
+
   \item{incl.ambhaplos}{This command defines the handling of ambiguous
-    haplotypes in the haplotypes analysis. Choices: 
+    haplotypes in the haplotypes analysis. Choices:
 
     \code{TRUE} = Ambiguous haplotypes (phase can not be inferred) are included
     in the analysis and are weighted according to their estimated
     frequencies in the probands.
-    
+
     \code{FALSE} = Ambiguous haplotypes are excluded from the analysis.
   }
   \item{infer.mis.snp}{Handling of missing genotype information in the
@@ -330,7 +334,7 @@ pbat.create.commandfile( pedfile, phefile="",
     applied to all individuals, even if they have missing genotype
     information. This results in more ambiguous haplotypes.
   }
-  
+
   \item{sub.haplos}{
     \code{FALSE} = The haplotypes defined by the all SNPs given in the
     haplotype-block definition are analyzed.
@@ -346,7 +350,7 @@ pbat.create.commandfile( pedfile, phefile="",
     \code{TRUE} = Only the sub-haplotypes are analyzed for which the first
     constituting SNPs are adjacent.
   }
-  
+
   \item{overall.haplo}{Specification of an overall haplotypes test. When
     this command is included in the batch-file, only one level of the
     \code{"groups"} variable can be specified.
@@ -362,16 +366,16 @@ pbat.create.commandfile( pedfile, phefile="",
 
   \item{output}{
     \code{"normal"} = Normal PBAT output.
-    
+
     \code{"short"} = Shorter output.  This is mostly for use in
     conjunction with 'gwa', where there is a lot of output.
-    
+
     \code{"detailed"} = Detailed output for each family is created.
   }
-  
+
   \item{max.mating.types}{Maximal number of mating types in the haplotype
     analysis.}
-  
+
   \item{commandfile}{Name of the temporary command file that will
     be created to send to the pbat.  It is suggested to leave
     this blank, and an appropriate name will be chosen with a time
@@ -389,20 +393,20 @@ pbat.create.commandfile( pedfile, phefile="",
 
   \item{snps}{Vector of strings for the SNPs to process. Default
     processes all of the SNPs.}
-  
+
   \item{phenos}{(G,P) Vector of strings for the phenotypes/traits for the
     analysis.  If none are specified, then all are analyzed.  (Note:
     this \emph{must be left empty for logrank analysis}, instead specify
     the time to onset with the time variable. }
   \item{time}{(L-R) Time to onset variable.  `phenos' cannot be specified
     when this is used, but it \emph{must be set for logrank}.}
-  
+
   \item{preds}{Vector of strings for the covariates for the test
     statistic.}
   \item{preds.order}{Vector of integers indicating the order of 'preds'
     - the order for the vector of covariates for the test
     statistic.}
-  
+
   \item{inters}{Vector of strings for the interaction variables.}
 
   \item{groups.var}{String for the grouping variable.}
@@ -415,7 +419,7 @@ pbat.create.commandfile( pedfile, phefile="",
   \item{haplos}{List of string vectors representing the haplotype
     blocks for the haplotype analysis.
     For example, \code{list( block1=c("m1","m2"), block2=c("m3","m4") )}
-    defines 2 
+    defines 2
     haplotype-blocks where the first block is defined by SNPs m1 and m2,
     and the second by SNPs m3 and m4.
   }
@@ -459,6 +463,11 @@ pbat.create.commandfile( pedfile, phefile="",
     This is also sometimes necessary for multi-allelic markers (i.e. not
     binary markers).
   }
+
+  \item{new.ped.algo}{Set to TRUE (default) to use the new, 10-100 times faster and more memory efficient algorithm.}
+
+  \item{cnv.intensity}{The CNV intensity number that should be analyzed.}
+  \item{cnv.intensity.num}{The number of CNV intensities per CNV in the .cped file.}
 }
 \value{
   `pbat', `pbat.last', `pbat.m', `pbat.obj', and `pbat.files'
@@ -599,7 +608,7 @@ top( res )
 # These will not function; they only serve as examples.
 
 # ... just indicates there are various options to be put here!
-res <- pbat.obj("pedfile", snps=c("snp1,snp2"), preds="pred1", ... ) 
+res <- pbat.obj("pedfile", snps=c("snp1,snp2"), preds="pred1", ... )
 summary(res)
 res
 
@@ -649,22 +658,22 @@ res
   Jiang, H., et al. (2006) Family-based association test for
   time-to-onset data with time-dependent differences between the hazard
   functions. Genet. Epidemiol, 30, 124-132.
-  
+
   Laird, N.M. and Lange, C. (2006) Family-based designs in the age of
   large-scale gene-association studies. Nat. Rev. Genet, 7.
-  
+
   Lange, C., et al. (2003) Using the noninformative families in
   family-based association tests: a powerful new testing
   strategy. Am. J. Hum. Genet, 73, 801-811.
-  
+
   Lange, C., et al. (2004a) A family-based association test for
   repeatedly measured quantitative traits adjusting for unknown
   environmental and/or polygenic effects. Stat. Appl. Genet. Mol. Biol,
   3.
-  
+
   Lange, C., et al. (2004b) Family-based association tests for survival
   and times-to-onset analysis. Stat. Med, 23, 179-189.
-  
+
   Van Steen, K., et al. (2005) Genomic screening and replication using
   the same data set in family-based association testing. Nat. Genet, 37,
   683-691.
@@ -674,7 +683,7 @@ res
   \code{\link{summary.pbat}},
   \code{\link{plot.pbat}},
   \code{\link{print.pbat}},
-  
+
   \code{\link{as.ped}},
   \code{\link{as.pedlist}},
   \code{\link{read.ped}}

@@ -13,7 +13,7 @@ pbat.power( mode="continuous" )
 pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
                additionalOffspringPhenos=TRUE,
                ascertainment="affected",
-               model="additive",
+               modelGen="additive", modelTest=modelGen,
                afreqMarker=NA,
                penAA=0.8, penAB=0.5, penBB=0.3,
                heritability=0.0, contsAscertainmentLower=0.0,
@@ -21,19 +21,20 @@ pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
                pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
                alpha=0.01,
                offset="default",
-               numSim=1000 )
+               numSim=1000,
+               ITERATION_KILLER=200 )
 }
 \arguments{
   \item{mode}{"continuous" or "dichotomous"}
-  
+
   \item{numOffspring}{Family - number of offspring}
   \item{numParents}{Family - number of parents (0,1,2)}
   \item{numFamilies}{Family - number of families}
   \item{additionalOffspringPhenos}{Only used when you have missing parents;
     additional offspring phenotypes. 1 for yes, 0 for no.}
   \item{ascertainment}{'unaffected', 'affected', or 'na' for anyone}
-  \item{model}{'additive', 'dominant', 'recessive' or (only for binary /
-    case control) 'multi'}
+  \item{modelGen}{The model used when generating the simulated data - one of 'additive', 'dominant', 'recessive'.}
+  \item{modelTest}{The model used to test the simulated data.}
   \item{afreqMarker}{allele frequency at the marker}
   \item{penAA}{penetrance of AA genotype}
   \item{penAB}{penetrance of AB genotype}
@@ -60,6 +61,7 @@ pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
   \item{numSim}{Number of monte-carlo simulations. I'd use a smaller
     number while starting out with it, and then turn it up to a much
     higher number of iterations later on.}
+  \item{ITERATION_KILLER}{Controls how many times to try to draw data when simulating, before giving up. A value of 0 indicates to never stop. This is useful if you are playing around and are considering a situation that is too difficult for this program to be able to simulate.}
 }
 \details{
   pbat.powerCmd(...) does not really do any range checking, primarily
@@ -69,7 +71,7 @@ pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
   Be careful with the number of simulations! When you are first
   exploring, you can keep this low, but you should turn this all the way
   up before doing your final computation.
-  
+
   Note that some values of `pDiseaseAlleleGivenMarkerAllele' in
   combination with `afreqMarker' are not possible. These will return
   negative values (these are error codes for the GUI, which will provide

@@ -12,6 +12,10 @@
 
 ## See phe.R for explanation of symbollic modification
 
+## Provide a wrapper to load in full dataset
+fread.ped <- function( filename, ... )
+  return( read.ped( filename, sym=FALSE, ... ) )
+
 ##################################################################
 ## S3 Methods for 'ped' class                                   ##
 ##################################################################
@@ -73,8 +77,8 @@ print.pedlist <- function( x, ... ) {
 }
 sort.ped <- function( x, decreasing=FALSE, ... ) {
   if( !is.sym(x) )
-    return( ped[ order(x$pid, x$id, decreasing=decreasing), ] )
-  stop( "Not symbolic, i.e. data not read into R. Try loading in with read.ped(...,sym=FALSE)) if you really want to do this." )
+    return( x[ order(x$pid, x$id, decreasing=decreasing), ] )
+  stop( "Data is symbolic, i.e. data not fully read into R. Try loading in with read.ped(...,sym=FALSE)) if you really want to do this." )
 }
 
 
@@ -120,8 +124,8 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
   #warning( "DO WE NEED TO DO ANYTHING WITH MISSINGNESS???" );
 
   filename <- str.file.extension( filename, ".ped" );
-  if( spaceInFilename(filename) )
-    stop( spaceInFilenameError(filename) ) ## added 5/17
+  if( spaceInFilename(filename) & sym==TRUE )  ## sym==TRUE added 01/14/2008
+    stop( spaceInFilenameError(filename) ) ## added 05/17/2007
   ped <- read.badheader( filename, na.strings="", lowercase=lowercase, onlyHeader=sym, max=max, ... ); # 0 is NA only for censor & sex
   firstNames <- c( "pid", "id", "idfath", "idmoth", "sex", "AffectionStatus" );
 
@@ -188,7 +192,7 @@ read.ped <- function( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100,
 
 as.ped <- function( x,
                     pid="pid", id="id", idfath="idfath",
-                    idmoth="idmoth", sex="sex", affection="affection",
+                    idmoth="idmoth", sex="sex", affection="AffectionStatus",
                     clearSym=FALSE )
 {
   if( is.sym(x) ){
@@ -267,6 +271,9 @@ write.ped <- function( file, ped ) {
     file <- str.file.extension(file,".ped");
   }
 
+  if( is.sym(cped) )
+    stop( "ped object is symbolic -- it was not really read into R. Thus you did not modify it, and so there is no point to doing this." )
+
   if( is.pedlist(ped) )
     ped <- as.ped(ped); # convert to 'ped' instead of 'pedlist'
 
@@ -282,7 +289,7 @@ write.ped <- function( file, ped ) {
 
 as.pedlist <- function( x,
                         pid="pid", id="id", idfath="idfath",
-                        idmoth="idmoth", sex="sex", affection="affection",
+                        idmoth="idmoth", sex="sex", affection="AffectionStatus",
                         clearSym=FALSE ) {
   if( is.sym(x) ){
     if( clearSym==TRUE )
@@ -414,11 +421,11 @@ as.pped <- function( ped, ppedname="" ){
 
 ## NEW! Plotting routines
 plotPed <- function( ped, sink=NULL ) {
-  library( kinship )
+  require( kinship ) ## replaced from 'library' for codetools...
 
   ## is it symbolic? it can't be for these routines...
   if( is.sym(ped) )
-    ped <- as.ped( clearSym=TRUE )
+    ped <- as.ped( ped, clearSym=TRUE )
 
   ## move it to their format
   if( any( ped$sex==0 ) )

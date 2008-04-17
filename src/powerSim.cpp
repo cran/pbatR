@@ -19,13 +19,14 @@
 
 #include "fbatDist.h"
 #include <fstream>
+#include <string>
 using namespace std;
 
 const int ASCERTAINMENT_AFFECTED = 0;
 const int ASCERTAINMENT_UNAFFECTED = 1;
 const int ASCERTAINMENT_NA = 2;
 
-int ITERATION_KILLER = 200;
+//int ITERATION_KILLER = 200;
 
 bool test_fbat=false; // runs when true
 
@@ -78,17 +79,25 @@ void randomAllelesFill( int *pM, int *pD,
   }
 }
 
+bool onlyAffected( int ascertainment[], int numOffspring ) {
+  for( int i=0; i<numOffspring; i++ )
+    if( ascertainment[i] != ASCERTAINMENT_AFFECTED )
+      return( false );
+  return( true );
+}
+
 double power( int numOffspring, int numParents, int numFamilies,
               bool additionalOffspringPhenos,
               int* ascertainment,
-              int model,
+              int modelGen, int modelTest,
               double afreqMarker,
               double penAA, double penAB, double penBB, // binary traits, used when heritability=0.0
               double heritability, double* contsAscertainmentLower, double* contsAscertainmentUpper, // continuous traits
               double pDiseaseAlleleGivenMarkerAllele, double afreqDSL,
               double abs_z_alpha_2, // critical value
               double offset,
-              int numSim )
+              int numSim,
+              int ITERATION_KILLER )
 {
   // debug -- are we passing in the parameters correctly? CHECK.
   /*
@@ -103,6 +112,18 @@ double power( int numOffspring, int numParents, int numFamilies,
        << "offset " << offset << endl
        << "numSim " << numSim << endl;
   */
+
+  // 04/17/2008 update -- efficiency? -- still throws away some, but not nearly so much for a rare disease?
+  if( onlyAffected( ascertainment, numOffspring ) ) {
+    double maxPen = penAA;
+    if( penAB > penAA ) maxPen = penAB;
+    if( penBB > penAA ) maxPen = penBB;
+
+    penAA /= maxPen;
+    penAB /= maxPen;
+    penBB /= maxPen;
+  }
+  // 04/17/2008 update END
 
   // allocate memory for the simulations
   // - the marker
@@ -124,7 +145,7 @@ double power( int numOffspring, int numParents, int numFamilies,
   p[DA_MB] = afreqDSL - p[DA_MA];
   p[DB_MA] = (1 - pDiseaseAlleleGivenMarkerAllele) * afreqMarker;
   p[DB_MB] = (1-afreqDSL) - p[DB_MA];
-  cout << "probs " << p[0] << " " << p[1] << " " << p[2] << " " << p[3] << endl; // debug only
+  //cout << "probs " << p[0] << " " << p[1] << " " << p[2] << " " << p[3] << endl; // debug only
 
   // now, for randomly generating from those probabilities
   double cumProb[4];
@@ -148,7 +169,7 @@ double power( int numOffspring, int numParents, int numFamilies,
     // this code is mirrored in power.R (needed for offset calculation in fact)
     double p = afreqDSL;
     double h = sqrt(heritability);
-    switch( model ) {
+    switch( modelGen ) {
     case MODEL_ADDITIVE:
       varXi = 2*p*(1-p);
       break;
@@ -208,14 +229,14 @@ double power( int numOffspring, int numParents, int numFamilies,
         }else{
           // we should do a continuous trait!
           trait[fam][child] = qtl( cD_a[fam][child], cD_b[fam][child],
-                                   sdXi, a, model );
+                                   sdXi, a, modelGen );
         }
 
         // make sure it satisfied ascertainment contditions
         if( heritability==0 ) {
           // binary trait conditions
-          if( ascertainment[child]==ASCERTAINMENT_AFFECTED && trait[fam][child]!=1
-              || ascertainment[child]==ASCERTAINMENT_UNAFFECTED && trait[fam][child]!=0 ) {
+          if(  ( ascertainment[child]==ASCERTAINMENT_AFFECTED && trait[fam][child]!=1 )
+              ||  ( ascertainment[child]==ASCERTAINMENT_UNAFFECTED && trait[fam][child]!=0 )  ) {
             // need to draw a new individual, this one's no good
             //sim--;
             goodFamily = false;
@@ -257,7 +278,7 @@ double power( int numOffspring, int numParents, int numFamilies,
       //else
       //  cout << "what??? it was needed?????" << endl; // son of a mother fucking bitch...
 
-      if( numIters >= ITERATION_KILLER ) {
+      if( numIters >= ITERATION_KILLER && ITERATION_KILLER!=0 ) {
         cout << "ITERATION_KILLER" << endl;
         return( -2 );
       }
@@ -276,7 +297,7 @@ double power( int numOffspring, int numParents, int numFamilies,
                          p1M[fam], p2M[fam],
                          cM_a[fam], cM_b[fam],
                          trait[fam],
-                         model,
+                         modelTest, // DEBUG ONLY DEBUG ONLY DEBUG ONLY
                          Vi[fam],
                          offset,
                          numPhenotyped );
@@ -308,6 +329,8 @@ double power( int numOffspring, int numParents, int numFamilies,
     double stat = num / sqrt(den);
 
     // debug fbatDist.h -- with fbat! -- this has been completely debugged.
+
+#ifdef TEST_FBAT
     if( test_fbat ) {
       // output the pedigree
       ofstream ped("killme.ped", ios::out);
@@ -344,7 +367,7 @@ double power( int numOffspring, int numParents, int numFamilies,
       fc << "minsize 0" << endl;
       fc << "load killme.ped" << endl;
       if( heritability!=0 ) fc << "load killme.phe" << endl;
-      fc << "model " << MODEL_FBAT_CHARS[model] << endl;
+      fc << "model " << MODEL_FBAT_CHARS[modelGen] << endl;
       fc << "offset " << offset << endl;
       if( heritability!=0 ) fc << "trait qtl" << endl;
       fc << "fbat" << endl;
@@ -362,6 +385,7 @@ double power( int numOffspring, int numParents, int numFamilies,
       // and set it so it doesn't run the next iteration
       test_fbat = false;
     }
+#endif
 
     //cout << "num = " << num << " den = " << den << endl;
     //cout << "stat = " << stat << endl;
@@ -377,7 +401,7 @@ extern "C" {
   void powerR( int *numOffspring, int *numParents, int *numFamilies,
 	       int *additionalOffspringPhenos,
 	       int *ascertainment,
-	       int *model,
+	       int *modelGen, int *modelTest,
 	       double *afreqMarker,
 	       double *penAA, double *penAB, double *penBB,
                double *heritability, double *contsAscertainmentLower, double *contsAscertainmentUpper,
@@ -385,6 +409,7 @@ extern "C" {
 	       double *abs_z_alpha_2,
 	       double *offset,
 	       int *numSim,
+               int *ITERATION_KILLER,
 	       double *result
 	       ) {
     rndAttach();
@@ -396,14 +421,15 @@ extern "C" {
     *result = power( *numOffspring, *numParents, *numFamilies,
 		     (bool)(*additionalOffspringPhenos),
 		     ascertainment,
-		     *model,
+		     *modelGen, *modelTest,
 		     *afreqMarker,
 		     *penAA, *penAB, *penBB,
                      *heritability, contsAscertainmentLower, contsAscertainmentUpper,
                      *pDiseaseAlleleGivenMarkerAllele, *afreqDSL,
 		     *abs_z_alpha_2,
 		     *offset,
-		     *numSim );
+		     *numSim,
+                     *ITERATION_KILLER  );
 
 #ifndef DONT_RESET
     rndDetach();

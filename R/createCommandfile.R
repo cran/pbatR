@@ -348,7 +348,7 @@ pbat.create.commandfile <- function(
        screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
-       max.ped=7, min.info=20,
+       max.ped=7, min.info=0,
        haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
@@ -363,9 +363,13 @@ pbat.create.commandfile <- function(
        env.cor.adjust=FALSE,
        gwa=FALSE,
        snppedfile=FALSE,
-       extended.pedigree.snp.fix=FALSE
+       extended.pedigree.snp.fix=FALSE,
+       new.ped.algo=TRUE,
+       cnv.intensity=2, cnv.intensity.num=3
                                     )
 {
+  ##cat( "cnv.intensity", cnv.intensity, "cnv.intensity.num", cnv.intensity.num, "\n" )
+  ##cat( "createCommandfile pedfile", pedfile, "\n" );
   ## Fix up a couple of variables passed in
   gwa <- (gwa==TRUE); ## in case it was a string
   snppedfile <- (snppedfile==TRUE);
@@ -379,7 +383,7 @@ pbat.create.commandfile <- function(
   #print( pedfile );
   #print( "pedfile.ext" );
   #print( pedfile.ext );
-  if( pedfile.ext!="ped" & pedfile.ext!="pped" ) {
+  if( pedfile.ext!="ped" & pedfile.ext!="pped" & pedfile.ext!="cped" ) {
     pedfile <- paste( pedfile, ".ped", sep="" );
     pedfile.ext <- "ped";
   }
@@ -486,7 +490,7 @@ pbat.create.commandfile <- function(
       warning( "gwa mode only supported with short output format; short output format enforced." );
     }
     if( !snppedfile ){
-      msg <- "Ensure that you don't really have just snps. This will go much faster (storage enhancment) if it is and you specify 'snppedfile=TRUE'. Stop this and try again if that is the case.";
+      msg <- "Ensure that you do not really have just snps. This will go much faster (storage enhancment) if it is and you specify 'snppedfile=TRUE'. Stop this and try again if that is the case.";
       print( msg ); ## need to try to get it to the user as fast as possible
       warning( msg );
     }
@@ -605,7 +609,7 @@ pbat.create.commandfile <- function(
   errorRangeCheck( "alpha", alpha, min=0, max=1, IS.INTEGER=FALSE );
   errorRangeCheck( "max.gee", max.gee );
   errorRangeCheck( "max.ped", max.ped );
-  errorRangeCheck( "min.info", min.info );
+  errorRangeCheck( "min.info", min.info, min=0 );
   errorRangeCheck( "length.haplos", length.haplos );
   errorRangeCheck( "max.mating.types", max.mating.types );
   ##warning( "Range checking for 'max.mating.types' is _NOT_ realistic!" );
@@ -647,6 +651,10 @@ pbat.create.commandfile <- function(
     writeCommand( "pedfile", pedfile, outfile=outfile );
   }else if( pedfile.ext=="pped" ) {
     writeCommand( "ppedfile", pedfile, outfile=outfile );
+  }else if( pedfile.ext=="cped" ) {
+    writeCommand( "cnv", paste(cnv.intensity,cnv.intensity.num), outfile=outfile ); ## NEW, ARGHHHHHHH...
+    writeCommand( "cpedfile", pedfile, outfile=outfile );
+    writeCommand( "shortoutput", "1", outfile=outfile ) ## cnv suffering
   }else{
     stop( paste( "The pedigree file '", pedfile, "' has the extension '", pedfile.ext, "', which is not supported (must be 'ped' or 'pped'." ) );
   }
@@ -809,13 +817,21 @@ pbat.create.commandfile <- function(
   }
 
   ## environmental correlation adjust (GFBAT)
-  writeCommand( "GFBAT", as.integer(env.cor.adjust), outfile=outfile );
+  if( !is.na(env.cor.adjust) && is.null(env.cor.adjust) )
+    writeCommand( "GFBAT", as.integer(env.cor.adjust==TRUE), outfile=outfile );
 
   ## genome-wide acceleration
-  writeCommand( "gwa", as.integer(gwa), outfile=outfile );
+  if( gwa==TRUE )
+    writeCommand( "gwa", 1, outfile=outfile );
+
+  ## 04/22/2007
+  if( new.ped.algo==TRUE )
+    writeCommand( "newpedalgo", 1, outfile=outfile );
 
   ## hmm... this was changed a bit...
   writeCommandStrMatch( "distribution", distribution, c("default","jiang","murphy","naive","observed"), outfile=outfile );
+
+  ##writeCommand( "channing", "1", outfile=outfile ) ## ahhhhhhhhhh!!!
 
   return( logfile );  # for future processing!
 }

@@ -1,13 +1,13 @@
 export(
-       as.phe, as.ped, as.pedlist,
-       is.phe, is.ped, is.pedlist,
-       read.ped, read.phe, write.ped, write.phe,
-
+       is.phe, as.phe, read.phe, fread.phe, write.phe,
+       is.ped, as.ped, read.ped, fread.ped, write.ped,
+       is.pedlist, as.pedlist,
        is.pped, as.pped, read.pped,
+       is.cped, as.cped, read.cped, fread.cped, write.cped,
 
        affectionPhe,
 
-       plotPed,
+       plotPed, plotCPed,
 
        pbat.create.commandfile,
        pbat.files, pbat.obj, pbat.m,
@@ -42,15 +42,18 @@ export(
 
 import( tcltk )
 
-S3method( print, pbat )
+S3method( print,   pbat )
 S3method( summary, pbat )
-S3method( plot, pbat )
+S3method( plot,    pbat )
 
 S3method( print, phe )
+S3method( sort, phe )
+
 S3method( print, ped )
+S3method( sort, ped )
 S3method( print, pedlist )
 
-S3method( sort, ped )
-S3method( sort, phe )
+S3method( print, cped )
+S3method( sort, cped )
 
 useDynLib(pbatR)

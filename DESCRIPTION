@@ -1,6 +1,6 @@
 Package: pbatR
-Version: 2.0.2
-Date: 2007-06-05
+Version: 2.1.1
+Date: 2008-04-17
 Title: P2BAT
 Author: PBAT: Christoph Lange, pbatR: Thomas Hoffmann
 Maintainer: Thomas Hoffmann <thoffman@hsph.harvard.edu>
@@ -11,4 +11,4 @@ Description: This package provides data analysis via the pbat program, and an al
 License: The license of this R package is GPL. The license of PBAT is available on the PBAT webpage, and must be downloaded separately from the link below.
 URL: http://www.r-project.org, http://www.biostat.harvard.edu/~clange/default.htm, http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html
 LazyLoad: true
-Packaged: Wed Sep 26 23:09:53 2007; tjhoffm
+Packaged: Thu May  8 13:22:52 2008; merlin

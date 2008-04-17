@@ -16,10 +16,10 @@ strsplitFix <- function( x, split ) {
   if( length(x)==0 || x=="" ) return("");
 
   ##print( paste( "TO BE SPLIT: (", x, "), (", split, ")", sep="") );
-  
+
   res=unlist( strsplit( x, split, fixed=TRUE ) ); # split, return as vector of strings
   ##print( "SPLIT" );
-  
+
   return( res[res!=""] ); # eliminate any empty strings!
 }
 
@@ -47,7 +47,7 @@ pbat.m <- function(
        screening="conditional power", distribution="default",
        logfile="",
        max.gee=1,
-       max.ped=14, min.info=20,
+       max.ped=14, min.info=0,
        incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
        overall.haplo=FALSE, cutoff.haplo=FALSE,
@@ -62,7 +62,9 @@ pbat.m <- function(
        env.cor.adjust=FALSE,
        gwa=FALSE,
        snppedfile=FALSE,
-       extended.pedigree.snp.fix=FALSE
+       extended.pedigree.snp.fix=FALSE,
+       new.ped.algo=TRUE,
+       cnv.intensity=2, cnv.intensity.num=3
                    )
 {
   # make sure some of the variables are of a certain format
@@ -82,7 +84,7 @@ pbat.m <- function(
     #######################################
     # first, get a string for the formula #
     #######################################
-    
+
     call <- match.call( expand.dots=FALSE );
     mf <- match( c("formula"), names(call) );
     formula <- call[[mf]];
@@ -108,7 +110,7 @@ pbat.m <- function(
   ########################
   # split up the formula #
   ########################
-  
+
   tmp <- strsplitFix( as.character(formula), "~" );
   if( length(tmp) > 2 )
     stop( "The 'formula' option must be specified with the phenotypes on the lhs, the model on the rhs, sepereated by a single '~' character." );
@@ -126,12 +128,12 @@ pbat.m <- function(
   ###########################################################################
   if( lhs=="" )
     stop( "You must specify some phenotype. These are from the names of the columns in the phenotype file/object, and the keyword 'AffectionStatus' which stands for the affection status of an individual. ALL is no longer supported." );
-  
-  
+
+
   ########################
   # take care of the lhs #
   ########################
-  
+
   tmp <- strsplitFix( lhs, "&" );
   censor=""; # PASSING
   time="";   # PASSING
@@ -169,7 +171,7 @@ pbat.m <- function(
   ##########################################
   # seperate the model and block structure #
   ##########################################
-  
+
   snps <- c(); # PASSING
   haplos <- list(); # PASSING
   blocks <- strsplitFix(rhs,"|");
@@ -203,7 +205,7 @@ pbat.m <- function(
   ####################################
   # now, seperate the 'model' string #
   ####################################
-  
+
   # first seperate out the model by '+' signs for the preds
   preds <- strsplitFix( model, "+" ); # PASSING
 
@@ -246,7 +248,7 @@ pbat.m <- function(
   if( length(preds)==1 && preds=="NONE" ) preds=""; # we actually want 'NONE' here...
   if( !is.null(haplos) && length(haplos)==0 ) haplos <- NULL;
 
-  
+
   # Let's just include some of the debugging in this file...
   ##if( PBAT.M.DEBUG==TRUE ) {
   ##  # print out everything that has the # PASSING comment;
@@ -262,7 +264,7 @@ pbat.m <- function(
   ##  print( "PREDS" ); print( preds );
   ##  print( "INTERS" ); print( inters );
   ##  print( "PREDS.ORDER" ); print( preds.order );
-  ##  
+  ##
   ##  return(NULL);
   ##}
 
@@ -301,7 +303,9 @@ pbat.m <- function(
        env.cor.adjust=env.cor.adjust,
        gwa=gwa,
        snppedfile=snppedfile,
-       extended.pedigree.snp.fix=extended.pedigree.snp.fix
+       extended.pedigree.snp.fix=extended.pedigree.snp.fix,
+       new.ped.algo=new.ped.algo,
+       cnv.intensity=cnv.intensity, cnv.intensity.num=cnv.intensity.num
                   );
 
   ##print( names(res) ); ## DEBUG

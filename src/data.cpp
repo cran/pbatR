@@ -6,6 +6,8 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <cstring>
 using namespace std;
 
 const int LINE_SIZE = 10000;
@@ -126,11 +128,17 @@ bool convertPbatlog( const char* pbatlogfile, const char* callfile,
   // open up the files
   ifstream infile( pbatlogfile );
 
+  /*
   std::_Ios_Openmode mode = ios::out;
   if( append != 0 )
     mode = ios::out | ios::trunc;
   ofstream outfileCall( callfile, (std::_Ios_Openmode)append );
   ofstream outfileResult( resultfile, (std::_Ios_Openmode)append );
+  */
+
+  // really no need to distinguish -- append will create if necessary
+  ofstream outfileCall( callfile, ios::app );
+  ofstream outfileResult( resultfile, ios::app );
 
   // now start reading in the input
   char line[LINE_SIZE];
@@ -143,10 +151,13 @@ bool convertPbatlog( const char* pbatlogfile, const char* callfile,
 
     bool partial = getPartialLine( infile, line, LINE_SIZE-1 );
 
+    ////cout << "line(" << line << ")" << endl;
+
     // and then continue along with the code...
 
     ////cout << line << endl;
     if( !pastAnd ){
+      ////cout << " - placing into callfile" << endl;
       if( containsChar( line ) )
 	pastAnd=true;
       else if( append == 0 ) {
@@ -157,6 +168,8 @@ bool convertPbatlog( const char* pbatlogfile, const char* callfile,
     }
 
     if( pastAnd ){
+      //cout << " - placing into outfile" << endl;
+
       // need to replace all of the &'s with ,'s
       replaceChar( line );
 
@@ -177,6 +190,7 @@ bool convertPbatlog( const char* pbatlogfile, const char* callfile,
 	    // we need to reformat the header
 	    outfileResult << headerFix( line ) << endl;
 	  }
+          touched = true;
 	}else{
           touched = true;
 
@@ -210,6 +224,8 @@ bool convertPbatlog( const char* pbatlogfile, const char* callfile,
   infile.close();
   outfileCall.close();
   outfileResult.close();
+
+  ////cout << " Touched status " << touched << endl;
 
   // and return if touched! (if there was actually any output in this file...)
   return( touched );
@@ -290,6 +306,9 @@ extern "C" {
       return;
     }
 
+    ////cout << "callfile " << *callfile << endl;
+    ////cout << "resultfile " << *resultfile << endl;
+
     char currentlog[LINE_SIZE];
 
     /*
@@ -309,9 +328,17 @@ extern "C" {
     bool touched = false;
     for( int i=1; i<=*pieces; i++ ) {
       sprintf( currentlog, "%s_%i_%i", *pbatlogfile, i, *pieces );
+
+      ////cout << "Parsing log '" << currentlog << "'" << endl;
+
       // make it so once touched, it _stays_ touched...
-      touched = touched | convertPbatlog( currentlog, *callfile, *resultfile, (int)touched );
+      bool newTouched = convertPbatlog( currentlog, *callfile, *resultfile, (int)touched );
+      touched = touched || newTouched;
+
+      //touched = true; // cheating / garbage
     }
+
+    ////cout << "launchPbatlogExtended finished" << endl;
   }
 }
 

@@ -101,11 +101,11 @@ calc_ar <- function( paa, pab, pbb, p ) {
   case2 <- paa*p^2
   cont0 <- (1-pbb)*(1-p)^2
   cont1 <- 2*(1-pab)*p*(1-p)
-  cont2 <- (1-paa)*p^2
+  #cont2 <- (1-paa)*p^2
 
   caseA <- case2 + 0.5*case1
   caseB <- case0 + 0.5*case1
-  contA <- cont2 + 0.5*cont1
+  #contA <- cont2 + 0.5*cont1  ## NOT USED!
   contB <- cont0 + 0.5*cont1
 
   K <- caseA+caseB

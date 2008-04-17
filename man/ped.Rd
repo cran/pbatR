@@ -4,6 +4,7 @@
 \alias{is.ped}
 \alias{is.pedlist}
 \alias{read.ped}
+\alias{fread.ped}
 \alias{write.ped}
 \alias{is.pped}
 \alias{as.pped}
@@ -30,12 +31,12 @@
 \usage{
 as.ped( x,
         pid="pid", id="id", idfath="idfath",
-        idmoth="idmoth", sex="sex", affection="affection",
+        idmoth="idmoth", sex="sex", affection="AffectionStatus",
         clearSym=FALSE )
 
 as.pedlist( x,
             pid="pid", id="id", idfath="idfath",
-            idmoth="idmoth", sex="sex", affection="affection",
+            idmoth="idmoth", sex="sex", affection="AffectionStatus",
             clearSym=FALSE )
 
 is.ped( obj, pure.ped=FALSE )
@@ -43,6 +44,7 @@ is.ped( obj, pure.ped=FALSE )
 is.pedlist( obj )
 
 read.ped( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... )
+fread.ped( filename, ... )
 
 write.ped( file, ped )
 
@@ -62,14 +64,14 @@ plotPed( ped, sink=NULL )
     described below.
 
     If \code{x} is of class \code{ped} or \code{pedlist}, no other options are used.
-    
+
     When \code{x} is of class \code{data.frame}, the columns have entries
-    that match the string parameters \code{idped,...,censor};
+    that match the string parameters \code{idped,...,AffectionStatus};
     genetic markers consist of \emph{subsequent} columns
     formated as follows: e.g. marker `p5' would need
     two columns known as `p5.a' `p5.b' (or really
     just where the characters a and b are different).
-    
+
     When \code{x} is of class \code{list}, the
     entries still include \code{idped,...,censor} as discussed
     previously, and genetic markers consist of a list object of two
@@ -82,7 +84,7 @@ plotPed( ped, sink=NULL )
   \item{sex}{String corresponding to column name for sex.}
   \item{affection}{String corresponding to column name for affection
     status.}
-  
+
   \item{filename}{Filename to open; does not need .phe extension.}
   \item{format}{Toggles the return structure, set to "ped" or "pedlist".}
   \item{lowercase}{When TRUE (and sym is FALSE), enforces all headers to
@@ -91,7 +93,7 @@ plotPed( ped, sink=NULL )
   \item{...}{Options for \code{\link{read.table}}, used only when sym is
     FALSE.  Do \emph{not} put in \code{header=TRUE}, as this will
     cause an error, as the header is automatically loaded.
-    
+
     With the proper file formatting, this should not be used.
   }
 
@@ -108,7 +110,7 @@ plotPed( ped, sink=NULL )
   \item{max}{When sym is TRUE, the amount of headers to read in before
     going pure symbolic (so that the SNP usage consistency will not be
     assessed by pbatR, only by PBAT).}
-  
+
   \item{clearSym}{When TRUE, if a symbolic file is found, it will be
     read in; otherwise, it will stay symbolic.}
 
@@ -132,7 +134,7 @@ x <- data.frame( pid       = c(1,1,1,1,1),
                  idfath    = c(4,4,4,0,0),
                  idmoth    = c(5,5,5,0,0),
                  sex       = c(1,2,1,1,2),
-                 affection = c(1,0,0,1,0),
+                 AffectionStatus = c(1,0,0,1,0),
                  m1.a      = c(1,1,1,1,1),
                  m1.b      = c(1,2,1,1,2),
                  m2.a      = c(4,4,4,4,4),
@@ -148,8 +150,7 @@ names( x )[1:6] <- c( "mypedid", "subid", "fathid",
                       "mothid", "gender", "affection" );
 x
 myPed <- as.ped( x, pid="mypedid", id="subid", idfath="fathid",
-                 idmoth="mothid", sex="gender" ) # affection need not be
-                                                 #  specified here
+                 idmoth="mothid", sex="gender", affection="affection" )
 myPed  # Note it's the same as before!
 
 myPed <- as.ped( myPedlist )       # Easy conversion back
@@ -180,7 +181,7 @@ myPedlist <- as.pedlist( myPed )   #  and forth between formats.
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
+
   \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \seealso{
