@@ -477,10 +477,18 @@ pbat.create.commandfile( pedfile, phefile="",
   details.
 }
 \details{
+  INTERPRITING THE OUTPUT:
+
+  1) I make every attempt to try to properly header the output, but sometimes this is not possible. You will often see a warning message to this regards, which is generally safe to ignore.
+
+  2) 'a'=additive, 'd'=dominant, 'r'=recessive, 'h'=heterozygous advantage
+
+  FURTHER USEFUL COMMENTS:
+
   These commands require `pbatdata.txt' to be in the working directory;
   if not found, the program will attempt to (1) copy the file from the
   directory where pbat is, (2) copy it from anywhere in the path, or
-  (3) complain and die.
+  (3) error and exit.
 
   Linux warning: the file `pbatdata.txt' appears not to have shipped
   with the current (as of writing this) linux version; to fix this just

@@ -480,8 +480,13 @@ pbat.files <- function( pedfile, phefile,
     cat( "There are no results.  If you see anything to the effect of 'pbat: command not found', use pbat.set() and set the location of pbat if you have X or windows, otherwise use pbat.set('<full path to pbat>').  Note that the pbat you have will probably have a version number on it.\n" );
     cat( "Additionally try setting min.info=0, although note that these may be numerically unstable.\n" );
   }else{
-    ## 5/17
+    ## 5/17/07
     try( names( pbatObj$results ) <- pbatFilesFixNamesExtra( names( pbatObj$results ) ) )
+
+    ## 6/03/08
+    modelCol <- which( names(pbatObj$results) == "model" )
+    if( length( modelCol ) > 0 )
+      pbatObj$results[[modelCol]] <- factor( pbatObj$results[[modelCol]], levels=0:3, labels=c("a","d","r","h" ) )
   }
 
   return( pbatObj );
