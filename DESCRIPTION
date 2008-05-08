@@ -1,9 +1,9 @@
 Package: pbatR
-Version: 2.1.2
+Version: 2.1.2.1
 Date: 2008-05-08
 Title: P2BAT
 Author: PBAT: Christoph Lange, pbatR: Thomas Hoffmann
-Maintainer: Thomas Hoffmann <thoffman@hsph.harvard.edu>
+Maintainer: ORPHANED
 Depends: R (>= 2.0.0), survival
 Imports: tcltk
 Suggests: kinship, tcltk
@@ -11,4 +11,4 @@ Description: This package provides data analysis via the pbat program, and an al
 License: GPL
 URL: http://www.r-project.org, http://www.biostat.harvard.edu/~clange/default.htm, http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html
 LazyLoad: true
-Packaged: Mon Aug 11 12:22:16 2008; merlin
+Packaged: Mon Feb 23 11:44:10 2009; hornik
