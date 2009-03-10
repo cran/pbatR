@@ -11,6 +11,7 @@
 \alias{read.pped}
 \alias{sort.ped}
 \alias{plotPed}
+\alias{ped.markerNames}
 \title{Pedigree Object}
 \description{
   Creates, tests, reads, or writes objects of type \code{ped} or
@@ -57,6 +58,8 @@ as.pped( ped, ppedname="" )
 \method{sort}{ped}(x,decreasing=FALSE,...)
 
 plotPed( ped, sink=NULL )
+
+ped.markerNames( ped )
 }
 \arguments{
   \item{x}{
@@ -178,6 +181,8 @@ myPedlist <- as.pedlist( myPed )   #  and forth between formats.
   pedigrees. My preferred alternative would be to use Madeline, which
   makes beautiful pictures (amongst other things):
     http://eyegene.ophthy.med.umich.edu/
+    
+  \code{ped.markerNames} returns the names of the markers, without the '.a' and '.b' extension for markers (and not duplicated for markers).
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}

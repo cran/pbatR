@@ -36,7 +36,9 @@ plotCPed( cped, sink=NULL )
     When \code{x} is of class \code{data.frame}, the columns have entries
     that match the string parameters \code{idped,...,AffectionStatus};
     copy number variation measurements markers consist of \emph{subsequent} columns
-    formated as follows: e.g. copy number variant `c' with three intensities would need a total of six columns: 'c1.1.a', 'c1.1.b', 'c1.2.a', 'c1.2.b', 'c1.3.a', 'c1.3.b'.
+    formated as follows: e.g. two copy number variants `cnv1' and `cnv2' with three intensities would need a total of six columns (three per cnv) past the first six named 'cnv1.1', 'cnv1.2', 'cnv1.3', 'cnv2.1', 'cnv2.2', 'cnv2.3'. See the examples below.
+
+    A slightly different format can be used when reading data from disk, that is more or less consistent with how a pedigree file is loaded from disk. See the details below.
   }
   \item{pid}{String corresponding to column name for pedigree id.}
   \item{id}{String corresponding to column name for subject id.}
@@ -46,7 +48,7 @@ plotCPed( cped, sink=NULL )
   \item{affection}{String corresponding to column name for affection
     status.}
 
-  \item{filename}{Filename to open; does not need .phe extension.}
+  \item{filename}{Filename to open; does not need .phe extension. See the details below for the file format.}
   \item{lowercase}{When TRUE (and sym is FALSE), enforces all headers to
     lowercase for convenience.}
 
@@ -78,8 +80,13 @@ plotCPed( cped, sink=NULL )
   \item{sink}{For `plot.cped', this is the name of a pdf file to output all of the plots to (there will be one plot per page).}
 }
 \examples{
-# A highly artificial example with not enough subjects to be run;
-#  however, it demonstrates how to put data in it.
+###################
+## First Example ##
+
+## A highly artificial example with not enough subjects to be run;
+##  however, it demonstrates how to put data in it.
+## We have two cnvs here, cnv1 and cnv2.
+## The data is just completely random.
 set.seed(13)
 x <- data.frame( pid       = c(1,1,1,1,1),
                  id        = c(1,2,3,4,5),
@@ -87,22 +94,78 @@ x <- data.frame( pid       = c(1,1,1,1,1),
                  idmoth    = c(5,5,5,0,0),
                  sex       = c(1,2,1,1,2),
                  AffectionStatus = c(1,0,0,1,0),
-                 c.1.a     = runif(5),
-                 c.1.b     = runif(5),
-                 c.2.a     = runif(5),
-                 c.2.b     = runif(5),
-                 c.3.a     = runif(5),
-                 c.3.b     = runif(5) )
+                 cnv1.1     = runif(5),
+                 cnv1.2     = runif(5),
+                 cnv1.3     = runif(5),
+                 cnv2.1     = runif(5),
+                 cnv2.2     = runif(5),
+                 cnv2.3     = runif(5) )
 x
-myCPed <- as.cped( x ) # Mark it with the class 'ped'
+myCPed <- as.cped( x ) # Mark it with the class 'cped'
 myCPed
+
+\dontrun{
+####################
+## Second Example ##
+
+## Again, a completely random dataset.
+## Here we go through an analysis of it.
+## However, see pbat.m for many more details on all of the options.
+## Create a completely random dataset with one cnv.
+set.seed(13)
+NUMTRIOS <- 500
+## The data is completely random, it does not really make any sense.
+cped <- as.cped( data.frame( pid             = kronecker( 1:NUMTRIOS, rep(1,3) ),
+                             id              = rep( 1:3, NUMTRIOS ),
+                             idfath          = rep( c(0,0,1), NUMTRIOS ),
+                             idmoth          = rep( c(0,0,2), NUMTRIOS ),
+                             sex             = rep( c(2,1,1), NUMTRIOS ),
+                             AffectionStatus = rep( c(0,0,2), NUMTRIOS ),
+                             cnv1.1          = runif( 3*NUMTRIOS ),
+                             cnv1.2          = runif( 3*NUMTRIOS ),
+                             cnv1.3          = runif( 3*NUMTRIOS )    ) )
+
+## Print out part of the dataset
+print( head( cped ) )
+
+## Command line run
+pbat.work() ## Makes the intermediate files go in ./pbatRwork directory
+
+## - Analyzing the first intensity
+res1 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=1, cnv.intensity.num=3, offset="none" )
+pbat.clean( res1, all.output=TRUE ) ## Removes all intermediate files
+## - Analyzing the second intensity
+res2 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=2, cnv.intensity.num=3, offset="none" )
+pbat.clean( res2, all.output=TRUE )
+## - Analyzing the third intensity
+res3 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=3, cnv.intensity.num=3, offset="none" )
+pbat.clean( res3, all.output=TRUE )
+
+pbat.unwork() ## Close up work (head to original working directory)
+
+## Print all of the results
+print( res1$results )
+print( res2$results )
+print( res3$results )
+
+## Or put all the results together and write to file
+res1$results <- rbind( res1$results, res2$results, res3$results )
+write.pbat( res1, "cpedResults.csv" )
+
+## Otherwise, we could write the data to disk, and run with the GUI interface
+## Write the data to disk:
+write.cped( "cped.cped", cped )
+}
 }
 \details{
-  When reading in a file on disk using \code{read.cped}, a `.cped' file should have the following format. The first line should indicate the names of the copy number markers. Each subsequent line stands for one individual/subject, starting with the pedigree id, followed by the individual/subject id, the id of the father, the id of the mother, the individual's sex, and affection status (just as in the standard pedigree file!). After this information, for each marker, both marker alleles for each copy number intensity are listed. The order corresponds to the order of the copy number markres in the first line of the file.
+  When reading in a file on disk using \code{read.cped}, a `.cped' file should have the following format. The file should be formatted as follows. The first six columns are \emph{unlabeled} (1) the pedigree id, (2) the individual id, (3) the father id, (4) the mother id, (5) sex [0=missing, 1=male, 2=female], and (6) AffectionStatus [0=missing, 1=unaffected, 2=affected]. The subsequent columns correspond to the intensities. So, suppose we have cnv1 and cnv2. The first line of the file would contain `cnv1 cnv2'. Then the subsequent lines would correspond to each individual, the first six columns being as described, and then NUMINTENSITY columns per cnv for a total of 6+2*NUMINTENSITY data columns. NUMINTENSITY is just however many intensities there are per cnv, you will need to specify this number at analysis time. NOTE: MISSING DATA in a cped file should be coded as `-1234.0', rather than the usual `.' or `-' (technically the `.' and `-' should still work with \code{fread.cped}, and when \code{sym=FALSE}).
 
-  must be encoded with a `0', unlike the phenotype file.
+  The best way to see all of this in action is to run the code in the examples below, and look at the cped file produced from it.
 
-  `plotCPed' is a hack transforming the data to the `plotPed' routine.
+  `plotCPed' plots the data similar to the `plotPed' routine (in fact it transforms the data to use it).
 }
 \references{
   \url{http://www.biostat.harvard.edu/~clange/default.htm}
@@ -114,6 +177,6 @@ myCPed
   \code{\link{read.cped}}
   \code{\link{write.cped}},
   \code{\link{plotCPed}}
-]}
+}
 \keyword{interface}
 

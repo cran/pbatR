@@ -4,6 +4,8 @@ export(
        is.pedlist, as.pedlist,
        is.pped, as.pped, read.pped,
        is.cped, as.cped, read.cped, fread.cped, write.cped,
+       
+       ped.markerNames,
 
        affectionPhe,
 

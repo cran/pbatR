@@ -49,10 +49,8 @@ pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
     removed.}
   \item{contsAscertainmentUpper}{Upper bound, defaults to `1'.}
 
-  \item{pDiseaseAlleleGivenMarkerAllele}
-  {Pr(Disease allele A|marker allele A)}
-  \item{afreqDSL}{allele frequency at DSL, defaults to marker
-    frequency.}
+  \item{pDiseaseAlleleGivenMarkerAllele}{Pr(Disease allele A|marker allele A)}
+  \item{afreqDSL}{allele frequency at DSL, defaults to marker frequency.}
 
   \item{alpha}{significance level}
   \item{offset}{"default" uses the population prevalence for dichotomous

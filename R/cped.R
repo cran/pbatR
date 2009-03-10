@@ -5,6 +5,8 @@
 ## Reads in cped files (copy number variation).
 ## Again -- still allow the symbolic loading
 
+## Tom, try to code missing CNVs by -1234.0. That should work. Best, Christoph
+
 ## We have one cped file where there are the usual 6 columns
 ## as in a pedigree file, followed by 12 columns, which is
 ## data for two cped markers. It is read in with
@@ -65,7 +67,7 @@ read.cped <- function( filename, lowercase=TRUE, sym=TRUE, max=100, ... ) {
   filename <- str.file.extension( filename, ".cped" )
   if( spaceInFilename(filename) && sym==TRUE )
     stop( spaceInFilenameError(filename) )
-  cped <- read.badheader( filename, na.strings="", lowercase=lowercase, onlyHeader=sym, max=max, ... );
+  cped <- read.badheader( filename, na.strings=c("-",".","NA"), lowercase=lowercase, onlyHeader=sym, max=max, ... );
   firstNames <- c( "pid", "id", "idfath", "idmoth", "sex", "AffectionStatus" )
 
   if( sym ) {
@@ -95,6 +97,16 @@ read.cped <- function( filename, lowercase=TRUE, sym=TRUE, max=100, ... ) {
   class( cped$table ) <- c("cped","data.frame")
 
   attr( cped$table, "numIntensity" ) <- numIntensity  ## Doesn't really do that much
+
+  #print( cped$table ) ## DEBUG ONLY
+
+  ## NEW! Need to recode missing data...
+  for( i in 7:ncol(cped$table) ) {
+    wh <- which(cped$table[[i]]==-1234.0)
+    if( length(wh) > 0 )
+      cped$table[[i]][wh] <- NA
+  }
+  ## End of recode...
 
   return( cped$table )
 }## DEBUGGED
@@ -151,7 +163,7 @@ write.cped <- function( file, cped ) {
   header <- unique( rem.dot.a( names(cped)[7:ncol(cped)] ) )
 
   ## and dump it to file
-  write.badheader( file, cped, header )
+  write.badheader( file, cped, header, na="-1234.0" )  ## na update for cped missing data!
 }## DEBUGGED
 
 ## plotting it?

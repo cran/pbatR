@@ -306,6 +306,10 @@ writeCommandStrMatch1 <- function( commandStr, str, strVec, outfile ) {
 errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE ) {
   hasMin <- !is.null(min) && min!="";
   hasMax <- !is.null(max) && max!="";
+
+  minStr <- "-INF"; ## 12/28/2008
+  maxStr <- "INF";  ## 12/28/2008
+
   if( (hasMin && value<min) || (hasMax && value>max) ) {
     minStr <- as.character(min); if(!hasMin) minStr <- "INF";
     maxStr <- as.character(max); if(!hasMax) maxStr <- "INF";

@@ -464,3 +464,16 @@ plotPed <- function( ped, sink=NULL ) {
   if( !is.null(sink) )
     dev.off()
 }
+
+
+## 12/07/2008
+ped.markerNames <- function( ped ) {
+  if( is.sym(ped) ) {
+    if( length(ped)==0 )
+      stop( "Pedigree is completely symbolic, try reading it in with 'fread.ped' instead of 'read.ped'.")
+    return( names(ped)[7:length(ped)] )
+  }
+  
+  n <- names(ped)[seq(from=7, to=ncol(ped), by=2)]
+  return(  substring( n, 1, nchar(n)-2 )  )
+}
