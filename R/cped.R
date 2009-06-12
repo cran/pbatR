@@ -72,7 +72,7 @@ read.cped <- function( filename, lowercase=TRUE, sym=TRUE, max=100, ... ) {
 
   if( sym ) {
     cpedlist <- NULL
-    if( length(ped$header) < max ) {
+    if( length(cped$header) < max ) { ## Stupid bug! cped, not ped!!! How on earth did this _ever_ work???
       cpedlist <- data.frame( matrix( 0, nrow=1, ncol=length(firstNames)+length(cped$header) ) )
       names( cpedlist ) <- c( firstNames, cped$header )
     }else{

@@ -83,7 +83,7 @@ extern "C" {
       if( getpid() != parentPid ){
 	///sleep(i+1); // DEBUG ONLY
 	//std::cout << cmds[i] << std::endl;
-	system( cmds[i].c_str() );
+	int sysRes = system( cmds[i].c_str() );
 	exit(0);
       }
     }

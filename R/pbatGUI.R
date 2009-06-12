@@ -176,8 +176,8 @@ pbatGUI.setglobs <- function() {
   globs$env.cor.adjust <- tclVar("FALSE");
 
   ## 04/28/2008
-  globs$cnv.intensity <- tclVar(2)
-  globs$cnv.intensity.num <- tclVar(3)
+  globs$cnv.intensity <- tclVar(1) ## tclVar(2)
+  globs$cnv.intensity.num <- tclVar(1) ## tclVar(3)
 
   setPbatGUI( "globs", globs );
 }
@@ -1393,6 +1393,7 @@ pbatGUI.pedFileChoice <- function() {
 
   # Load in the data file
   tempstrExtension <- file.extension(tempstr)
+  print(tempstrExtension)
   if( tempstrExtension=="ped" ) {
     globs$ped <- read.ped( globs$pedfile );
   }else if( tempstrExtension=="pped" ){
@@ -1400,6 +1401,11 @@ pbatGUI.pedFileChoice <- function() {
   }else{
     ## cped! argh!
     globs$ped <- read.cped( globs$pedfile );
+    ##print( globs$ped ) ## DEBUG ONLY
+
+    ## New -- can we also set the offset to be zero?
+    #globs$offset <- tclVar("none")
+    #wrong -- this should only be for AffectionStatus
   }
   globs$pedset <- TRUE;
 
@@ -1867,16 +1873,34 @@ pbatGUI.mainForm <- function() {
 
       # now, put each of the prediction vars into the formula
       if( length(globs$preds)>=1 ) {
+        ## MI INTERACTION MI INTERACTION
+        #print( "globs$preds" )
+        #print( globs$preds )
+        #print( "globs$mi" )
+        #print( globs$mi )
+        mis <- NULL
+        print( "allPhenos" )
+        print( allPhenos )
+        try( {
+          if( any( globs$mi ) )
+            mis <- allPhenos[c(FALSE,globs$mi)] ## it's AffectionStatus, and then everything else...
+        } )
+        print( mis )
         for( i in 1:length(globs$preds) ) {
           if( i>1 )
             formula <- paste( formula, " + ", sep="" );
 
-          ;# $allPhenosOrder, $allPhenosMI
+          ## $allPhenosOrder, $allPhenosMI
           phenosIndex <- which(globs$preds[i]==allPhenos);
           ###order <- as.numeric(tclvalue(globs$tclVar.predsOrder[[phenosIndex]]));
           order <- globs$order[phenosIndex];
           ###if( as.numeric(tclvalue(globs$cbValue.predsInter[[phenosIndex]])) ) {
-          if( globs$mi[phenosIndex] ) {
+
+          print( "globs$mi" )
+          print( globs$mi )
+          
+          #if( globs$mi[phenosIndex] ) {
+          if( any(globs$preds[i]==mis) ) { ## is it in the interactions???
             if( order>1 ) {
               formula <- paste( formula, "mi(",globs$preds[i],"^",order,")", sep="" );
             }else{
@@ -1886,6 +1910,8 @@ pbatGUI.mainForm <- function() {
             formula <- paste( formula, globs$preds[i], sep="" );
             if( order>1 ) formula <- paste( formula, "^", order, sep="" );
           }
+
+          print( formula )
         }
       }else{
         formula <- paste( formula, "NONE" );
