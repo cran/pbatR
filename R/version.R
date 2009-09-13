@@ -15,7 +15,8 @@ pbat.current <- function( libname="" ){
   cat( "Checking version of pbatR... " );
   fle <- NULL
   try( {
-    filename <- "http://www.people.fas.harvard.edu/~tjhoffm/pbatRversion.txt";
+    ##filename <- "http://www.people.fas.harvard.edu/~tjhoffm/pbatRversion.txt";
+    filename <- "http://sites.google.com/site/thomashoffmannproject/pbatRversion.txt";
     fle <- file( filename );
     lines <- readLines( fle, n=3 );
     curVersion <- lines[1];
@@ -41,7 +42,8 @@ pbat.current <- function( libname="" ){
       ##cat( "aside: your version may be current if this was not installed as super-user if you are on a linux machine, current version is ", curVersion, ".\n" );
     }
 
-    if( nchar( notes ) > 0 )
+    ##if( nchar( notes ) > 0 )
+    if(!is.na(notes) && is.character(notes) && nchar(notes) > 0)
       cat( "Notes:\n ", notes, "\n", sep="" );
 
     return( invisible() );

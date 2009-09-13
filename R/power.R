@@ -1,6 +1,7 @@
 ## Disabling recessive and dominant, for the moment
+## UPDATE: This code was right all along, the bug was not on my end! YAY!
 powerDisabled <- function()
-  return( TRUE )
+  return( !TRUE )
 
 
 ################################################

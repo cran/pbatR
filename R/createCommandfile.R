@@ -121,8 +121,9 @@ getTimeStamp <- function() {
     return(n);
   }
 
+  options(digits.secs=6) ## millisecond timing out to the millionth of a second... try to eliminate that race condition
   d <- as.POSIXlt( Sys.time() );
-  return( paste( 1900+d$year, zpad(d$mon), zpad(d$mday), zpad(d$hour), zpad(d$min), zpad(floor(d$sec)), sep="" ) );  ## R2.3 change... seconds decide to have bloody decimal points... why can't we just be consistent between releases???? WHY??????
+  return( paste( 1900+d$year, zpad(d$mon), zpad(d$mday), zpad(d$hour), zpad(d$min), zpad(floor(d$sec*1000000)), sep="" ) );  ## R2.3 change... seconds decide to have bloody decimal points... why can't we just be consistent between releases???? WHY??????
 }
 
 ## Returns if all characters in a string are numbers (decimals not allowed since we're checking for time-stamps ultimately)

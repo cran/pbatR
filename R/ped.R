@@ -419,51 +419,54 @@ as.pped <- function( ped, ppedname="" ){
   return( read.pped( ppedname ) );
 }
 
+## DEPRECATED: see plot.pedigree.R for an awesome rewrite
 ## NEW! Plotting routines
-plotPed <- function( ped, sink=NULL ) {
-  require( kinship ) ## replaced from 'library' for codetools...
-
-  ## is it symbolic? it can't be for these routines...
-  if( is.sym(ped) )
-    ped <- as.ped( ped, clearSym=TRUE )
-
-  ## move it to their format
-  if( any( ped$sex==0 ) )
-    ped$sex[ped$sex==0] <- 3;
-
-  ## Huh? the documentation on this package doesn't make much sense...
-  ped$affection <- 0
-  ped$affection[ped$AffectionStatus==2] <- 1
-
-  ## If sink = filename, sink each plot to a file!
-  ## See if we should sink it to file
-  if( !is.null(sink) ) {
-    pdf( sink );
-  }else{
-    par(ask=TRUE);
-  }
-
-  for( pid in unique(ped$pid) ) {
-    ## pull out the pedigree piece
-    subPed <- ped[ ped$pid==pid, ]
-    ## fix it so it's their program happy
-    pedigr <- pedigree( subPed$id, subPed$idfath, subPed$idmoth, subPed$sex, subPed$affection )
-    #print( pedigr )
-
-    SUCCESS <- FALSE;  ## sometimes it fails...
-    try( {
-      plot( pedigr );
-      title( pid );
-      SUCCESS <- TRUE;
-    } );
-    if( !SUCCESS )
-      print( paste( "Plotting pedigree", pid, "failed." ) );
-  }
-
-  ## Close off the filename if necessary
-  if( !is.null(sink) )
-    dev.off()
-}
+# plotPed <- function( ped, sink=NULL ) {
+#   require( kinship ) ## replaced from 'library' for codetools...
+# 
+#   ## is it symbolic? it can't be for these routines...
+#   if( is.sym(ped) )
+#     ped <- as.ped( ped, clearSym=TRUE )
+# 
+#   ## move it to their format
+#   if( any( ped$sex==0 ) )
+#     ped$sex[ped$sex==0] <- 3;
+# 
+#   ## Huh? the documentation on this package doesn't make much sense...
+#   #ped$affection <- 0
+#   #ped$affection[ped$AffectionStatus==2] <- 1
+#   ped$affection <- ped$AffectionStatus
+# 
+#   ## If sink = filename, sink each plot to a file!
+#   ## See if we should sink it to file
+#   if( !is.null(sink) ) {
+#     pdf( sink );
+#   }else{
+#     par(ask=TRUE);
+#   }
+# 
+#   for( pid in unique(ped$pid) ) {
+#     ## pull out the pedigree piece
+#     subPed <- ped[ ped$pid==pid, ]
+#     ## fix it so it's their program happy
+#     pedigr <- pedigree(id = subPed$id, dadid=subPed$idfath, momid=subPed$idmoth, sex=subPed$sex, affected=subPed$affection)
+#     print( pedigr )
+#     print( str(pedigr) )
+# 
+#     SUCCESS <- FALSE;  ## sometimes it fails...
+#     try( {
+#       plot( pedigr );
+#       title( pid );
+#       SUCCESS <- TRUE;
+#     } );
+#     if( !SUCCESS )
+#       print( paste( "Plotting pedigree", pid, "failed." ) );
+#   }
+# 
+#   ## Close off the filename if necessary
+#   if( !is.null(sink) )
+#     dev.off()
+# }
 
 
 ## 12/07/2008

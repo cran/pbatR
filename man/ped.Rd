@@ -57,7 +57,7 @@ as.pped( ped, ppedname="" )
 
 \method{sort}{ped}(x,decreasing=FALSE,...)
 
-plotPed( ped, sink=NULL )
+plotPed(ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL)
 
 ped.markerNames( ped )
 }
@@ -128,6 +128,9 @@ ped.markerNames( ped )
 
   \item{sink}{For `plot.ped', this is the name of a pdf file to output
     all of the plots to (there will be one plot per page).}
+  \item{geno}{For 'plot.ped'; "none" includes no genotype summary information, "percent" gives an overall summary of how much each individual is genotyped, i.e. non-missing (the default), and "each" gives all of the genotypes of each individual.}
+  \item{phe}{For 'plot.ped', a phenotype object for extra information.}
+  \item{pheCols}{For 'plot.ped', names in the phenotype object of columns that should be displayed in the pedigree.}
 }
 \examples{
 # A highly artificial example with not enough subjects to be run;

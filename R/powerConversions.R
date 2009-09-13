@@ -12,7 +12,8 @@ h_K <- function( paa, pab, pbb, p, K )
 
 h_model <- function( paa, pab, pbb, model ) {
   if( model==MOI_ADDITIVE )
-    return( paa-pab - (pab-pbb) )
+    return( paa + pbb - 2*pab )
+    #return( paa-pab - (pab-pbb) )
   if( model==MOI_DOMINANT )
     return( paa-pab )
   if( model==MOI_RECESSIVE )
@@ -65,14 +66,34 @@ calc_or <- function( paa, pab, pbb, p ) {
   cont1 <- 2*(1-pab)*p*(1-p)
   cont2 <- (1-paa)*p^2
 
-  or1 <- 1/( case0 * cont1 / case1 / cont0 )  ## OR from options, OR_heterozygous, OR1 output
-  or2 <- 1/( case0 * cont2 / case2 / cont0 )  ## OR_homozygous, OR2 output
+  #or1 <- 1/( case0 * cont1 / case1 / cont0 )  ## OR from options, OR_heterozygous, OR1 output
+  #or2 <- 1/( case0 * cont2 / case2 / cont0 )  ## OR_homozygous, OR2 output
+  or1 <- (case1 * cont0) / (case0 * cont1)
+  or2 <- (case2 * cont0) / (case0 * cont2)
 
   return( c(or1=or1, or2=or2) )
 }
 
-h_or <- function( paa, pab, pbb, afreq, or1 ) {
-  return( or1 - calc_or(paa,pab,pbb,afreq)[1] )
+##h_or <- function( paa, pab, pbb, afreq, or1 ) {
+##  #return( or1 - calc_or(paa,pab,pbb,afreq)[1] )
+##  return( or1 - (pab*(1-pbb))/(pbb*(1-pab)) )
+##}
+
+#h_or2 <- function( paa, pab, pbb, afreq, or1 ) {
+#  return( or1 - (paa*(1-pab))/(pab*(1-paa)) )
+#}
+
+h_or <- function( paa, pab, pbb, afreq, or1, moi ) {
+  return(  ( or1-(pab*(1-pbb))/(pbb*(1-pab)) ) )
+
+  ## STUPID, It was correct all along!
+  
+#  if( moi==MOI_ADDITIVE )
+#    return( abs( 2*or1 - (paa*(1-pbb))/(pbb*(1-paa)) ) + abs( or1-(pab*(1-pbb))/(pbb*(1-pab)) )  )
+    #return( ( 2*or1 - (paa*(1-pbb))/(pbb*(1-paa)) )^2 + ( or1-(pab*(1-pbb))/(pbb*(1-pab)) )^2  )
+#    return( ( or1-(paa*(1-pab))/(pab*(1-paa)) )^2 + ( or1-(pab*(1-pbb))/(pbb*(1-pab)) )^2 )
+  #  return( ( 2*or1 - (paa*(1-pbb))/(pbb*(1-paa)) )^2 + ( or1-(paa*(1-pab))/(pab*(1-paa)) )^2 +  ( or1-(pab*(1-pbb))/(pbb*(1-pab)) )^2  )
+  #  return( abs( or1-(paa*(1-pab))/(pab*(1-paa)) ) + abs( or1-(pab*(1-pbb))/(pbb*(1-pab)) ) )
 }
 
 solve_or1 <- function( pen, afreq, popPrev, or1, moi ) {
@@ -81,14 +102,104 @@ solve_or1 <- function( pen, afreq, popPrev, or1, moi ) {
   pbb <- pen[3]
   return( h_K( paa, pab, pbb, afreq, popPrev )^2
           + h_model( paa, pab, pbb, moi )^2
-          + h_or( paa, pab, pbb, afreq, or1 )^2 )
+          + h_or( paa, pab, pbb, afreq, or1, moi )^2 )
+  #return( abs( h_K( paa, pab, pbb, afreq, popPrev ) )
+  #        + abs( h_model( paa, pab, pbb, moi ) )
+  #        + abs( h_or( paa, pab, pbb, afreq, or1 ) ) )
 }
 
 ## export - solving for pen** given OR
+#pen_or1 <- function( moi, afreq, popPrev, or1 ) {
+#  res <- optim( rep(0.3,3), fn=solve_or1,
+#                moi=moi, afreq=afreq, popPrev=popPrev, or1=or1 )
+#  return( res$par )
+#}
+
+pen_or1_a <- function( moi, afreq, popPrev, or1 ) {
+  bestPen <- NULL
+  bestVal <- -1
+  
+  NRUNS <- 10
+  #if( popPrev < 0.01 ) NRUNS <- 100
+  RUNIF_MAX <- 0.5
+  if( popPrev < 0.01 ) RUNIF_MAX <- 0.05
+
+  for( i in 1:NRUNS ) {
+    #cat( i, "" )
+    res <- optim( runif(n=3)*RUNIF_MAX, fn=solve_or1, moi=moi, afreq=afreq, popPrev=popPrev, or1=or1 )
+    pen <- res$par
+    val <- solve_or1( pen=pen, afreq=afreq, popPrev=popPrev, or1=or1, moi=moi )
+    if( bestVal==-1 || val<bestVal ) {
+      if( all(pen>0 & pen<1) ) {
+        bestPen <- pen
+        bestVal <- val
+        #cat( "bestPen" ); print( bestPen );
+      }
+    }
+  }
+  return( bestPen )
+}
+
+## -- redoing this function, now using the rootSolve routine
 pen_or1 <- function( moi, afreq, popPrev, or1 ) {
-  res <- optim( rep(0.3,3), fn=solve_or1,
-                moi=moi, afreq=afreq, popPrev=popPrev, or1=or1 )
-  return( res$par )
+  if( moi == MOI_RECESSIVE )
+    return( rev( pen_or1( moi=MOI_DOMINANT, afreq=1-afreq, popPrev=popPrev, or1=1/or1 ) ) )
+
+  require( rootSolve )
+
+  solve_or_multiroot <- function( pen, afreq, popPrev, or1, moi ) {
+    paa <- pen[1]
+    pab <- pen[2]
+    pbb <- pen[3]
+
+    return( c( h_K( paa, pab, pbb, afreq, popPrev ),
+               h_model( paa, pab, pbb, moi ),
+               h_or( paa, pab, pbb, afreq, or1 ) ) )
+  }
+
+  NRUNS <- 1000
+  if( popPrev < 0.01 ) NRUNS <- 100
+  RUNIF_MAX <- 0.5
+  if( popPrev < 0.01 ) RUNIF_MAX <- 0.05
+
+  NSUCRUNS <- 1 #100
+  SUCCESSES <- 0
+  bestroot <- NULL
+  
+
+  for( i in 1:NRUNS ) {
+    try( {
+      res <- multiroot(f = solve_or_multiroot,
+                      start = runif(n=3)*RUNIF_MAX,
+                      maxiter=10000,
+                      rtol=1e-10, atol=1e-10, ctol=1e-10,
+#                      rtol=1e-6, atol=1e-8, ctol=1e-8,
+                      useFortran=FALSE,
+                      positive=FALSE,
+                      afreq=afreq, popPrev=popPrev, or1=or1, moi=moi)
+      root <- res$root
+      if( all( root>=0 & root<=1 ) ) {
+        #cat( i ); print( res )
+        #return( res$root )
+
+        if( SUCCESSES==0 || sum(abs(res$root))<sum(abs(bestroot)) ) {
+          bestroot <- res$root
+          SUCCESSES <- SUCCESSES + 1
+          if( SUCCESSES > NSUCRUNS )
+            return( bestroot )
+        }
+      }
+      #print( str( res$root ) )
+      #print( class( res$root ) )
+      #stop()
+      #return( res$root )
+    }, silent=TRUE )
+  }
+  if( SUCCESSES > 0 )
+    return( bestroot )
+    
+  ##stop( "ALL FAILED" )
+  return( pen_or1_a( moi=moi, afreq=afreq, popPrev=popPrev, or1=or1 ) )
 }
 
 ##################
