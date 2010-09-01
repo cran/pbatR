@@ -63,7 +63,7 @@ pbat.m <- function(
        gwa=FALSE,
        snppedfile=FALSE,
        extended.pedigree.snp.fix=FALSE,
-       new.ped.algo=TRUE,
+       new.ped.algo=FALSE,
        cnv.intensity=2, cnv.intensity.num=3
                    )
 {

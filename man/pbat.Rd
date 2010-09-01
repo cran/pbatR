@@ -82,7 +82,7 @@ pbat.m( formula, phe, ped, fbat="",
         gwa=FALSE,
         snppedfile=FALSE,
         extended.pedigree.snp.fix=FALSE,
-        new.ped.algo=TRUE,
+        new.ped.algo=FALSE,
         cnv.intensity=2, cnv.intensity.num=3 )
 
 pbat.obj( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... )
@@ -128,7 +128,7 @@ pbat.create.commandfile( pedfile, phefile="",
        gwa=FALSE,
        snppedfile=FALSE,
        extended.pedigree.snp.fix=FALSE,
-       new.ped.algo=TRUE,
+       new.ped.algo=FALSE,
        cnv.intensity=2, cnv.intensity.num=3 )
 }
 \arguments{
@@ -464,7 +464,7 @@ pbat.create.commandfile( pedfile, phefile="",
     binary markers).
   }
 
-  \item{new.ped.algo}{Set to TRUE (default) to use the new, 10-100 times faster and more memory efficient algorithm.}
+  \item{new.ped.algo}{Set to TRUE (default is FALSE) to use the new, 10-100 times faster and more memory efficient algorithm. Somewhat experimental with extended pedigrees, so use with caution.}
 
   \item{cnv.intensity}{The CNV intensity number that should be analyzed.}
   \item{cnv.intensity.num}{The number of CNV intensities per CNV in the .cped file.}
@@ -477,6 +477,8 @@ pbat.create.commandfile( pedfile, phefile="",
   details.
 }
 \details{
+  IF YOU ARE HAVING PROBLEMS: Try setting extended.pedigree.snp.fix, the slowest but most robust method.
+
   INTERPRITING THE OUTPUT:
 
   1) I make every attempt to try to properly header the output, but sometimes this is not possible. You will often see a warning message to this regards, which is generally safe to ignore.

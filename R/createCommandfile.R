@@ -327,6 +327,21 @@ errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE
                 sep="") );
 }
 
+## 08/31/2010
+## All possible subsets
+all.possible.subsets = function(snps){
+  sublist = list()
+  for(i in 1:length(snps))
+    sublist[[i]] = c(FALSE, TRUE) #c(TRUE,FALSE)
+  snpgrid = expand.grid(sublist)
+
+  haplolist = list()
+  for(g in 1:nrow(snpgrid))
+    if(!all(snpgrid[g,] == FALSE))
+      haplolist[[length(haplolist) + 1]] = snps[as.logical(snpgrid[g,])]
+  return(haplolist)
+}
+all.possible.subsets(paste("m", 1:4, sep=""))
 
 #####################################################################
 ## pbat.create.commandfile(...)                                     #
@@ -369,7 +384,7 @@ pbat.create.commandfile <- function(
        gwa=FALSE,
        snppedfile=FALSE,
        extended.pedigree.snp.fix=FALSE,
-       new.ped.algo=TRUE,
+       new.ped.algo=FALSE,
        cnv.intensity=2, cnv.intensity.num=3
                                     )
 {
@@ -378,6 +393,13 @@ pbat.create.commandfile <- function(
   ## Fix up a couple of variables passed in
   gwa <- (gwa==TRUE); ## in case it was a string
   snppedfile <- (snppedfile==TRUE);
+
+  ## NEW 08/31/2010, if extended.pedigree.snp.fix=TRUE, turn off new.ped.algo...
+  if(extended.pedigree.snp.fix)
+    new.ped.algo=FALSE
+
+  if(overall.haplo && screening=="conditional power")
+    stop("To use overall.haplo=TRUE, you must set screening='wald'.")
 
   ##-----------------------------
   ## fix up extensions / naming -
@@ -596,15 +618,28 @@ pbat.create.commandfile <- function(
       # make sure the snps are in the list
       errorVecNotContained( "haplos dataframe", haplos[[i]], posSnps );
 
-      # then make sure there is no overlap (can't have a snp in more than one block!)
-      ##print( length(haplos) );
-      if( i<length(haplos) ) {
-        for( j in (i+1):length(haplos) ) {
-          errorIfAnyMatch(haplos[[i]], haplos[[j]],
-                          paste("Haplotype block ",i," (",names(haplos)[i],") ",sep="" ),
-                          paste("Haplotype block ",j," (",names(haplos)[j],") ",sep="" ) );
-        }
+#       # then make sure there is no overlap (can't have a snp in more than one block!)
+#       ##print( length(haplos) );
+#       if( i<length(haplos) ) {
+#         for( j in (i+1):length(haplos) ) {
+#           errorIfAnyMatch(haplos[[i]], haplos[[j]],
+#                           paste("Haplotype block ",i," (",names(haplos)[i],") ",sep="" ),
+#                           paste("Haplotype block ",j," (",names(haplos)[j],") ",sep="" ) );
+#         }
+#       }
+    }
+
+    ## Now, what if sub.haplos?
+    ## NEW, NEW, NEW
+    if(sub.haplos & !adj.snps){
+      sub.haplos = FALSE
+      haplos2 = list()
+      for(h in 1:length(haplos)){
+        haplosaddi = all.possible.subsets(haplos[[h]])
+        for(hh in 1:length(haplosaddi))
+          haplos2[[length(haplos2) + 1]] = haplosaddi[[hh]]
       }
+      haplos = haplos2
     }
   }
 
@@ -623,7 +658,7 @@ pbat.create.commandfile <- function(
   monte <- as.integer( monte ); ## force to be an integer
   errorRangeCheck( "monte", monte, min=0 );
 
-  errorRangeCheck( "cutoff.haplo", cutoff.haplo, min=0, max=1 );
+  errorRangeCheck( "cutoff.haplo", cutoff.haplo, min=0, max=1, IS.INTEGER=FALSE );  ##
 
   ####print( "got past here 5" );
 

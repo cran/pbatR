@@ -3,6 +3,8 @@
  * Created 05/28/2007
  */
 
+#include "thmalloc.h"
+
 /* The idea is to completely replace the power calculations in pbatR by
  *  coding them directly, and only using via simulation for simplicity
  */
@@ -127,17 +129,17 @@ double power( int numOffspring, int numParents, int numFamilies,
 
   // allocate memory for the simulations
   // - the marker
-  int p1M[numFamilies][2]; // first parents genotype
-  int p2M[numFamilies][2]; // second parents genotype
-  int cM_a[numFamilies][numOffspring], cM_b[numFamilies][numOffspring]; // children genotypes
+  THMALLOC2(int, _p1M, p1M, numFamilies, 2); //int p1M[numFamilies][2]; // first parents genotype
+  THMALLOC2(int, _p2M, p2M, numFamilies, 2); //int p2M[numFamilies][2]; // second parents genotype
+  THMALLOC2(int, _cM_a, cM_a, numFamilies, numOffspring); THMALLOC2(int, _cM_b, cM_b, numFamilies, numOffspring); //int cM_a[numFamilies][numOffspring], cM_b[numFamilies][numOffspring]; // children genotypes
   // - the DSL
-  int p1D[numFamilies][2]; // first parents genotype
-  int p2D[numFamilies][2]; // second parents genotype
-  int cD_a[numFamilies][numOffspring], cD_b[numFamilies][numOffspring]; // children genotypes
-  double trait[numFamilies][numOffspring];
+  THMALLOC2(int, _p1D, p1D, numFamilies, 2); //int p1D[numFamilies][2]; // first parents genotype
+  THMALLOC2(int, _p2D, p2D, numFamilies, 2); //int p2D[numFamilies][2]; // second parents genotype
+  THMALLOC2(int, _cD_a, cD_a, numFamilies, numOffspring); THMALLOC2(int, _cD_b, cD_b, numFamilies, numOffspring); //int cD_a[numFamilies][numOffspring], cD_b[numFamilies][numOffspring]; // children genotypes
+  THMALLOC2(double, _trait, trait, numFamilies, numOffspring); //double trait[numFamilies][numOffspring];
 
-  double Si[numFamilies];
-  double Vi[numFamilies];
+  THMALLOC(double, _Si, Si, numFamilies); //double Si[numFamilies];
+  THMALLOC(double, _Vi, Vi, numFamilies); //double Vi[numFamilies];
 
   // calculate the probablities for when not the marker
   double p[4];

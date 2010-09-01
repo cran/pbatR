@@ -1,10 +1,13 @@
 // for debugging, compile with -D_KLUDGE_DEBUG_
 // g++ kludge.cpp -D_KLUDGE_DEBUG_ -o kludge
 
+#include "thmalloc.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <vector>
 using namespace std;
 
 const int LINE_SIZE = 10000;
@@ -217,9 +220,9 @@ extern "C" {
     outfile << header << endl;
 
     // info on the good line
-    bool good_isstar[numfields];
-    bool good_isnum[numfields];
-    bool good_isp[numfields];
+    THMALLOC(bool, _good_isstar, good_isstar, numfields); //bool good_isstar[numfields];
+    THMALLOC(bool, _good_isnum, good_isnum, numfields); //bool good_isnum[numfields];
+    THMALLOC(bool, _good_isp, good_isp, numfields); //bool good_isp[numfields];
     bool found_good = false;
     int firstP=-1; // the first 'P :.*' field location
 
@@ -240,8 +243,8 @@ extern "C" {
 	if( !found_good ) {
 	  found_good = true;
 
-	  int fieldStart[numfields];
-	  int fieldLength[numfields];
+	  THMALLOC(int, _fieldStart, fieldStart, numfields); //int fieldStart[numfields];
+	  THMALLOC(int, _fieldLength, fieldLength, numfields); //int fieldLength[numfields];
 	  kludge_fill_fields( line, fieldStart, fieldLength );
 	  fillFieldInfo( line, fieldStart, fieldLength,  curnumfields,
 			 good_isstar, good_isnum, good_isp );
@@ -267,14 +270,14 @@ extern "C" {
       //cout << "curnumfields " << curnumfields << endl;
 
       // filling in the fields
-      int fieldStart[curnumfields];
-      int fieldLength[curnumfields];
+      THMALLOC(int, _fieldStart, fieldStart, curnumfields); //int fieldStart[curnumfields];
+      THMALLOC(int, _fieldLength, fieldLength, curnumfields); //int fieldLength[curnumfields];
 
       // fill in the types arrays
-      bool isstar[curnumfields];
-      bool isnum[curnumfields];
-      bool isp[curnumfields];
-      bool printToken[curnumfields];
+      THMALLOC(bool, _isstar, isstar, curnumfields); //bool isstar[curnumfields];
+      THMALLOC(bool, _isnum, isnum, curnumfields); //bool isnum[curnumfields];
+      THMALLOC(bool, _isp, isp, curnumfields); //bool isp[curnumfields];
+      THMALLOC(bool, _printToken, printToken, curnumfields); //bool printToken[curnumfields];
 
       kludge_fill_fields( line, fieldStart, fieldLength );
       fillFieldInfo( line, fieldStart, fieldLength,  curnumfields,

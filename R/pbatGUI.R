@@ -151,7 +151,8 @@ pbatGUI.setglobs <- function() {
   ## 03/22/2006
   globs$distribution <- tclVar("default");
   ## 04/17/2008
-  globs$new.ped.algo <- tclVar("TRUE");
+  #globs$new.ped.algo <- tclVar("TRUE");
+  globs$new.ped.algo <- tclVar("FALSE");  ## 08/31/2010
 
   globs$res <- NULL;
 
@@ -1898,7 +1899,7 @@ pbatGUI.mainForm <- function() {
 
           print( "globs$mi" )
           print( globs$mi )
-          
+
           #if( globs$mi[phenosIndex] ) {
           if( any(globs$preds[i]==mis) ) { ## is it in the interactions???
             if( order>1 ) {
