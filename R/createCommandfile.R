@@ -398,7 +398,7 @@ pbat.create.commandfile <- function(
   if(extended.pedigree.snp.fix)
     new.ped.algo=FALSE
 
-  if(overall.haplo && screening=="conditional power")
+  if(overall.haplo==TRUE && screening=="conditional power")
     stop("To use overall.haplo=TRUE, you must set screening='wald'.")
 
   ##-----------------------------
@@ -492,6 +492,8 @@ pbat.create.commandfile <- function(
 
   ## The infamous pbatdata.txt file...
   checkAndGetPbatdata();
+#   print("haplos")
+#   print(haplos)
 
   if( !file.exists(pedfile) )
     stop( paste("The pedigree file '",
@@ -511,7 +513,7 @@ pbat.create.commandfile <- function(
      !is.null(mminsnps) && !is.null(mmaxsnps) && !is.null(mminphenos) && !is.null(mmaxphenos) ) {
     stop( "Multimarker mode (mminsnps, mmaxsnps, mminphenos, mmaxphenos) is not supported for scan.genetic='all'. Try doing each one in turn." );
   }
-  if( gwa ) {
+  if( gwa==TRUE ) {
     if( output!="short" ){
       output <- "short";
       warning( "gwa mode only supported with short output format; short output format enforced." );
@@ -631,7 +633,7 @@ pbat.create.commandfile <- function(
 
     ## Now, what if sub.haplos?
     ## NEW, NEW, NEW
-    if(sub.haplos & !adj.snps){
+    if(sub.haplos==TRUE && adj.snps==FALSE){
       sub.haplos = FALSE
       haplos2 = list()
       for(h in 1:length(haplos)){

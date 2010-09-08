@@ -67,6 +67,8 @@ pbat.m <- function(
        cnv.intensity=2, cnv.intensity.num=3
                    )
 {
+  #cat("entered pbat.m") ## debug hell
+
   # make sure some of the variables are of a certain format
   max.pheno <- as.numeric( max.pheno );
   min.pheno <- as.numeric( min.pheno );

@@ -191,7 +191,7 @@ pbat.files <- function( pedfile, phefile,
                         LOAD.OUTPUT=TRUE,
                         ... )
 {
-  ##cat( "pbat.files pedfile", pedfile, "\n" );
+  cat( "pbat.files pedfile", pedfile, "\n" );
 
   curTimeStamp = getTimeStamp();
   if( isTimeStamped(pedfile) ) {
@@ -577,6 +577,8 @@ affectionPhe <- function( ped, trait="affected", offset=0.0 ) {
 #                pbat.files().                                     #
 ####################################################################
 pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... ) {
+  #cat("entered pbat.obj") ## debug hell
+
   #write.phe( paste( file.prefix, ".phe", sep="" ), phe );
   #write.ped( paste( file.prefix, ".ped", sep="" ), ped );
   #return( pbat.files( file.prefix, ... ) );
