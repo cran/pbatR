@@ -40,10 +40,15 @@ bool all( int a, int b, int c ) {
 void printFamily( int *p1, int *p2,
                   int *ca, int *cb,
                   int numSibs ) {
-  cout << "P: " << p1[0] << " "  << p1[1] << ", " << p2[0] << " " << p2[1] << endl << "C: ";
-  for( int i=0; i<numSibs; i++ )
-    cout << ca[i] << " " << cb[i] << ", ";
-  cout << endl;
+  //cout << "P: " << p1[0] << " "  << p1[1] << ", " << p2[0] << " " << p2[1] << endl << "C: ";
+  //for( int i=0; i<numSibs; i++ )
+  //  cout << ca[i] << " " << cb[i] << ", ";
+  //cout << endl;
+
+  Rprintf("P: %d %d, %d %d\nC: ", p1[0], p1[1], p2[0], p2[1]);
+  for(int i=0; i<numSibs; i++)
+    Rprintf("%d %d, ", ca[i], cb[i]);
+  Rprintf("\n");
 }
 
 bool pG( int gP1, int gP2, // parental mating type
@@ -205,14 +210,16 @@ bool pG( int gP1, int gP2, // parental mating type
   if( (gP1==gAA||gP1==gBB) && gP2==gMiss
       && all(nAA,nAB,nBB) ) {
 #ifndef LOOKUP_COMPARE
-    cout << "WARNING: impossible genotype in file." << endl;
+    //cout << "WARNING: impossible genotype in file." << endl;
+    Rprintf("WARNING: impossible genotype in file.\n");
     //printFamily();
 #endif
     return(true);
   }
 
-  cout << "failed all cases!" << endl;
-  cout << gP1 << " " << gP2 << endl;
+  //cout << "failed all cases!" << endl;
+  //cout << gP1 << " " << gP2 << endl;
+  Rprintf("failed all cases!\n%d %d\n", gP1, gP2);
   return(false);
 }
 
@@ -235,7 +242,8 @@ int xCode( int a, int b, int MODEL ) {
   case( MODEL_RECESSIVE ):
     return( (int)(a==ALLELE_A && b==ALLELE_A) );
   }
-  cout << "xCode (1) out of bounds! " << a << " " << b << endl;
+  //cout << "xCode (1) out of bounds! " << a << " " << b << endl;
+  Rprintf("xCode (1) out of bounds! %d %d\n", a, b);
   return( -1 ); // should never get here
 }
 int xCode( int g, int MODEL ) {
@@ -247,7 +255,8 @@ int xCode( int g, int MODEL ) {
   case gBB:
     return( xCode( ALLELE_B, ALLELE_B, MODEL ) );
   }
-  cout << "xCode (2) out of bounds! " << g << endl;
+  //cout << "xCode (2) out of bounds! " << g << endl;
+  Rprintf("xCode (2) out of bounds! %d\n", g);
   return( -1 ); // should never get here
 }
 
@@ -332,7 +341,8 @@ bool pGG( int gP1, int gP2, // parental mating type
         return(true);
       }
       if( first_third(nAA,nAB,nBB) ) {
-        cout << "Impossible genotypes, 1 missing parent." << endl;
+        //cout << "Impossible genotypes, 1 missing parent." << endl;
+        Rprintf("Impossible genotypes, 1 missing parent.\n");
         return(false);
       }
       if( second_third(nAA,nAB,nBB) ) {
@@ -468,10 +478,18 @@ double fbat_Si( int n,
   for( gg=0; gg<9; gg++ ) pgg_sum += pgg[gg];
   if( pgg_sum<0.99 || pgg_sum>1.01 ) {
     printFamily( p1, p2,  ca, cb,  n );
-    cout << "pgg_sum = " << pgg_sum << endl;
+    //cout << "pgg_sum = " << pgg_sum << endl;
     for( gg=0; gg<9; gg++ )
       cout << " P[" << gg << "]=" << pgg[gg] << endl;
-    exit(1);
+    //exit(1);
+    //cout << " ERROR, SHOULD EXIT!!!" << endl;
+
+    Rprintf("pgg_sum = %d\n", pgg_sum);
+    for(gg = 0; gg<9; gg++)
+      Rprintf(" P[%d]=%f\n", gg, pgg[gg]);
+    Rprintf("Error in code, should exit!");
+
+    return(-999);
   }
 #endif
 
@@ -546,7 +564,8 @@ void recursiveFillLookupCompare( int curSib, int numSibs,
       if( !fuzzyEqual( chart_g1(index), pg[0] ) ||
           !fuzzyEqual( chart_g2(index), pg[1] ) ||
           !fuzzyEqual( chart_g3(index), pg[2] ) ) {
-        cout << "Lookup failure! You: " << pg[0] << " " << pg[1] << " " << pg[2] << "Fbat: " << chart_g1(index) << " " << chart_g2(index) << " " << chart_g3(index) << endl;
+        //cout << "Lookup failure! You: " << pg[0] << " " << pg[1] << " " << pg[2] << "Fbat: " << chart_g1(index) << " " << chart_g2(index) << " " << chart_g3(index) << endl;
+        Rprintf("Lookup failure! You: %g %g %g Fbat: %g %g %g\n", pg[0], pg[1], pg[2], chart_g1(index), chart_g2(index), chart_g3(index));
         printFamily( p1, p2,  ca, cb,  numSibs );
       }
 
@@ -559,14 +578,16 @@ void recursiveFillLookupCompare( int curSib, int numSibs,
   if( (gP1==gAA||gP1==gBB) && gP2==gMiss
       && all(nAA,nAB,nBB) ) {
 #ifndef LOOKUP_COMPARE
-    cout << "WARNING: impossible genotype in file." << endl;
+    //cout << "WARNING: impossible genotype in file." << endl;
+    Rprintf("WARNING: impossible genotype in file.\n");
     printFamily();
 #endif
     return(true);
   }
 
-  cout << "failed all cases!" << endl;
-  cout << gP1 << " " << gP2 << endl;
+  //cout << "failed all cases!" << endl;
+  //cout << gP1 << " " << gP2 << endl;
+  Rprintf("failed all cases\n%f %f\n", gP1, gP2);
   return(false);
 }
 

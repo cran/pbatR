@@ -23,6 +23,8 @@
 #include <iostream>
 using namespace std;
 
+#include <R.h>
+
 // constants
 //const int gA = 0;
 //const int gB = 1;

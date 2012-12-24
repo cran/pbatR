@@ -43,7 +43,8 @@ int binaryTrait( int c_a, int c_b,
     return( (int)(RUnif() < penAB) );
   if( g == gBB )
     return( (int)(RUnif() < penBB) );
-  cout << "binaryTrait(...) out of bounds!" << endl;
+  //cout << "binaryTrait(...) out of bounds!" << endl;
+  Rprintf("binaryTrait(...{ out of bounds!\n");
   return( -1 );
 }
 
@@ -76,7 +77,8 @@ void randomAllelesFill( int *pM, int *pD,
       pD[i] = ALLELE_B;
       pM[i] = ALLELE_B;
     }else{
-      cout << "randomAllelesFill(...) cumProb is out of bounds!" << endl;
+      //cout << "randomAllelesFill(...) cumProb is out of bounds!" << endl;
+      Rprintf("randomAllelesFill(...) cumProb is out of bounds!\n");
     }
   }
 }
@@ -281,7 +283,8 @@ double power( int numOffspring, int numParents, int numFamilies,
       //  cout << "what??? it was needed?????" << endl; // son of a mother fucking bitch...
 
       if( numIters >= ITERATION_KILLER && ITERATION_KILLER!=0 ) {
-        cout << "ITERATION_KILLER" << endl;
+        //cout << "ITERATION_KILLER" << endl;
+        Rprintf("ITERATION_KILLER\n");
         return( -2 );
       }
       numIters++;
@@ -379,9 +382,10 @@ double power( int numOffspring, int numParents, int numFamilies,
       system( "sh killme.sh" );
 
       // and compare our computed statistic...
-      cout << "FBAT statistic:" << stat << endl;
-      cout << "num " << num << endl;
-      cout << "var " << den << endl;
+      //cout << "FBAT statistic:" << stat << endl;
+      //cout << "num " << num << endl;
+      //cout << "var " << den << endl;
+      Rprintf("FBAT statistic: %f\nnum %f\nvar %f\n", stat, num, den);
       return(0);
 
       // and set it so it doesn't run the next iteration

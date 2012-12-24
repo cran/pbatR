@@ -54,9 +54,9 @@ extern "C" {
       if( !CreateProcess( NULL, curCmd,
 			  NULL, NULL, FALSE, CREATE_NO_WINDOW,
 			  NULL, NULL, &si, &pi ) ) {
-	std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
+        std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
       }else{
-	piVec.push_back(pi);
+        piVec.push_back(pi);
       }
     }
 
@@ -81,10 +81,11 @@ extern "C" {
       pid = fork();
 
       if( getpid() != parentPid ){
-	///sleep(i+1); // DEBUG ONLY
-	//std::cout << cmds[i] << std::endl;
-	int sysRes = system( cmds[i].c_str() );
-	exit(0);
+        ///sleep(i+1); // DEBUG ONLY
+        //std::cout << cmds[i] << std::endl;
+        int sysRes = system( cmds[i].c_str() );
+        //exit(0);
+        return(0);
       }
     }
 
@@ -93,8 +94,8 @@ extern "C" {
       //std::cout << "waiting..." << std::endl; // DEBUG
 
       for( i=0; i<(int)cmds.size(); i++ ) {
-	int status=0;
-	waitpid( -1, &status, 0 );
+        int status=0;
+        waitpid( -1, &status, 0 );
       }
 
       //std::cout << "Finished" << std::endl; // DEBUG

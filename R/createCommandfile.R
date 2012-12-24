@@ -19,31 +19,31 @@ PBATDATAURL <- "http://www.biostat.harvard.edu/~clange/pbatdata.zip";
 getPbatdata <- function() {
   return(); ## sigh... this file was removed!!!
 
-  ## Give the user a chance to say yes or no:
-  msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
-                  PBATDATAURL,
-                  "'? This file is needed.", sep="");
-  if( isPackageLoaded( 'tcltk' ) ) {
-    if( "yes" != tclvalue(tkmessageBox(title="pbatdata.txt",message=msgStr,icon="question",type="yesno")) )
-      return();
-  }else{
-    if( 'yes' != textMessageBox( msgStr, c('yes','no') ) )
-      return();
-  }
-
-  ## Carry on with downloading
-  pbatpath <- str.getpath(pbat.get());
-  ######zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );  ## not used
-  ######if( pbatpath=="" ) zipfile <- "./pbatdata.zip";         ## ?codetools.
-  ###download.file( PBATDATAURL, zipfile );
-  download.file( PBATDATAURL, "./pbatdata.zip" );
-  Sys.sleep(2); ## Just in case this is why it was getting corrupted
-  pbatdatafile <- zip.file.extract( file="pbatdata.txt", zipname="pbatdata.zip" );
-  destfile <- paste( pbatpath, "/pbatdata.txt", sep="" );
-  if( pbatpath=="" ) destfile <- "pbatdata.txt";
-  if( file.exists(pbatdatafile) ){
-    file.copy(pbatdatafile, destfile);
-  }
+#   ## Give the user a chance to say yes or no:
+#   msgStr <- paste("Can I attempt to download 'pbatdata.txt' from '",
+#                   PBATDATAURL,
+#                   "'? This file is needed.", sep="");
+#   if( isPackageLoaded( 'tcltk' ) ) {
+#     if( "yes" != tclvalue(tkmessageBox(title="pbatdata.txt",message=msgStr,icon="question",type="yesno")) )
+#       return();
+#   }else{
+#     if( 'yes' != textMessageBox( msgStr, c('yes','no') ) )
+#       return();
+#   }
+#
+#   ## Carry on with downloading
+#   pbatpath <- str.getpath(pbat.get());
+#   ######zipfile <- paste( pbatpath, "/pbatdata.zip", sep="" );  ## not used
+#   ######if( pbatpath=="" ) zipfile <- "./pbatdata.zip";         ## ?codetools.
+#   ###download.file( PBATDATAURL, zipfile );
+#   download.file( PBATDATAURL, "./pbatdata.zip" );
+#   Sys.sleep(2); ## Just in case this is why it was getting corrupted
+#   pbatdatafile <- zip.file.extract( file="pbatdata.txt", zipname="pbatdata.zip" );
+#   destfile <- paste( pbatpath, "/pbatdata.txt", sep="" );
+#   if( pbatpath=="" ) destfile <- "pbatdata.txt";
+#   if( file.exists(pbatdatafile) ){
+#     file.copy(pbatdatafile, destfile);
+#   }
 }
 
 #####################################################################

@@ -10,6 +10,8 @@
 #include <vector>
 using namespace std;
 
+#include <R.h>
+
 const int LINE_SIZE = 10000;
 const int NUMREAD = 10;
 
@@ -77,9 +79,12 @@ char* kludge_field( char *line, int field, int* fieldStart, int* fieldLength )
 void kludgePrintFields( int numfields, char *line, int* fieldStart, int* fieldLength )
 {
   int curfield;
+  //for( curfield=0; curfield<numfields; curfield++ )
+  //  cout << "(" << kludge_field( line, curfield, fieldStart, fieldLength ) << ")";
+  //cout << endl;
   for( curfield=0; curfield<numfields; curfield++ )
-    cout << "(" << kludge_field( line, curfield, fieldStart, fieldLength ) << ")";
-  cout << endl;
+    Rprintf("(%s)", kludge_field( line, curfield, fieldStart, fieldLength ));
+  Rprintf("\n");
 }
 
 bool field_is_star( char *line, int field, int* fieldStart, int* fieldLength ){

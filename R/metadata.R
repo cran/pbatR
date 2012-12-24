@@ -285,7 +285,8 @@ pbat.getNumProcesses <- function()
 
 
 ## Loading in the metadata should be done on startup!
-.onLoad <- function(libname, pkgname){
+#.onLoad <- function(libname, pkgname){
+.onAttach <- function(libname, pkgname){
   pbat.setmode.defaults( save=FALSE );
   pbat.loadMetadata();
   ##print( pbat.getmode() );
@@ -296,28 +297,30 @@ pbat.getNumProcesses <- function()
   }
 
   m <- pbat.getmode();
-  cat( "##############################\n" );
-  cat( "# The current pbatR mode is:\n" )
-  cat( "#  PBAT executable:", m$executable, "\n" );
+  msg = "##############################\n"
+  msg = paste(msg, "# The current pbatR mode is:\n",sep='')
+  msg = paste(msg, "#  PBAT executable:", m$executable, "\n", sep='');
   if( is.null(m$wine) || m$wine=="" ) {
-    cat( "#  (wine is not being used)\n" );
+    msg = paste(msg, "#  (wine is not being used)\n", sep='');
   }else{
-    cat( "#  wine location:", m$wine, "\n" );
+    msg = paste(msg, "#  wine location:", m$wine, "\n", sep='');
   }
-  cat( "#  mode:", m$mode, "\n" );
-  cat( "#  jobs:", m$jobs, "\n" );
-  cat( "#  cluster command:", m$cluster, "\n" );
-  cat( "#  cluster refresh:", m$refresh, "\n" );
-  cat( "##############################\n" );
+  msg = paste(msg, "#  mode:", m$mode, "\n", sep='');
+  msg = paste(msg, "#  jobs:", m$jobs, "\n", sep='');
+  msg = paste(msg, "#  cluster command:", m$cluster, "\n", sep='');
+  msg = paste(msg, "#  cluster refresh:", m$refresh, "\n", sep='');
+  msg = paste(msg, "##############################\n", sep='');
 
   ## newest - version check
   if( pbatenv.get("version.check")==1 ) {
     pbat.current(libname);
   }else{
-    cat( "Warning: Version checking is turned off.  Issue the command:\n" );
-    cat( " pbat.setVersionCheck()\n" );
-    cat( "to turn version checking back on.\n" );
+    msg = paste(msg, "Warning: Version checking is turned off.  Issue the command:\n", sep='');
+    msg = paste(msg, " pbat.setVersionCheck()\n", sep='');
+    msg = paste(msg, "to turn version checking back on.\n", sep='');
   }
+
+  packageStartupMessage(msg)
 
   ##print( libname )
   ##print( pkgname )

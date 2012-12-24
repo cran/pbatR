@@ -10,6 +10,8 @@
 #include <cstring>
 using namespace std;
 
+#include <R.h>
+
 const int LINE_SIZE = 10000;
 const int GROUP_LEN = 5;
 
@@ -302,7 +304,8 @@ extern "C" {
   void launchPbatlogExtended( char **pbatlogfile, char **callfile, char **resultfile, int *pieces )
   {
     if( *pieces == 0 ){
-      cout << "ERR: pieces == 0" << endl; // should never happen
+      //cout << "ERR: pieces == 0" << endl; // should never happen
+      Rprintf("ERR: pieces == 0\n");
       return;
     }
 
