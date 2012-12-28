@@ -3,6 +3,10 @@
  * Created 05/28/2007
  */
 
+// FOR THE STUPID MAC VERSION?
+#undef error
+// ?NOISREV CAM DIPUTS EHT ROF
+
 #include "thmalloc.h"
 
 /* The idea is to completely replace the power calculations in pbatR by
