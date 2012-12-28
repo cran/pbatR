@@ -1,5 +1,7 @@
 #ifdef WAIT_WINDOWS_DEFINE
 
+// Can't include R.h (or it interacts with the windows routines), so error messages currently disabled here.
+
 #include <windows.h>
 #include <iostream>
 #include <string>
@@ -53,7 +55,7 @@ int run( char *arg1 )
 {
   // the name of the sh file that we are trying to open (DEBUG)
   //cout << arg1 << endl;
-  Rprintf("%s\n", arg1);
+  ///Rprintf("%s\n", arg1);
 
   // Read in the input.
   // We _EXPECT_ this to be in a particular format (since we created it!):
@@ -64,17 +66,17 @@ int run( char *arg1 )
   ifstream infile( arg1 );
   string line;
   getline( infile, line ); // get the empty line
-  Rprintf("LINE: %s\n");
+  ///Rprintf("LINE: %s\n");
   string executable;
   infile >> executable;
-  Rprintf("Executable: %s\n", executable);
+  ///Rprintf("Executable: %s\n", executable);
   getline( infile, line );
   while( getline( infile, line ) ) {
     if( line != "EOF" ){
-      Rprintf("LINE: %s\n", line);
+      ///Rprintf("LINE: %s\n", line);
       commands.push_back( line );
     }else{
-      Rprintf("CLOSING LINE: %s\n", line);
+      ///Rprintf("CLOSING LINE: %s\n", line);
     }
   }
 
@@ -95,7 +97,7 @@ int run( char *arg1 )
 
   // creating the ouput pipe for the child
   if( !CreatePipe( &outrTemp, &outw, &sa, 0 ) ) {
-    Rprintf("Couldn't create the child output pipe.\n");
+    ///Rprintf("Couldn't create the child output pipe.\n");
     return( 1 );
   }
 
@@ -103,42 +105,42 @@ int run( char *arg1 )
 
   // handle for the ouput writing
   if( !DuplicateHandle( GetCurrentProcess(), outw, GetCurrentProcess(), &errw, 0, TRUE, DUPLICATE_SAME_ACCESS) ) {
-    Rprintf("Couldn't duplicate the handle for output writing.\n");
+    ///Rprintf("Couldn't duplicate the handle for output writing.\n");
     return( 1 );
   }
 
   // handle for the input
   if( !CreatePipe( &inr, &inwTemp, &sa, 0 ) ) {
-    Rprintf("could not create the pipe for the input.\n");
+    ///Rprintf("could not create the pipe for the input.\n");
     return( 1 );
   }
 
   // Create handles
   if( !DuplicateHandle( GetCurrentProcess(), outrTemp, GetCurrentProcess(), &outr, 0, FALSE, DUPLICATE_SAME_ACCESS) ) {
-    Rprintf("Couldn't duplicate the handle.\n");
+    ///Rprintf("Couldn't duplicate the handle.\n");
     return( 1 );
   }
   if( !DuplicateHandle( GetCurrentProcess(), inwTemp, GetCurrentProcess(), &inw, 0, FALSE, DUPLICATE_SAME_ACCESS ) ) {
-    Rprintf("Could not duplicate the handle.\n");
+    ///Rprintf("Could not duplicate the handle.\n");
     return( 1 );
   }
 
   // close some handles
   if( !CloseHandle(outrTemp)
-      || !CloseHandle(inwTemp) )
-    Rprintf("Couldn't close the handles that shouldn't be inherited.\n");
+      || !CloseHandle(inwTemp) ) ;
+    ///Rprintf("Couldn't close the handles that shouldn't be inherited.\n");
 
   // close the std input file so ReadFile(...) will fail when the input thread should die.
   HANDLE stdInput = GetStdHandle( STD_INPUT_HANDLE );
   if( stdInput == INVALID_HANDLE_VALUE ) {
-    Rprintf("Couldn't get the std input handle.\n");
+    ///Rprintf("Couldn't get the std input handle.\n");
     return( 1 );
   }
 
   // launch the coveted PBAT-child
   HANDLE childP = launchRedirectedPBAT( outw, inr, errw, executable );
   if( childP == NULL ) {
-    Rprintf("Launching redirected PBAT failed.\n");
+    ///Rprintf("Launching redirected PBAT failed.\n");
     return( 1 );
   }
 
@@ -146,7 +148,7 @@ int run( char *arg1 )
   if( !CloseHandle( outw )
       || !CloseHandle( inr )
       || !CloseHandle( errw ) ) {
-    Rprintf("Couldn't close some of the pipe handles.\n");
+    ///Rprintf("Couldn't close some of the pipe handles.\n");
     return( 1 );
   }
 
@@ -154,7 +156,7 @@ int run( char *arg1 )
   DWORD idThr;
   HANDLE inpThr = CreateThread( NULL, 0, handleInputThread, (LPVOID)inw, 0, &idThr );
   if( inpThr == NULL ){
-    Rprintf("Couldn't create the input thread for the PBAT-child.\n");
+    ///Rprintf("Couldn't create the input thread for the PBAT-child.\n");
     return( 1 );
   }
 
@@ -170,7 +172,7 @@ int run( char *arg1 )
 
   // wait forever for the thread to die
   if( WaitForSingleObject( inpThr, INFINITE ) == WAIT_FAILED ) {
-    Rprintf("The PBAT-child was terminated abnormally!\n");
+    ///Rprintf("The PBAT-child was terminated abnormally!\n");
   }
 
   // close the handles
@@ -199,7 +201,7 @@ HANDLE launchRedirectedPBAT( HANDLE out, HANDLE in, HANDLE err, string executabl
   strcpy( executableChar, executable.c_str() );
   PROCESS_INFORMATION pi; // process information filled in if launched
   if( !CreateProcess( NULL, executableChar, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi ) ) {
-Rprintf("Couldn't create the pbat process..." << endl;
+    ///Rprintf("Couldn't create the pbat process..." << endl;
     return( NULL );
   }
 
@@ -228,15 +230,16 @@ void handleOutputThread( HANDLE h )
 	break; // should happen, apparently
 
       // otherwise we've got a problem...
-      Rprintf("Couldn't read from the input file from PBAT!\n");
+      ///Rprintf("Couldn't read from the input file from PBAT!\n");
     }
 
     // and show it onscreen
     // (we could alternatively hide this...)
-    if( !WriteConsole( GetStdHandle(STD_OUTPUT_HANDLE), buff, nBytesRead, &nBytesWrites, NULL) )
-      Rprintf("Couldn't write it on-screen.\n");
+    if( !WriteConsole( GetStdHandle(STD_OUTPUT_HANDLE), buff, nBytesRead, &nBytesWrites, NULL) ) {
+      ///Rprintf("Couldn't write it on-screen.\n");
+    }
 
-    Rprintf("Just got input\n");
+    ///Rprintf("Just got input\n");
     justGotInput = true;
   }
 }
@@ -259,7 +262,7 @@ DWORD WINAPI handleInputThread( LPVOID lpvThreadParam )
     strcpy( strLine, commands[curLine].c_str() );
     strcat( strLine, "\n" );
     nBytesRead = strlen(strLine);
-    Rprintf("ABOUT TO PIPE: '%s'\n", strLine);
+    ///Rprintf("ABOUT TO PIPE: '%s'\n", strLine);
     WriteFile( hPipeWrite, strLine, nBytesRead, &nBytesWrites, NULL );
     curLine++;
   }
@@ -270,7 +273,7 @@ DWORD WINAPI handleInputThread( LPVOID lpvThreadParam )
     strcpy( strLine, "-1\n" );
     nBytesRead = strlen(strLine);
 
-    Rprintf("PBAT HACK: '%s'\n", strLine);
+    ///Rprintf("PBAT HACK: '%s'\n", strLine);
     WriteFile( hPipeWrite, strLine, nBytesRead, &nBytesWrites, NULL );
     curLine++;
   }

@@ -1,4 +1,4 @@
-6c870343ebf2732ccbcc0090af7d7acf *DESCRIPTION
+fecefa95848f82b7bba34bc258939419 *DESCRIPTION
 5e38542ff7fda854eb9572b2711fc10c *NAMESPACE
 957918b0b5836728953d23dba7cfaf5f *R/attrTest.R
 51ec681ccbdc835dd38369e8f2806120 *R/c2bat.R
@@ -51,6 +51,6 @@ e9789998ff597bcdb8117b0d2fd97abe *src/fbatDist.h
 db4b10a6a196612cbcd6223f9f358e30 *src/powerSim.cpp
 df3d0e7ac76a73b2534dbdbce512317d *src/random.cpp
 65d5933fb6d130834be179174e7583fe *src/random.h
-a6262b90df878105ca7fce5ca574eec0 *src/sh2win.cpp
+24b8d69942382f4aecc5807f2c96182d *src/sh2win.cpp
 a2de2275b1f343ae0682b72044d07112 *src/thmalloc.h
-0c79dbb50fd22b44e22d82196af3e4d1 *src/wait.cpp
+047e014fb37fde3f5cc0a2ebd74ae63d *src/wait.cpp

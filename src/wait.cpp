@@ -1,6 +1,8 @@
 // Leave the following in for windows, but not for *nix
 //#define WAIT_WINDOWS_DEFINE
 
+// again, for windows, I suspect including R.h will mess up the other includes, so just completely leaving out the few status messages now (should be pretty safe in this file)
+
 #ifdef WAIT_WINDOWS_DEFINE
  #include <windows.h>
  #include <stdio.h>
@@ -54,7 +56,7 @@ extern "C" {
       if( !CreateProcess( NULL, curCmd,
 			  NULL, NULL, FALSE, CREATE_NO_WINDOW,
 			  NULL, NULL, &si, &pi ) ) {
-        std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
+        ///std::cerr << "Couldn't create process '" << cmds[i] << std::endl;
       }else{
         piVec.push_back(pi);
       }
