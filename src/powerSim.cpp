@@ -23,10 +23,13 @@
 // - fully debugged, no longer needed...
 //#define TEST_FBAT
 
-#include "fbatDist.h"
+// Brian Ripley: "etc.  You need to include system headers before R ones, or use R_NO_REMAP or similar (see 'Writing R Extensions')."
+
 #include <fstream>
 #include <string>
 using namespace std;
+
+#include "fbatDist.h"
 
 const int ASCERTAINMENT_AFFECTED = 0;
 const int ASCERTAINMENT_UNAFFECTED = 1;

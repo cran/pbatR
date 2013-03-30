@@ -1,4 +1,4 @@
-12fffd794265465b81c3a92cc56abd16 *DESCRIPTION
+2d9f4890581b4822daf7b381c9e400dc *DESCRIPTION
 5e38542ff7fda854eb9572b2711fc10c *NAMESPACE
 957918b0b5836728953d23dba7cfaf5f *R/attrTest.R
 51ec681ccbdc835dd38369e8f2806120 *R/c2bat.R
@@ -48,7 +48,7 @@ cb90f21d10e6d09320968706e1179603 *man/phe.Rd
 f19b530d2ae5a9b38e5af9e0f18ea3df *src/fbatDist.cpp
 e9789998ff597bcdb8117b0d2fd97abe *src/fbatDist.h
 63d6014897eb69b86074275fd818f6bb *src/kludge.cpp
-4f4e0daffaff772ecd4217f7176612ab *src/powerSim.cpp
+85cd7ac73db3d51a643d30af266e46e1 *src/powerSim.cpp
 df3d0e7ac76a73b2534dbdbce512317d *src/random.cpp
 65d5933fb6d130834be179174e7583fe *src/random.h
 24b8d69942382f4aecc5807f2c96182d *src/sh2win.cpp
