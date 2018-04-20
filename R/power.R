@@ -148,7 +148,7 @@ pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
   ##print( contsAscertainmentUpper )
 
   result <- as.double(0.0)
-  .C("powerR",
+  cres = .C("powerR",
      as.integer(numOffspring), as.integer(numParents), as.integer(numFamilies),
      as.integer(additionalOffspringPhenos),
      as.integer(ascertainment),
@@ -161,8 +161,10 @@ pbat.powerCmd <- function( numOffspring=1, numParents=2, numFamilies=500,
      as.double(offset),
      as.integer(numSim),
      as.integer(ITERATION_KILLER),
-     result,
-     DUP=FALSE)
+     result=result) #,
+     #DUP=FALSE)
+  #print(cres)
+  result = cres$result # NEW FIX
   if( result==-1 ) {
     #warning( "Invalid parameters, power is zeroed out." );
     print( "ERROR: Invalid parameters, power is zeroed out." );

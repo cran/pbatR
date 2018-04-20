@@ -181,7 +181,7 @@ newframe <- function( gridframe, grid=TRUE, relief="groove", borderwidth=2, stic
 ####################################################################
 createPowerGUI <- function( mode="continuous" )
 {
-  require( tcltk )
+  ##require( tcltk )
   main <- tktoplevel()
   setPower( "main", main )
   tkwm.title( main, paste("Power calculations (",mode," trait)",sep="") )

@@ -8,8 +8,8 @@
   related). Information useful for reporting.
 }
 \usage{
-pbat.help( bug=FALSE, full=TRUE, ped=NULL, phe=NULL, lib.loc=NULL )
-pbat.firsttime();
+pbat.help(bug=FALSE, full=TRUE, ped=NULL, phe=NULL, lib.loc=NULL)
+pbat.firsttime()
 }
 \arguments{
   \item{bug}{Whether you think a bug was found on a run. Will attempt to
@@ -21,11 +21,6 @@ pbat.firsttime();
   \item{lib.loc}{a character vector describing the location of R library
     trees to search through, or 'NULL', i.e what/if you specified for
     this when the library was loaded.}
-}
-\references{
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}  
-
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
 }
 \seealso{
   \code{\link{pbat}}

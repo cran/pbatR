@@ -7,17 +7,12 @@
   useful for simulations.
 }
 \usage{
-pbat.clean( pbatObj, plots=TRUE, all.output=FALSE )
+pbat.clean(pbatObj, plots=TRUE, all.output=FALSE)
 }
 \arguments{
   \item{pbatObj}{'pbat' object}
   \item{plots}{TRUE/FALSE - delete plot output}
   \item{all.output}{DEPRECATED: No longer does anything, deleting files from other (potentially running) PBAT runs can be dangerous.}
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}  
 }
 \seealso{
   \code{\link{pbat}}

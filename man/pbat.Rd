@@ -56,80 +56,85 @@ pbat.last()
 
 pbat.last.rawResults()
 
-pbat.m( formula, phe, ped, fbat="",
-        max.pheno=1, min.pheno=1,
-        null="no linkage, no association", alpha=0.05,
-        trans.pheno="none", trans.pred="none", trans.inter="none",
-        scan.pred="all", scan.inter="all",
-        scan.genetic="additive",
-        offset="gee",
-        screening="conditional power", distribution="default",
-        logfile="",
-        max.gee=1,
-        max.ped=14, min.info=0,
-        incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
-        sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
-        overall.haplo=FALSE, cutoff.haplo=FALSE,
-        output="normal",
-        max.mating.types=10000,
-        commandfile="",
-        future.expansion=NULL,
-        LOAD.OUTPUT=TRUE,
-        monte=0,
-        mminsnps=NULL, mmaxsnps=NULL,
-        mminphenos=NULL, mmaxphenos=NULL,
-        env.cor.adjust=FALSE,
-        gwa=FALSE,
-        snppedfile=FALSE,
-        extended.pedigree.snp.fix=FALSE,
-        new.ped.algo=FALSE,
-        cnv.intensity=2, cnv.intensity.num=3 )
+pbat.m( 
+  formula, phe, ped, fbat="",
+  max.pheno=1, min.pheno=1,
+  null="no linkage, no association", alpha=0.05,
+  trans.pheno="none", trans.pred="none", trans.inter="none",
+  scan.pred="all", scan.inter="all",
+  scan.genetic="additive",
+  offset="gee",
+  screening="conditional power", distribution="default",
+  logfile="",
+  max.gee=1,
+  max.ped=14, min.info=0,
+  incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
+  sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
+  overall.haplo=FALSE, cutoff.haplo=FALSE,
+  output="normal",
+  max.mating.types=10000,
+  commandfile="",
+  future.expansion=NULL,
+  LOAD.OUTPUT=TRUE,
+  monte=0,
+  mminsnps=NULL, mmaxsnps=NULL,
+  mminphenos=NULL, mmaxphenos=NULL,
+  env.cor.adjust=FALSE,
+  gwa=FALSE,
+  snppedfile=FALSE,
+  extended.pedigree.snp.fix=FALSE,
+  new.ped.algo=FALSE,
+  cnv.intensity=2, cnv.intensity.num=3 )
 
-pbat.obj( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPUT=TRUE, ... )
+pbat.obj(
+  phe, ped, file.prefix, phenos="", 
+  offset="gee", LOAD.OUTPUT=TRUE, ...)
 
-pbat.files( pedfile, phefile, fbat="gee",
-            commandfile="",
-            logrank.outfile="",
-            preds="", preds.order="",
-            max.pheno=1,
-            LOAD.OUTPUT=TRUE,
-            ... )
+pbat.files( 
+  pedfile, phefile, fbat="gee",
+  commandfile="",
+  logrank.outfile="",
+  preds="", preds.order="",
+  max.pheno=1,
+  LOAD.OUTPUT=TRUE,
+  ...)
 
-pbat.create.commandfile( pedfile, phefile="",
-       snps="",
-       phenos="", time="", # (only one of 'phenos' and 'time' can be set)
-       preds="", preds.order="",
-       inters="",
-       groups.var="", groups="",
-       fbat="gee",
-       censor="",
-       max.pheno=1, min.pheno=1,
-       null="no linkage, no association", alpha=0.05,
-       trans.pheno="none", trans.pred="none", trans.inter="none",
-       scan.pred="all", scan.inter="all",
-       scan.genetic="additive",
-       offset="gee",
-       screening="conditional power", distribution="default",
-       logfile="",
-       max.gee=1,
-       max.ped=7, min.info=0,
-       haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
-       sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
-       overall.haplo=FALSE, cutoff.haplo=FALSE,
-       output="normal",
-       max.mating.types=10000,
-       commandfile="",
-       future.expansion=NULL,
-       LOGFILE.OVERRIDE=TRUE,
-       monte=0,
-       mminsnps=NULL, mmaxsnps=NULL,
-       mminphenos=NULL, mmaxphenos=NULL,
-       env.cor.adjust=FALSE,
-       gwa=FALSE,
-       snppedfile=FALSE,
-       extended.pedigree.snp.fix=FALSE,
-       new.ped.algo=FALSE,
-       cnv.intensity=2, cnv.intensity.num=3 )
+pbat.create.commandfile(
+  pedfile, phefile="",
+  snps="",
+  phenos="", time="", # (set only one)
+  preds="", preds.order="",
+  inters="",
+  groups.var="", groups="",
+  fbat="gee",
+  censor="",
+  max.pheno=1, min.pheno=1,
+  null="no linkage, no association", alpha=0.05,
+  trans.pheno="none", trans.pred="none", trans.inter="none",
+  scan.pred="all", scan.inter="all",
+  scan.genetic="additive",
+  offset="gee",
+  screening="conditional power", distribution="default",
+  logfile="",
+  max.gee=1,
+  max.ped=7, min.info=0,
+  haplos=NULL, incl.ambhaplos=TRUE, infer.mis.snp=FALSE,
+  sub.haplos=FALSE, length.haplos=2, adj.snps=TRUE,
+  overall.haplo=FALSE, cutoff.haplo=FALSE,
+  output="normal",
+  max.mating.types=10000,
+  commandfile="",
+  future.expansion=NULL,
+  LOGFILE.OVERRIDE=TRUE,
+  monte=0,
+  mminsnps=NULL, mmaxsnps=NULL,
+  mminphenos=NULL, mmaxphenos=NULL,
+  env.cor.adjust=FALSE,
+  gwa=FALSE,
+  snppedfile=FALSE,
+  extended.pedigree.snp.fix=FALSE,
+  new.ped.algo=FALSE,
+  cnv.intensity=2, cnv.intensity.num=3 )
 }
 \arguments{
   \item{formula}{Symbolic expression describing what should be
@@ -257,24 +262,27 @@ pbat.create.commandfile( pedfile, phefile="",
     \code{"none"} = No adjustments for covariates/predictor
     variables. You need to select this for dichotomous traits.
 
-    \code{"max power"} = Offset (=FBAT adjustment for covariates and interaction
-    variables) that maximizes the power of the FBAT-statistic
-    (computationally slow, efficiency dependent on the correct choice of
+    \code{"max power"} = Offset (=FBAT adjustment for 
+    covariates and interaction variables) that maximizes 
+    the power of the FBAT-statistic (computationally slow,
+    efficiency dependent on the correct choice of
     the mode of inheritance)
 
-    \code{"gee + marker score"} = Offset (=FBAT adjustment for covariates and interaction
-    variables) based on standard phenotypic residuals obtained by
-    GEE-estimation including the expected marker score (E(X|H0)), all
+    \code{"gee + marker score"} = Offset (=FBAT adjustment for
+    covariates and interaction variables) based on standard 
+    phenotypic residuals obtained by GEE-estimation including
+    the expected marker score (E(X|H0)), all
     covariates and interaction variables.
 
-    \code{"gee"} = Offset (=FBAT adjustment for covariates and interaction
-    variables) based on standard phenotypic residuals obtained by
-    GEE-estimation including all covariates and interaction variables.
-    (default - most of the time, with the exception of selecting from
+    \code{"gee"} = Offset (=FBAT adjustment for covariates 
+    and interaction variables) based on standard phenotypic
+    residuals obtained by GEE-estimation including all
+    covariates and interaction variables. (default - most
+    of the time, with the exception of selecting from
     the gui interface (not the command line) AffectionStatus)
 
-    \code{(numeric value)} = This only works for AffectionStatus; set a numeric
-    value (i.e. `0.13' without the `' marks) to this.
+    \code{(numeric value)} = This only works for AffectionStatus;
+    set a numeric value (i.e. `0.13' without the `' marks) to this.
   }
 
   \item{screening}{
@@ -418,10 +426,11 @@ pbat.create.commandfile( pedfile, phefile="",
 
   \item{haplos}{List of string vectors representing the haplotype
     blocks for the haplotype analysis.
-    For example, \code{list( block1=c("m1","m2"), block2=c("m3","m4") )}
-    defines 2
-    haplotype-blocks where the first block is defined by SNPs m1 and m2,
-    and the second by SNPs m3 and m4.
+    For example,
+    \code{list(block1=c("m1","m2"), block2=c("m3","m4"))}
+    defines 2 haplotype-blocks where the first block
+    is defined by SNPs m1 and m2, and the second by SNPs
+    m3 and m4.
   }
 
   \item{LOGFILE.OVERRIDE}{When using the 'sym' option in read.ped and
@@ -649,15 +658,12 @@ res
   This was taken with only slight modification to accomodate the
   interface from Christoph Lange's description of the commands for the
   pbat program, (which was available with the software at the time of
-  this writing), available at the PBAT webpage:
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
+  this writing).
 
-  P2BAT webpage:
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
-
-  FBAT webpage (lists a lot of references in relation to both of these
-  programs):
-  \url{http://biosun1.harvard.edu/~fbat/fbat.htm}
+  P2BAT webpage.
+  
+  FBAT webpage (lists a lot of references
+  in relation to both of these programs).
 
   More pbat references:
 

@@ -11,17 +11,17 @@
   Creates, tests, reads, or writes an object of class \code{cped}.
 }
 \usage{
-as.cped( x,
-         pid="pid", id="id", idfath="idfath",
-         idmoth="idmoth", sex="sex", affection="AffectionStatus",
-         clearSym=FALSE )
+as.cped(x,
+  pid="pid", id="id", idfath="idfath",
+  idmoth="idmoth", sex="sex", affection="AffectionStatus",
+  clearSym=FALSE)
 
-is.cped( obj )
+is.cped(obj)
 
-read.cped( filename, lowercase=TRUE, sym=TRUE, max=100, ... )
-fread.cped( filename, ... )
+read.cped(filename, lowercase=TRUE, sym=TRUE, max=100, ...)
+fread.cped(filename, ...)
 
-write.cped( file, cped )
+write.cped(file, cped)
 
 \method{sort}{cped}(x,decreasing=FALSE,...)
 
@@ -115,49 +115,51 @@ myCPed
 set.seed(13)
 NUMTRIOS <- 500
 ## The data is completely random, it does not really make any sense.
-cped <- as.cped( data.frame( pid             = kronecker( 1:NUMTRIOS, rep(1,3) ),
-                             id              = rep( 1:3, NUMTRIOS ),
-                             idfath          = rep( c(0,0,1), NUMTRIOS ),
-                             idmoth          = rep( c(0,0,2), NUMTRIOS ),
-                             sex             = rep( c(2,1,1), NUMTRIOS ),
-                             AffectionStatus = rep( c(0,0,2), NUMTRIOS ),
-                             cnv1.1          = runif( 3*NUMTRIOS ),
-                             cnv1.2          = runif( 3*NUMTRIOS ),
-                             cnv1.3          = runif( 3*NUMTRIOS )    ) )
+cped <- as.cped(data.frame(
+  pid             = kronecker(1:NUMTRIOS, rep(1,3)),
+  id              = rep(1:3, NUMTRIOS),
+  idfath          = rep(c(0,0,1), NUMTRIOS),
+  idmoth          = rep(c(0,0,2), NUMTRIOS),
+  sex             = rep(c(2,1,1), NUMTRIOS),
+  AffectionStatus = rep(c(0,0,2), NUMTRIOS),
+  cnv1.1          = runif(3*NUMTRIOS),
+  cnv1.2          = runif(3*NUMTRIOS),
+  cnv1.3          = runif(3*NUMTRIOS)))
 
 ## Print out part of the dataset
-print( head( cped ) )
+print(head(cped))
 
 ## Command line run
 pbat.work() ## Makes the intermediate files go in ./pbatRwork directory
 
 ## - Analyzing the first intensity
-res1 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
-                cnv.intensity=1, cnv.intensity.num=3, offset="none" )
-pbat.clean( res1, all.output=TRUE ) ## Removes all intermediate files
+res1 <- pbat.m(AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=1, cnv.intensity.num=3, offset="none")
+pbat.clean(res1, all.output=TRUE) ## Removes all intermediate files
 ## - Analyzing the second intensity
-res2 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
-                cnv.intensity=2, cnv.intensity.num=3, offset="none" )
-pbat.clean( res2, all.output=TRUE )
+res2 <- pbat.m(AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=2, cnv.intensity.num=3, offset="none")
+pbat.clean(res2, all.output=TRUE)
 ## - Analyzing the third intensity
-res3 <- pbat.m( AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
-                cnv.intensity=3, cnv.intensity.num=3, offset="none" )
-pbat.clean( res3, all.output=TRUE )
+res3 <- pbat.m(AffectionStatus ~ NONE, ped=cped, phe=NULL, fbat="gee",
+                cnv.intensity=3, cnv.intensity.num=3, offset="none")
+pbat.clean(res3, all.output=TRUE)
 
 pbat.unwork() ## Close up work (head to original working directory)
 
 ## Print all of the results
-print( res1$results )
-print( res2$results )
-print( res3$results )
+print(res1$results)
+print(res2$results)
+print(res3$results)
 
 ## Or put all the results together and write to file
-res1$results <- rbind( res1$results, res2$results, res3$results )
-write.pbat( res1, "cpedResults.csv" )
+res1$results <- rbind(res1$results, res2$results, res3$results)
+write.pbat(res1, "cpedResults.csv")
 
-## Otherwise, we could write the data to disk, and run with the GUI interface
+## Otherwise, we could write the data to disk, 
+##  and run with the GUI interface
 ## Write the data to disk:
-write.cped( "cped.cped", cped )
+write.cped("cped.cped", cped)
 }
 }
 \details{
@@ -166,11 +168,6 @@ write.cped( "cped.cped", cped )
   The best way to see all of this in action is to run the code in the examples below, and look at the cped file produced from it.
 
   `plotCPed' plots the data similar to the `plotPed' routine (in fact it transforms the data to use it).
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \seealso{
   \code{\link{read.ped}},

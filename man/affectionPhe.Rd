@@ -7,7 +7,7 @@
   substitute offset fix for the GUI.
 }
 \usage{
-affectionPhe( ped, trait="affected", offset=0.0 )
+affectionPhe(ped, trait="affected", offset=0.0)
 }
 \arguments{
   \item{ped}{An object of class \code{ped}.}

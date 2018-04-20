@@ -77,13 +77,14 @@ isPackageLoaded <- function( package ){
 ## Does just that.                                          #
 #############################################################
 loadTclTkOrDie <- function(){
-  if( !require("tcltk") )
-    stop('You need to have loaded tcl/tk to use this function {e.g. library(tcltk)}.');
+##  if( !require("tcltk") )
+##    stop('You need to have loaded tcl/tk to use this function {e.g. library(tcltk)}.');
+  return(invisible())
 }
 
 
 ################################
 ## Debug
 ##choices <- c("yes", "no", "maybe")
-##textMessageBox2( "Are you hungry?", choices )  
+##textMessageBox2( "Are you hungry?", choices )
 ##textMessageBox2( "Choose a file or directory", dir() )

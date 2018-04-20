@@ -18,17 +18,17 @@
 
 ## dyn.load("wait")
 
-addCommand <- function( str ) {
+addCommandR <- function( str ) { # Can't be addCommand, or it interacts with some new stuff they did...
   .C( "addCommand", as.character(str) );
   return( invisible() );
 }
 
-clearCommands <- function( str ) {
+clearCommandsR <- function( str ) {
   .C( "clearCommands" );
   return( invisible() );
 }
 
-runCommands <- function( str ) {
+runCommandsR <- function( str ) {
   .C( "runCommands" );
   return( invisible() );
 }

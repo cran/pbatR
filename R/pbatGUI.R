@@ -577,7 +577,7 @@ pbatGUI.predictorsForm <- function(){
 
     ## set globs$preds
     phenosChosen <- posPhenos[ as.numeric(tkcurselection(lst.aphenos))+1 ];
-    if( length(phenosChosen) < 1 ) return; # nothing was selected
+    if( length(phenosChosen) < 1 ) return(); # nothing was selected
     globs$preds <- sort( unique( c(globs$preds, phenosChosen) ) );
     setPbatGUI( "globs", globs );
 
@@ -591,7 +591,7 @@ pbatGUI.predictorsForm <- function(){
     globs <- getPbatGUI( "globs" );
 
     phenosIndex <- as.numeric(tkcurselection(lst.phenos));
-    if( length(phenosIndex)<1 ) return;
+    if( length(phenosIndex)<1 ) return();
     tkdelete( lst.phenos, phenosIndex );
     globs$preds <- globs$preds[-phenosIndex];
     setPbatGUI( "globs", globs );
@@ -609,7 +609,7 @@ pbatGUI.predictorsForm <- function(){
 
     selPheno <- globs$preds[as.numeric(tkcurselection(lst.phenos))+1];
     if( length(selPheno)!=1 )
-      return;
+      return();
     idx <- which( selPheno==allPhenos );
 
     ## 01/20/2006 forbidden pbat command fix
@@ -635,7 +635,7 @@ pbatGUI.predictorsForm <- function(){
 
     selPheno <- globs$preds[as.numeric(tkcurselection(lst.phenos))+1];
     if( length(selPheno)!=1 )
-      return;
+      return();
     idx <- which( selPheno==allPhenos );
 
     # finally set it
@@ -759,7 +759,7 @@ pbatGUI.snpsForm <- function() {
     globs <- getPbatGUI( "globs" );
 
     snpsChosen <- allSnps[ as.numeric(tkcurselection(lst.snp)) + 1 ];
-    if( nchar(snpsChosen[1]) < 1 ) return; ##############
+    if( nchar(snpsChosen[1]) < 1 ) return(); ##############
     #print( snpsChosen );  # DEBUG only
     tkselection.clear( lst.snp, 0, 'end' );
 
@@ -780,7 +780,7 @@ pbatGUI.snpsForm <- function() {
     globs <- getPbatGUI( "globs" );
 
     snpsChosen <- allSnps[ as.numeric(tkcurselection(lst.snp)) + 1 ];
-    if( length(snpsChosen<1) || nchar(snpsChosen)<1 ) return;
+    if( length(snpsChosen<1) || nchar(snpsChosen)<1 ) return();
     tkselection.clear( lst.snp, 0, 'end' );
 
     for( i in 1:length(snpsChosen) ) {
@@ -801,7 +801,7 @@ pbatGUI.snpsForm <- function() {
     globs <- getPbatGUI( "globs" );
 
     snpIndex <- as.numeric(tkcurselection(lst.block));
-    if( length(snpIndex)<1 ) return;
+    if( length(snpIndex)<1 ) return();
 
     tkdelete( lst.block, snpIndex );
     globs$blocks <- globs$blocks[-(snpIndex+1)];

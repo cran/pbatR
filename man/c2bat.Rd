@@ -5,12 +5,13 @@
   C2BAT (c) Matt McQueen, Jessica Su, Christoph Lange.
 }
 \usage{
-c2bat( snps,
-       case.aa, case.Aa, case.AA,
-       control.aa, control.Aa, control.AA,
-       replicates=0,
-       statistic="armitage",
-       method="exact" )
+c2bat(
+  snps,
+  case.aa, case.Aa, case.AA,
+  control.aa, control.Aa, control.AA,
+  replicates=0,
+  statistic="armitage",
+  method="exact")
 }
 \arguments{
   \item{snps}{Names of the snps (vector). Can be strings.}

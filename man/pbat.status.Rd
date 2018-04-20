@@ -8,11 +8,14 @@
 pbat.status(n=1,workFirst=FALSE)
 }
 \arguments{
-  \item{n}{Returns the last `n' lines from the status file. If n=0, all
-    lines are returned.}
-  \item{workFirst}{Whether to check for `./pbatRwork/pbatstatus.txt' or
-    `./pbatstatus.txt' first.  Generally only semi-important internally,
-    but set this to true if you just typed pbat.unwork().}
+  \item{n}{Returns the last `n' lines from the status file.
+    If n=0, all lines are returned.}
+  \item{workFirst}{Whether to check for 
+    `./pbatRwork/pbatstatus.txt' or
+    `./pbatstatus.txt' first.
+    Generally only semi-important internally,
+    but set this to true if you just typed
+    \code{pbat.unwork()}.}
 }
 \seealso{
   \code{\link{pbat}}

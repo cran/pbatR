@@ -8,7 +8,7 @@
   but will not be identifiable.
 }
 \usage{
-obfuscate( obj )
+obfuscate(obj)
 }
 \arguments{
   \item{obj}{object of class `ped' or `phe' to be used (the same object

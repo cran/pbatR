@@ -20,7 +20,7 @@ phe <- read.phe("myphe")
 
 cur <- pbat.work( ped )
 
-res <- pbat.m( trait ~ NONE, ped=ped, phe=phe, fbat="gee" )
+res <- pbat.m(trait ~ NONE, ped=ped, phe=phe, fbat="gee")
 ...
 ## whatever you want to do with the results
 

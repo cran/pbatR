@@ -8,21 +8,22 @@
   do not require pbat, and should run on any machine.
 }
 \usage{
-pbat.power( mode="continuous" )
+pbat.power(mode="continuous")
 
-pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
-               additionalOffspringPhenos=TRUE,
-               ascertainment="affected",
-               modelGen="additive", modelTest=modelGen,
-               afreqMarker=NA,
-               penAA=0.8, penAB=0.5, penBB=0.3,
-               heritability=0.0, contsAscertainmentLower=0.0,
-                contsAscertainmentUpper=1.0,
-               pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
-               alpha=0.01,
-               offset="default",
-               numSim=1000,
-               ITERATION_KILLER=200 )
+pbat.powerCmd( 
+  numOffspring=1, numParents=2, numFamilies=500,
+  additionalOffspringPhenos=TRUE,
+  ascertainment="affected",
+  modelGen="additive", modelTest=modelGen,
+  afreqMarker=NA,
+  penAA=0.8, penAB=0.5, penBB=0.3,
+  heritability=0.0, contsAscertainmentLower=0.0,
+  contsAscertainmentUpper=1.0,
+  pDiseaseAlleleGivenMarkerAllele=1.0, afreqDSL=0.1,
+  alpha=0.01,
+  offset="default",
+  numSim=1000,
+  ITERATION_KILLER=200 )
 }
 \arguments{
   \item{mode}{"continuous" or "dichotomous"}
@@ -81,10 +82,6 @@ pbat.powerCmd( numOffspring=1, numParents=2, numFamilies=500,
   number, but make note of this number, see set.seed for more details).
 }
 \references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
-
   Hoffmann, T. and Lange, C. (2006) P2BAT: a massive parallel
   implementation of PBAT for genome-wide association studies in
   R. Bioinformatics. Dec 15;22(24):3103-5.

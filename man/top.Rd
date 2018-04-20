@@ -5,7 +5,7 @@
   The top n markers by conditional power.
 }
 \usage{
-top( pbatObj, n=10, sortBy=NULL )
+top(pbatObj, n=10, sortBy=NULL)
 }
 \arguments{
   \item{pbatObj}{An object of class 'pbat', i.e. the results of

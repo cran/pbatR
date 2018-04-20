@@ -246,37 +246,37 @@ pbat.files <- function( pedfile, phefile,
   ## now go through the modes
   if( mode$mode == "single" ){
     ## The original
-    clearCommands()
+    clearCommandsR()
     #if( isWindows() ) {
-    #  addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) #);
+    #  addCommandR( paste( "\"", pbat.get(), "\" \"", commandfile, "\"", sep="" ) #);
     #}else{
     #  ##print( "SINGLE Command" );
     #  ##print( paste( pbat.get(), commandfile ) );
-    #  addCommand( paste( pbat.get(), commandfile ) );
+    #  addCommandR( paste( pbat.get(), commandfile ) );
     #}
 
-    addCommand( paste( wineStr, pbat.get(), " ", commandfile, sep="" ) );
-    runCommands();
+    addCommandR( paste( wineStr, pbat.get(), " ", commandfile, sep="" ) );
+    runCommandsR();
   }else if( mode$mode != "cluster" ){
     ## The original multiple spawning method
-    clearCommands();
+    clearCommandsR();
     for( i in 1:numProcesses ) {
       #if( isWindows() ) {
-      #  addCommand( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
+      #  addCommandR( paste( "\"", pbat.get(), "\" \"", commandfile, "\"",
       #                    " ", i, " ", numProcesses, sep="" ) );
       #}else{
       #  ##print( "MULTIPLE Command" );
       #  ##print( paste( pbat.get(), commandfile, i, numProcesses ) );
-      #  addCommand( paste( pbat.get(), commandfile, i, numProcesses ) );
+      #  addCommandR( paste( pbat.get(), commandfile, i, numProcesses ) );
       #}
 
-      addCommand( paste( wineStr, pbat.get(), " ", commandfile, " ", i, " ", numProcesses,  sep="" ) );
+      addCommandR( paste( wineStr, pbat.get(), " ", commandfile, " ", i, " ", numProcesses,  sep="" ) );
     }
-    runCommands();
+    runCommandsR();
   }else{
     ## The bsub method for clusters... rather inefficient, but it's for clusters that don't support the above.
 
-    clearCommands(); ## remember otherwise it spin-locks
+    clearCommandsR(); ## remember otherwise it spin-locks
 
     filenameSH <- rep( "", numProcesses );
     filenameTouch <- rep( "", numProcesses );
@@ -297,11 +297,11 @@ pbat.files <- function( pedfile, phefile,
       close(file);
 
       ## run the shell file (well, add it to the queue)
-      addCommand( paste( mode$cluster, " ", wineStr, filenameSH[i], sep="" ) );
+      addCommandR( paste( mode$cluster, " ", wineStr, filenameSH[i], sep="" ) );
     }
 
     ## now run all of the shell files
-    runCommands();
+    runCommandsR();
 
     ## wait for all the files to have been 'touched'
     if( CLUSTER.TIME>0 ){

@@ -4,7 +4,7 @@ export(
        is.pedlist, as.pedlist,
        is.pped, as.pped, read.pped,
        is.cped, as.cped, read.cped, fread.cped, write.cped,
-       
+
        ped.markerNames,
 
        affectionPhe,
@@ -43,6 +43,8 @@ export(
        )
 
 import( tcltk )
+import( survival )
+import( rootSolve )
 
 S3method( print,   pbat )
 S3method( summary, pbat )
@@ -58,4 +60,12 @@ S3method( print, pedlist )
 S3method( print, cped )
 S3method( sort, cped )
 
-useDynLib(pbatR)
+useDynLib(pbatR, .registration=TRUE)
+
+
+importFrom("grDevices", "dev.off", "pdf")
+importFrom("graphics", "lines", "par", "plot", "polygon", "segments",
+           "text", "title")
+importFrom("stats", "optim", "qnorm", "runif")
+importFrom("utils", "installed.packages", "read.csv", "read.table",
+           "tail", "write.csv", "write.table")

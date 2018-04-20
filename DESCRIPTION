@@ -1,30 +1,19 @@
 Package: pbatR
-Version: 2.2-9
-Date: 2013-03-30
-Title: P2BAT
-Author: Thomas Hoffmann <tjhoffm@gmail.com>, with contributions from
-        Christoph Lange <clange@hsph.harvard.edu>
+Version: 2.2-13
+Date: 2018-04-16
+Title: Pedigree/Family-Based Genetic Association Tests Analysis and
+        Power
+Author: Thomas Hoffmann <tjhoffm@gmail.com>, with contributions from Christoph Lange <clange@hsph.harvard.edu>
 Maintainer: Thomas Hoffmann <tjhoffm@gmail.com>
-Depends: R (>= 2.0.0), survival, rootSolve
-Imports: tcltk
+Depends: R (>= 2.0.0)
+Imports: survival, rootSolve
 Suggests: kinship2, tcltk
-Description: This package provides data analysis via the pbat program,
-        and an alternative internal implementation of the power
-        calculations via simulation only.  For analysis, this package
-        provides a frontend to the PBAT software, automatically reading
-        in the output from the pbat program and displaying the
-        corresponding figure when appropriate (i.e. PBAT-logrank). It
-        includes support for multiple processes and clusters. For
-        analysis, users must download PBAT (developed by Christoph
-        Lange) and accept it's license, available on the PBAT webpage.
-        Both the data analysis and power calculations have command line
-        and graphical interfaces using tcltk.
+Description: This R package provides power calculations via internal simulation methods. The package also provides a frontend to the now abandoned PBAT program (developed by Christoph Lange), and reads in the corresponding output and displays results and figures when appropriate. The license of this R package itself is GPL. However, to have the program interact with the PBAT program for some functionality of the R package, users must additionally obtain the PBAT program from Christoph Lange, and accept his license. Both the data analysis and power calculations have command line and graphical interfaces using tcltk.
 License: GPL
 URL: http://sites.google.com/site/thomashoffmannproject/
-        http://www.biostat.harvard.edu/~clange/default.htm
         http://bioinformatics.oxfordjournals.org/cgi/content/short/22/24/3103
 LazyLoad: true
-Packaged: 2013-03-30 15:35:59 UTC; tom
 NeedsCompilation: yes
+Packaged: 2018-04-17 17:28:42 UTC; tom
 Repository: CRAN
-Date/Publication: 2013-03-30 17:31:14
+Date/Publication: 2018-04-20 03:51:52 UTC

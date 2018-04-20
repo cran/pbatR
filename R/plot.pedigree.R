@@ -16,6 +16,8 @@ plot.pedigree <- function(x, id = x$id, sex = x$sex, status = x$status,
                            extraInfo = NULL, ## Tom added
                            ...)
 {
+  #library(kinship2)
+
   #col <- rep("white",length(x$id))
   #col[affected==1] <- "black"
   col[is.na(affected)] <- "red" ## missing!!
@@ -398,7 +400,7 @@ plot.pedigree <- function(x, id = x$id, sex = x$sex, status = x$status,
                                         # Now, get the structure of the plot, and lay out the main region
                                         #
 
-  plist <- align.pedigree(x, packed = packed, width = width, align =
+  plist <- kinship2::align.pedigree(x, packed = packed, width = width, align =
                           align)
   who <- (plist$nid > 0)
   xp <- plist$pos[who]
@@ -552,8 +554,8 @@ plot.pedigree <- function(x, id = x$id, sex = x$sex, status = x$status,
       }
 
       tw <- tw.left|tw.right
-      mz <- mz.left|mz.right
-      un <- un.left|un.right
+      ##mz <- mz.left|mz.right  ## Codetools 02/20/2014
+      ##un <- un.left|un.right  ## Codetools 02/20/2014
       who <- (plist$fam[i,  ] == fam) & !tw
 
       xx <- plist$pos[i, who]
@@ -596,11 +598,11 @@ plot.pedigree <- function(x, id = x$id, sex = x$sex, status = x$status,
 
       ## add question mark for unknown zygosity
 
-      xx.lu <- plist$pos[i, un.left]
-      yy.lu <- rep( - i, length = sum(un.left))
+      ##xx.lu <- plist$pos[i, un.left]   ## Codetools 02/20/2014
+      ##yy.lu <- rep( - i, length = sum(un.left))  ## Codetools 02/20/2014
 
-      xx.ru <- plist$pos[i, un.right]
-      yy.ru <- rep( - i, length = sum(un.right))
+      ##xx.ru <- plist$pos[i, un.right]  ## Codetools 02/20/2014
+      ##yy.ru <- rep( - i, length = sum(un.right))  ## Codetools 02/20/2014
 
       ## text('?',.5*(xx.lu+.5*(xx.ru+xx.lu)),
       ##      .5*(yy.lu+(1/adj)*radius + yy.lu+3*delta), cex=adj*.3)
@@ -721,7 +723,7 @@ function (ped, phe) ## modified from nuclify -- no longer nuclifies...
 ## And then this is my own function to handle plotting a 'ped' class object
 ## geno \in "none", "percent", "each"
 plotPed <- function( ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL ) {
-  require( kinship2 ) ## replaced from 'library' for codetools...
+  ##require( kinship2 ) ## replaced from 'library' for codetools...
 
   ## Bloody affectionStatus + kinship = hell on your pedigree
   alev <- unique(ped$AffectionStatus)
@@ -800,7 +802,7 @@ plotPed <- function( ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL ) {
     if(!is.null(extraInfo))
       subExtraInfo <- subset(extraInfo, ped$pid==pid)
     ## fix it so it's their program happy
-    pedigr <- pedigree(id = subPed$id, dadid=subPed$idfath, momid=subPed$idmoth, sex=subPed$sex) #, affected=subPed$affection)
+    pedigr <- kinship2::pedigree(id = subPed$id, dadid=subPed$idfath, momid=subPed$idmoth, sex=subPed$sex) #, affected=subPed$affection)
     pedigr$affected <- matrix(subPed$AffectionStatus) ## Workaround the bug in the pedigree routine -- hey, it works!!!
     #print( pedigr )
     #print( str(pedigr) )

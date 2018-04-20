@@ -10,15 +10,16 @@
   Creates, tests, reads, or writes an object of class \code{phe}.
 }
 \usage{
-as.phe( df, pid="pid", id="id" )
+as.phe(df, pid="pid", id="id")
 
-is.phe( obj )
+is.phe(obj)
 
-read.phe( filename, na.strings=c("-",".","NA"), lowercase=TRUE,
-          sym=TRUE, ... )
-fread.phe( filename, ... )
+read.phe(
+  filename, na.strings=c("-",".","NA"), 
+  lowercase=TRUE, sym=TRUE, ...)
+fread.phe(filename, ...)
 
-write.phe( file, phe )
+write.phe(file, phe)
 
 \method{sort}{phe}(x,decreasing=FALSE,...)
 }
@@ -83,11 +84,6 @@ write.phe( file, phe )
   the grouping values must be read in.  Alternatively, you can specify
   these values when calling those functions (see the groups.* options)
   in pbat.
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \examples{
 # A highly artificial example just to get you used to the syntax

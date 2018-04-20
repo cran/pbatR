@@ -311,14 +311,14 @@ pbat.getNumProcesses <- function()
   msg = paste(msg, "#  cluster refresh:", m$refresh, "\n", sep='');
   msg = paste(msg, "##############################\n", sep='');
 
-  ## newest - version check
-  if( pbatenv.get("version.check")==1 ) {
-    pbat.current(libname);
-  }else{
-    msg = paste(msg, "Warning: Version checking is turned off.  Issue the command:\n", sep='');
-    msg = paste(msg, " pbat.setVersionCheck()\n", sep='');
-    msg = paste(msg, "to turn version checking back on.\n", sep='');
-  }
+#   ## newest - version check
+#   if( pbatenv.get("version.check")==1 ) {
+#     pbat.current(libname);
+#   }else{
+#     msg = paste(msg, "Warning: Version checking is turned off.  Issue the command:\n", sep='');
+#     msg = paste(msg, " pbat.setVersionCheck()\n", sep='');
+#     msg = paste(msg, "to turn version checking back on.\n", sep='');
+#   }
 
   packageStartupMessage(msg)
 

@@ -30,36 +30,36 @@
   in clustered mode.
 }
 \usage{
-as.ped( x,
-        pid="pid", id="id", idfath="idfath",
-        idmoth="idmoth", sex="sex", affection="AffectionStatus",
-        clearSym=FALSE )
+as.ped(x,
+  pid="pid", id="id", idfath="idfath",
+  idmoth="idmoth", sex="sex", affection="AffectionStatus",
+  clearSym=FALSE)
 
-as.pedlist( x,
-            pid="pid", id="id", idfath="idfath",
-            idmoth="idmoth", sex="sex", affection="AffectionStatus",
-            clearSym=FALSE )
+as.pedlist(x,
+  pid="pid", id="id", idfath="idfath",
+  idmoth="idmoth", sex="sex", affection="AffectionStatus",
+  clearSym=FALSE)
 
-is.ped( obj, pure.ped=FALSE )
+is.ped(obj, pure.ped=FALSE)
 
-is.pedlist( obj )
+is.pedlist(obj)
 
-read.ped( filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ... )
-fread.ped( filename, ... )
+read.ped(filename, format="ped", lowercase=TRUE, sym=TRUE, max=100, ...)
+fread.ped(filename, ...)
 
-write.ped( file, ped )
+write.ped(file, ped)
 
-is.pped( obj )
+is.pped(obj)
 
-read.pped( filename, max=100 )
+read.pped(filename, max=100)
 
-as.pped( ped, ppedname="" )
+as.pped(ped, ppedname="")
 
 \method{sort}{ped}(x,decreasing=FALSE,...)
 
 plotPed(ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL)
 
-ped.markerNames( ped )
+ped.markerNames(ped)
 }
 \arguments{
   \item{x}{
@@ -186,11 +186,6 @@ myPedlist <- as.pedlist( myPed )   #  and forth between formats.
     http://eyegene.ophthy.med.umich.edu/
     
   \code{ped.markerNames} returns the names of the markers, without the '.a' and '.b' extension for markers (and not duplicated for markers).
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \seealso{
   \code{\link{read.ped}},

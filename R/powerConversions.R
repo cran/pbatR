@@ -87,7 +87,7 @@ h_or <- function( paa, pab, pbb, afreq, or1, moi ) {
   return(  ( or1-(pab*(1-pbb))/(pbb*(1-pab)) ) )
 
   ## STUPID, It was correct all along!
-  
+
 #  if( moi==MOI_ADDITIVE )
 #    return( abs( 2*or1 - (paa*(1-pbb))/(pbb*(1-paa)) ) + abs( or1-(pab*(1-pbb))/(pbb*(1-pab)) )  )
     #return( ( 2*or1 - (paa*(1-pbb))/(pbb*(1-paa)) )^2 + ( or1-(pab*(1-pbb))/(pbb*(1-pab)) )^2  )
@@ -118,7 +118,7 @@ solve_or1 <- function( pen, afreq, popPrev, or1, moi ) {
 pen_or1_a <- function( moi, afreq, popPrev, or1 ) {
   bestPen <- NULL
   bestVal <- -1
-  
+
   NRUNS <- 10
   #if( popPrev < 0.01 ) NRUNS <- 100
   RUNIF_MAX <- 0.5
@@ -145,7 +145,7 @@ pen_or1 <- function( moi, afreq, popPrev, or1 ) {
   if( moi == MOI_RECESSIVE )
     return( rev( pen_or1( moi=MOI_DOMINANT, afreq=1-afreq, popPrev=popPrev, or1=1/or1 ) ) )
 
-  require( rootSolve )
+  ##require( rootSolve )
 
   solve_or_multiroot <- function( pen, afreq, popPrev, or1, moi ) {
     paa <- pen[1]
@@ -165,7 +165,7 @@ pen_or1 <- function( moi, afreq, popPrev, or1 ) {
   NSUCRUNS <- 1 #100
   SUCCESSES <- 0
   bestroot <- NULL
-  
+
 
   for( i in 1:NRUNS ) {
     try( {
@@ -197,7 +197,7 @@ pen_or1 <- function( moi, afreq, popPrev, or1 ) {
   }
   if( SUCCESSES > 0 )
     return( bestroot )
-    
+
   ##stop( "ALL FAILED" )
   return( pen_or1_a( moi=moi, afreq=afreq, popPrev=popPrev, or1=or1 ) )
 }

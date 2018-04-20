@@ -15,9 +15,10 @@
   into an R object).
 }
 \usage{
-is.finished( pbatObj=NULL, clean=TRUE )
-pbat.load( pbatObj=NULL )
-pbat.concatenate( pbatObj=NULL, filename="myResults.txt", clean=FALSE )
+is.finished(pbatObj=NULL, clean=TRUE)
+pbat.load(pbatObj=NULL)
+pbat.concatenate(pbatObj=NULL, 
+  filename="myResults.txt", clean=FALSE)
 }
 \arguments{
   \item{pbatObj}{'pbat' object (result of pbat.m, pbat.obj,
@@ -38,11 +39,6 @@ pbat.concatenate( pbatObj=NULL, filename="myResults.txt", clean=FALSE )
     want to do this until you have checked the output.
   }
   \item{filename}{output filename}
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}  
 }
 \seealso{
   \code{\link{pbat.set}}

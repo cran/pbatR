@@ -6,8 +6,8 @@
   Writes a `pbat' object (the result of calling \code{pbat.m}) to disk.
 }
 \usage{
-write.pbat( x, filename, resultsOnly=FALSE )
-write.pbat.csv( x, filename, resultsOnly=FALSE )
+write.pbat(x, filename, resultsOnly=FALSE)
+write.pbat.csv(x, filename, resultsOnly=FALSE)
 }
 \arguments{
   \item{x}{Object of class \code{pbat}.}
@@ -26,10 +26,5 @@ write.pbat.csv( x, filename, resultsOnly=FALSE )
   spreadsheet program. Note that to use the R output (for the logrank
   plots), you should open the file in a spreadsheet program and just
   copy and paste it into R.
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-  
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \keyword{interface}

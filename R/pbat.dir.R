@@ -8,13 +8,13 @@
 ####################################################################
 
 ## New c kludge routines
-kludgeConvertAwful <- function( csv.infilename, csv.outfilename ) {
+kludgeConvertAwfulR <- function( csv.infilename, csv.outfilename ) {
   warning( "Kludge pbat input level 2 reached (output is unfixable, padded)." );
 
   .C( "kludgeConvertAwful", as.character(csv.infilename), as.character(csv.outfilename) );
 }
 
-kludgeConvert <- function( csv.infilename, csv.outfilename ) {
+kludgeConvertR <- function( csv.infilename, csv.outfilename ) {
   warning( "Kludge pbat input level 1 reached (tries to fix output, should be okay?)." );
 
   status = as.integer(0);
@@ -22,7 +22,7 @@ kludgeConvert <- function( csv.infilename, csv.outfilename ) {
   print( status )
 
   #if( status != 1 )
-  #  kludgeConvertAwful( csv.infilename, csv.outfilename );
+  #  kludgeConvertAwfulR( csv.infilename, csv.outfilename );
 }
 
 # a <intersect> b
@@ -113,11 +113,11 @@ loadPbatlog <- function( log ){
           read <- TRUE; } );
   if( !read ) {
     kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
-    kludgeConvert( resultfile, kludgeLog );
+    kludgeConvertR( resultfile, kludgeLog );
     try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
             read <- TRUE }  );
     if( !read ) {
-      kludgeConvertAwful( resultfile, kludgeLog );
+      kludgeConvertAwfulR( resultfile, kludgeLog );
       try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
               read <- TRUE }  );
 
@@ -407,11 +407,11 @@ loadPbatlogExtended <- function( log ) {
           read <- TRUE; } );
   if( !read ) {
     kludgeLog <- paste( resultfile, ".kludge.csv", sep="" );
-    kludgeConvert( resultfile, kludgeLog );
+    kludgeConvertR( resultfile, kludgeLog );
     try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
             read <- TRUE }  );
     if( !read ) {
-      kludgeConvertAwful( resultfile, kludgeLog );
+      kludgeConvertAwfulR( resultfile, kludgeLog );
       try(  { pbatData <- read.csv( kludgeLog, strip.white=TRUE );
               read <- TRUE }  );
 

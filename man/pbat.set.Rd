@@ -26,17 +26,17 @@
   \code{pbat.getwine} returns the value, leave empty for windows
 }
 \usage{
-pbat.set( executableStr="", CLEAR=FALSE )
+pbat.set(executableStr="", CLEAR=FALSE)
 pbat.get()
 
-pbat.setmode.defaults( save=TRUE )
-pbat.setmode( mode=NULL, jobs=NULL, clusterCommand=NULL,
-              clusterRefresh=NULL )
+pbat.setmode.defaults(save=TRUE)
+pbat.setmode(mode=NULL, jobs=NULL, clusterCommand=NULL,
+             clusterRefresh=NULL )
 pbat.getmode()
 
-pbat.setVersionCheck( check=TRUE )
+pbat.setVersionCheck(check=TRUE)
 
-pbat.setwine( wineStr="", CLEAR=FALSE )
+pbat.setwine(wineStr="", CLEAR=FALSE)
 pbat.getwine()
 }
 \arguments{
@@ -123,11 +123,6 @@ pbat.getwine()
 
   System administrators could copy the '.pbat.Rmeta' file to the users
   home directory after using \code{pbat.set} to set it themselves.
-}
-\references{
-  \url{http://www.biostat.harvard.edu/~clange/default.htm}
-
-  \url{http://www.people.fas.harvard.edu/~tjhoffm/pbatR.html}
 }
 \seealso{
   \code{\link{pbat.m}}
