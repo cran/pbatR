@@ -1,6 +1,6 @@
 Package: pbatR
-Version: 2.2-13
-Date: 2018-04-16
+Version: 2.2-15
+Date: 2023-02-03
 Title: Pedigree/Family-Based Genetic Association Tests Analysis and
         Power
 Author: Thomas Hoffmann <tjhoffm@gmail.com>, with contributions from Christoph Lange <clange@hsph.harvard.edu>
@@ -11,9 +11,9 @@ Suggests: kinship2, tcltk
 Description: This R package provides power calculations via internal simulation methods. The package also provides a frontend to the now abandoned PBAT program (developed by Christoph Lange), and reads in the corresponding output and displays results and figures when appropriate. The license of this R package itself is GPL. However, to have the program interact with the PBAT program for some functionality of the R package, users must additionally obtain the PBAT program from Christoph Lange, and accept his license. Both the data analysis and power calculations have command line and graphical interfaces using tcltk.
 License: GPL
 URL: http://sites.google.com/site/thomashoffmannproject/
-        http://bioinformatics.oxfordjournals.org/cgi/content/short/22/24/3103
+        https://academic.oup.com/bioinformatics/article-abstract/22/24/3103/208723
 LazyLoad: true
 NeedsCompilation: yes
-Packaged: 2018-04-17 17:28:42 UTC; tom
+Packaged: 2023-02-03 19:21:36 UTC; tom
 Repository: CRAN
-Date/Publication: 2018-04-20 03:51:52 UTC
+Date/Publication: 2023-02-03 23:42:30 UTC

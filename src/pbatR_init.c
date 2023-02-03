@@ -8,13 +8,15 @@
 
 /* .C calls */
 extern void addCommand(void *);
-extern void clearCommands();
+//extern void clearCommands();  // <<-- This is bad, in C, this means it has a variable # of args, it's not a real prototpe...
+extern void clearCommands(void);
 extern void kludgeConvert(void *, void *, void *);
 extern void kludgeConvertAwful(void *, void *);
 extern void launchPbatlog(void *, void *, void *, void *);
 extern void launchPbatlogExtended(void *, void *, void *, void *);
 extern void powerR(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
-extern void runCommands();
+//extern void runCommands();
+extern void runCommands(void);
 
 static const R_CMethodDef CEntries[] = {
     {"addCommand",            (DL_FUNC) &addCommand,             1},

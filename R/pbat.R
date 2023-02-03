@@ -642,7 +642,8 @@ pbat.obj <- function( phe, ped, file.prefix, phenos="", offset="gee", LOAD.OUTPU
   ## new, nasty little kludge end
 
   phename <- "";  ## don't always need a phefile
-  if( !is.null(phe) && class(phe)=="phe" ) {
+  #if( !is.null(phe) && class(phe)=="phe" ) {
+  if( !is.null(phe) && inherits(phe,"phe") ) {
     if( !is.sym(phe) ) {
       write.phe( paste( file.prefix, ".phe", sep="" ), phe );
       phename <- file.prefix;

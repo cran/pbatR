@@ -269,7 +269,8 @@ pbatGUI.phenotypesForm <- function(){
 
   ## get the possible/impossible arrays of phenos
   allPhenos <- c();
-  if( class(globs$phe) == 'phe' )
+  #if( class(globs$phe)=="phe" )
+  if( inherits(globs$phe,"phe" ) )
     allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$preds );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
@@ -362,7 +363,8 @@ pbatGUI.logrankForm <- function(){
 
   # get the possible/impossible arrays of phenos
   allPhenos <- c();
-  if( class(globs$phe) == 'phe' )
+  #if( class(globs$phe)=="phe" )
+  if( inherits(globs$phe,"phe" ) )
     allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$preds );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
@@ -495,7 +497,8 @@ pbatGUI.predictorsForm <- function(){
 
   # get the possible/impossible arrays of phenos
   allPhenos <- c();
-  if( class(globs$phe)=="phe" )
+  #if( class(globs$phe)=="phe" )
+  if( inherits(globs$phe,"phe" ) )
     allPhenos <- names( globs$phe[-c(1,2)] );
   posPhenos <- vectorSubtraction( allPhenos, globs$phenos );
   posPhenos <- vectorSubtraction( posPhenos, globs$group );
@@ -1844,7 +1847,8 @@ pbatGUI.mainForm <- function() {
 
       globs <- getPbatGUI( "globs" );
       allPhenos <- c();
-      if( class(globs$phe)=="phe" )
+      #if( class(globs$phe)=="phe" )
+      if( inherits(globs$phe,"phe" ) )
         allPhenos <- names( globs$phe[-c(1,2)] );
       allPhenos <- c( "AffectionStatus", allPhenos );
 

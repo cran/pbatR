@@ -330,7 +330,8 @@ extern "C" {
     // - some of the output files can be empty...
     bool touched = false;
     for( int i=1; i<=*pieces; i++ ) {
-      sprintf( currentlog, "%s_%i_%i", *pbatlogfile, i, *pieces );
+      snprintf( currentlog, LINE_SIZE, "%s_%i_%i", *pbatlogfile, i, *pieces );
+      //sprintf( currentlog, "%s_%i_%i", *pbatlogfile, i, *pieces );
 
       ////cout << "Parsing log '" << currentlog << "'" << endl;
 
