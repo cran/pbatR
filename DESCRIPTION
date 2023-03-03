@@ -1,6 +1,6 @@
 Package: pbatR
-Version: 2.2-15
-Date: 2023-02-03
+Version: 2.2-16
+Date: 2023-03-02
 Title: Pedigree/Family-Based Genetic Association Tests Analysis and
         Power
 Author: Thomas Hoffmann <tjhoffm@gmail.com>, with contributions from Christoph Lange <clange@hsph.harvard.edu>
@@ -14,6 +14,6 @@ URL: http://sites.google.com/site/thomashoffmannproject/
         https://academic.oup.com/bioinformatics/article-abstract/22/24/3103/208723
 LazyLoad: true
 NeedsCompilation: yes
-Packaged: 2023-02-03 19:21:36 UTC; tom
+Packaged: 2023-03-02 22:54:39 UTC; tom
 Repository: CRAN
-Date/Publication: 2023-02-03 23:42:30 UTC
+Date/Publication: 2023-03-03 01:30:11 UTC
