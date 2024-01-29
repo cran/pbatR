@@ -746,7 +746,7 @@ plotPed <- function( ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL ) {
   }
   if(geno == "each") {
     extraInfo <- data.frame(matrix("NA",nrow=nrow(ped),ncol=(ncol(ped)-6)/2),stringsAsFactors=FALSE)
-    colnames(extraInfo) <- ped.markerNames(ped)
+    colnames(extraInfo) <- pedMarkerNames(ped)
     for(i in 1:ncol(extraInfo)){
       a0 <- ped[[6+i*2-1]]
       a1 <- ped[[6+i*2]]

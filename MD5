@@ -1,10 +1,10 @@
-ce19156362acb42e465c9e8f63b61c00 *DESCRIPTION
-511f6bb99feb2f478757bcad22549e67 *NAMESPACE
+cf3a475cc5023c831dbd4beb80fcf11f *DESCRIPTION
+0e3a3a23ab14c3302ea1dff13836eaa5 *NAMESPACE
 957918b0b5836728953d23dba7cfaf5f *R/attrTest.R
 51ec681ccbdc835dd38369e8f2806120 *R/c2bat.R
 e4a675d8dc62fd89c9415a492389216d *R/clean.R
 dd34356467ea4a081937c725cbd65075 *R/cped.R
-cb466a64de62461ee4b8bc3ac2ebe5a9 *R/createCommandfile.R
+4653050389421b4ad0c234984962f1b9 *R/createCommandfile.R
 9bc23bbd3a47d8048825a102b0c63a68 *R/extras.R
 8cd9d8ec8b858adc54e3523646dbcea1 *R/getPaths.R
 0eea3623748e88de272c5976267dee91 *R/help.R
@@ -16,9 +16,9 @@ bacbb7c91b67dd95e405f7f5b5778602 *R/pbat.R
 cd298a48002911ea356ca2e56dac6330 *R/pbat.io.R
 ffb9623375e4d015c649af15b65b4ff5 *R/pbat.m.R
 b7fe9ef7f5a939978bfaa717f89ea006 *R/pbatGUI.R
-a33a5f29d0cc76a7a1a6f1d002dcc55b *R/ped.R
+edb4da01715dcce883d12db446f9aa5e *R/ped.R
 b4df9715ca8f832e0febce929aec5203 *R/phe.R
-b2f61c6f92fe04495ba410f64f2a52e8 *R/plot.pedigree.R
+dee13fe79fd38ee5cc35e7fb2c18f9ae *R/plot.pedigree.R
 12b4cb6dc48f8bbaf4e1ffcf4c9e69d2 *R/power.R
 9132f4d1d43e611bbd5114549fafc0dd *R/powerConversions.R
 f09c387fbe36ca650093ff3ab095ce70 *R/powerGUI.R
@@ -37,7 +37,7 @@ e0916193c4f9ce6465f3c27d7a38118f *man/pbat.help.Rd
 932331628a875d6852f531ff451c7f19 *man/pbat.set.Rd
 ab769b248845568e5373c7afbbb88c87 *man/pbat.status.Rd
 131b2b43fb096ea4f9206986f622a350 *man/pbat.work.Rd
-4fa162f286feddb3f64a10985309913e *man/ped.Rd
+85db834acfba329c3a62d9774a184665 *man/ped.Rd
 44bd8f19ee62217f330ba8133b2e05e6 *man/phe.Rd
 9e328cfed086611413f178946ec242ae *man/power.Rd
 bbfb7a8ae32e9a015955fd0183eff937 *man/summary.Rd

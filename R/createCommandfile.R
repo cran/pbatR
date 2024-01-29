@@ -329,7 +329,7 @@ errorRangeCheck <- function( commandStr, value, min=1, max=NULL, IS.INTEGER=TRUE
 
 ## 08/31/2010
 ## All possible subsets
-all.possible.subsets = function(snps){
+allPossibleSubsets = function(snps){
   sublist = list()
   for(i in 1:length(snps))
     sublist[[i]] = c(FALSE, TRUE) #c(TRUE,FALSE)
@@ -341,7 +341,7 @@ all.possible.subsets = function(snps){
       haplolist[[length(haplolist) + 1]] = snps[as.logical(snpgrid[g,])]
   return(haplolist)
 }
-all.possible.subsets(paste("m", 1:4, sep=""))
+allPossibleSubsets(paste("m", 1:4, sep=""))
 
 #####################################################################
 ## pbat.create.commandfile(...)                                     #
@@ -637,7 +637,7 @@ pbat.create.commandfile <- function(
       sub.haplos = FALSE
       haplos2 = list()
       for(h in 1:length(haplos)){
-        haplosaddi = all.possible.subsets(haplos[[h]])
+        haplosaddi = allPossibleSubsets(haplos[[h]])
         for(hh in 1:length(haplosaddi))
           haplos2[[length(haplos2) + 1]] = haplosaddi[[hh]]
       }

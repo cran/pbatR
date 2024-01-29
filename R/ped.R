@@ -470,7 +470,7 @@ as.pped <- function( ped, ppedname="" ){
 
 
 ## 12/07/2008
-ped.markerNames <- function( ped ) {
+pedMarkerNames <- function( ped ) {
   if( is.sym(ped) ) {
     if( length(ped)==0 )
       stop( "Pedigree is completely symbolic, try reading it in with 'fread.ped' instead of 'read.ped'.")

@@ -11,7 +11,7 @@
 \alias{read.pped}
 \alias{sort.ped}
 \alias{plotPed}
-\alias{ped.markerNames}
+\alias{pedMarkerNames}
 \title{Pedigree Object}
 \description{
   Creates, tests, reads, or writes objects of type \code{ped} or
@@ -28,6 +28,8 @@
   The `pped' functions provide support for a more compressed form of
   input, that can be read in faster, and so may be faster when running
   in clustered mode.
+
+  COMPATIBILITY ISSUE 2024-01-27: The function \code{ped.markerNames} was renamed and is now \code{pedMarkerNames}. Failed new S3 check (which enforced that, as named, needed to be an S3 method).
 }
 \usage{
 as.ped(x,
@@ -59,7 +61,7 @@ as.pped(ped, ppedname="")
 
 plotPed(ped, sink=NULL, geno="percent", phe=NULL, pheCols=NULL)
 
-ped.markerNames(ped)
+pedMarkerNames(ped)
 }
 \arguments{
   \item{x}{
